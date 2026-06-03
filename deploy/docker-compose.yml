@@ -42,6 +42,21 @@ services:
     networks: [regenbazaar_net]
     restart: "no"
 
+  # Self-hosted IPFS node for tRWI metadata. RPC API (5001) stays INTERNAL to regenbazaar_net (never
+  # published to the host); the gateway (8080) is exposed read-only via nginx. Config applied by the
+  # init script at deploy/ipfs/001-config.sh.
+  ipfs:
+    image: ipfs/kubo:v0.30.0
+    container_name: regenbazaar_ipfs
+    environment:
+      IPFS_PROFILE: server
+    volumes:
+      - regenbazaar_ipfs_data:/data/ipfs
+      - ./ipfs/001-config.sh:/container-init.d/001-config.sh:ro
+    networks: [regenbazaar_net]
+    restart: unless-stopped
+    # No host port for 5001 (RPC). Gateway 8080 reached via nginx only.
+
   web:
     build:
       context: ..
@@ -57,6 +72,12 @@ services:
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
       DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+      # IPFS (self-host kubo) — RPC internal-only; gateway is the public read URL for resolving CIDs.
+      IPFS_API_URL: http://ipfs:5001
+      IPFS_GATEWAY_URL: ${IPFS_GATEWAY_URL:-http://ipfs:8080}
+      # On-chain (filled after W2 deploy). OPERATOR key is server-only — never in the browser bundle.
+      CELO_SEPOLIA_RPC_URL: ${CELO_SEPOLIA_RPC_URL:-https://forno.celo-sepolia.celo-testnet.org}
+      OPERATOR_PRIVATE_KEY: ${OPERATOR_PRIVATE_KEY:-}
     ports:
       # localhost-only bind; nginx on the host proxies the public subdomain to this.
       - "127.0.0.1:${WEB_PORT:-8010}:3000"
@@ -65,6 +86,8 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      ipfs:
+        condition: service_started
     networks: [regenbazaar_net]
     restart: unless-stopped
     deploy:
@@ -80,3 +103,5 @@ networks:
 volumes:
   regenbazaar_pgdata:
     name: regenbazaar_pgdata
+  regenbazaar_ipfs_data:
+    name: regenbazaar_ipfs_data
