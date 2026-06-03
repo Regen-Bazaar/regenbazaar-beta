@@ -38,6 +38,22 @@ docs/         ARCHITECTURE.md · DECISIONS.md · KNOWN_ISSUES.md.
 - **Onboarding** (later): ERC-4337 smart accounts + gasless paymaster (EntryPoint v0.6/0.7/0.8 live on Celo Sepolia).
 - **Storage** (later): Cloudflare R2 + CDN primary, self-hosted IPFS (kubo) backup.
 
+## Deployed (Celo Sepolia testnet, chainId 11142220)
+Core is live and source-verified on Blockscout (`celo-sepolia.blockscout.com/address/<addr>`). Full record:
+`packages/contracts/deployments/celo-sepolia.json`.
+
+| Contract | Address |
+|---|---|
+| TRWI (proxy) | `0xa511F92336d9DcBe62caEA46F82DcaFa82BC3E65` |
+| TRWIStaking | `0x665C8964Be8cA3C1F429Aee75Ebe709FF67ef2C1` |
+| REBAZ | `0x8e5F9e9E67688F75D4303a5395F78ff1E3B71975` |
+| EAS | `0x142dFB78c9DFDb447Fad7e327B139Bb622c81c1c` |
+| AuthorizedAttesterResolver | `0xabF828ea9CdF3c6cE95E97BC5E882b29880CeDc1` |
+| SchemaRegistry | `0xd58120Aa88783867f6F29498754E399fd3033eDa` |
+
+ImpactClaim schemaUID `0x836d37174fff1eb2e5a2af8d20d87a908283eec088e38cf21cedaaa9a2658633`. Roles wired
+(REBAZ MINTER→staking; TRWI TOKENIZER + resolver ATTESTER→admin). App wiring (attest→mint) is next.
+
 ## Toolchain
 pnpm workspaces · Next.js 15 / React 19 / Tailwind 4 · Foundry (Solidity 0.8.29) · Drizzle · PGlite · Ponder.
 Local development needs **no Docker** (in-process PGlite + Foundry + Node/tsx).
