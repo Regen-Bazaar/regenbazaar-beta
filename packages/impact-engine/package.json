@@ -7,6 +7,6 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "test": "node --experimental-strip-types --test test/score.test.ts test/extract.test.ts"
+    "test": "node --experimental-strip-types --test test/score.test.ts test/extract.test.ts test/price.test.ts"
   }
 }

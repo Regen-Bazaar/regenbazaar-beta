@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ruleBasedExtract, computeImpactValue } from "@rb/impact-engine";
+import { ruleBasedExtract, computeImpactValue, computePrice } from "@rb/impact-engine";
 import type { ComplexityAnswers, PopulationDensity } from "@rb/impact-engine";
 
 const DOMAINS = ["environment", "animal_welfare", "education", "poverty", "social", "health"];
@@ -70,6 +70,8 @@ export default function Tokenize() {
       }),
     [description, regionCode, density, complexity, periodStart, periodEnd],
   );
+
+  const price = useMemo(() => computePrice(iv.impactValue, 100), [iv.impactValue]);
 
   const setC = (k: keyof ComplexityAnswers) => (v: string) =>
     setComplexity((c) => ({ ...c, [k]: v }) as ComplexityAnswers);
@@ -240,6 +242,16 @@ export default function Tokenize() {
             <div className="mt-1 text-[11px] text-paper/45">
               platform-assessed (beta) · not third-party certified ·{" "}
               <a href="/methodology" className="underline hover:text-gold">{iv.tablesVersion}</a>
+            </div>
+
+            <div className="mt-4 rounded-lg border border-gold/20 bg-ink/50 p-3">
+              <div className="text-xs uppercase tracking-wide text-paper/55">Suggested price (formula)</div>
+              <div className="mt-1 text-2xl font-semibold text-paper">
+                {price.totalPrice.toLocaleString()} <span className="text-sm text-paper/50">total</span>
+              </div>
+              <div className="mt-0.5 text-[11px] text-paper/45">
+                ≈ {price.pricePerEdition.toLocaleString()} per edition (×100) · IV × {price.rate} · {price.modelVersion}
+              </div>
             </div>
 
             <div className="mt-5">
