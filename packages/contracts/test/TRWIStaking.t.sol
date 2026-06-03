@@ -21,6 +21,8 @@ contract TRWIStakingTest is Test {
     bytes32 internal constant SCHEMA = keccak256("ImpactClaim");
     bytes32 internal constant UID1 = bytes32(uint256(0x1));
 
+    event RewardRateChanged(uint256 bps);
+
     function setUp() public {
         // admin = this test contract → can grant roles without prank gymnastics
         eas = new MockEAS();
@@ -55,6 +57,13 @@ contract TRWIStakingTest is Test {
 
         vm.prank(ngo);
         trwi.setApprovalForAll(address(staking), true);
+    }
+
+    function test_SetBaseRewardRate_EmitsEvent() public {
+        vm.expectEmit(false, false, false, true, address(staking));
+        emit RewardRateChanged(2000);
+        staking.setBaseRewardRate(2000); // admin = this test contract
+        assertEq(staking.baseRewardRateBps(), 2000);
     }
 
     function test_StakeAccrueClaim() public {

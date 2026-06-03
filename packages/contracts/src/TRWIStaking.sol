@@ -56,6 +56,7 @@ contract TRWIStaking is IERC1155Receiver, AccessControl, ReentrancyGuard {
     );
     event Claimed(uint256 indexed stakeId, address indexed owner, uint256 reward);
     event Unstaked(uint256 indexed stakeId, address indexed owner, uint256 tokenId, uint256 amount);
+    event RewardRateChanged(uint256 bps);
 
     error NotStakeOwner();
     error StillLocked();
@@ -148,6 +149,7 @@ contract TRWIStaking is IERC1155Receiver, AccessControl, ReentrancyGuard {
 
     function setBaseRewardRate(uint256 bps) external onlyRole(ADMIN_ROLE) {
         baseRewardRateBps = bps;
+        emit RewardRateChanged(bps);
     }
 
     // ---- ERC1155 receiver ----

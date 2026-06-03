@@ -101,6 +101,7 @@ contract TRWI is
         if (royaltyReceiver != address(0)) _setTokenRoyalty(id, royaltyReceiver, royaltyBps);
 
         _mint(ngo, id, editions, "");
+        emit URI(metaURI, id); // ERC1155 metadata signal for indexers/marketplaces
         emit ImpactTokenized(id, ngo, iv, editions, easUID, metaURI);
     }
 
@@ -134,8 +135,11 @@ contract TRWI is
         return bytes(u).length != 0 ? u : super.uri(id);
     }
 
+    /// @notice Update a token's metadata URI. NOTE: metadata is admin-mutable post-mint — holders/buyers
+    ///         should verify the impact data at acquisition time, not trust lazy lookups. Emits ERC1155 URI.
     function setURI(uint256 id, string calldata newURI) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _uris[id] = newURI;
+        emit URI(newURI, id);
     }
 
     // ---- required overrides ----
@@ -157,4 +161,7 @@ contract TRWI is
     }
 
     function _authorizeUpgrade(address) internal override onlyRole(UPGRADER_ROLE) {}
+
+    /// @dev Reserve storage for future upgrades (defensive; OZ v5 bases use namespaced storage).
+    uint256[50] private __gap;
 }

@@ -22,6 +22,8 @@ contract TRWITest is Test {
     bytes32 internal constant UID1 = bytes32(uint256(0x1));
     bytes32 internal TOKENIZER;
 
+    event URI(string value, uint256 indexed id);
+
     function setUp() public {
         eas = new MockEAS();
         TRWI impl = new TRWI();
@@ -79,6 +81,26 @@ contract TRWITest is Test {
         (address recv, uint256 amt) = trwi.royaltyInfo(1, 10_000);
         assertEq(recv, royaltyRecv);
         assertEq(amt, 500); // 5%
+    }
+
+    function test_MintImpact_EmitsUriEvent() public {
+        _setValid();
+        vm.expectEmit(true, false, false, true, address(trwi));
+        emit URI("ipfs://meta1", 1);
+        vm.prank(tokenizer);
+        trwi.mintImpact(UID1, 100, address(0), 0);
+    }
+
+    function test_SetURI_EmitsUriEvent() public {
+        _setValid();
+        vm.prank(tokenizer);
+        trwi.mintImpact(UID1, 100, address(0), 0);
+
+        vm.expectEmit(true, false, false, true, address(trwi));
+        emit URI("ipfs://updated", 1);
+        vm.prank(admin);
+        trwi.setURI(1, "ipfs://updated");
+        assertEq(trwi.uri(1), "ipfs://updated");
     }
 
     function test_Retire() public {
