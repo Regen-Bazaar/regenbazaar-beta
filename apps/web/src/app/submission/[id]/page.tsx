@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
-import { impactSubmissions } from "@rb/db/schema";
+import { desc, eq } from "drizzle-orm";
+import { impactSubmissions, verifications } from "@rb/db/schema";
 import { getDb } from "../../../lib/db";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +40,13 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
   const [s] = await db.select().from(impactSubmissions).where(eq(impactSubmissions.id, id)).limit(1);
   if (!s) notFound();
 
+  const [lastReview] = await db
+    .select()
+    .from(verifications)
+    .where(eq(verifications.submissionId, id))
+    .orderBy(desc(verifications.createdAt))
+    .limit(1);
+
   const iv = s.ivResult as IVResult;
   const tags = (s.frameworkTags as { sdg: string[]; ebf: string[] } | null) ?? { sdg: [], ebf: [] };
 
@@ -64,6 +71,19 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
           <Section title="Report">
             <p className="text-paper/80">{s.description}</p>
           </Section>
+          {lastReview?.note && (
+            <Section title="Validator note">
+              <div
+                className={`rounded-md border px-3 py-2 text-sm ${
+                  lastReview.decision === "reject"
+                    ? "border-red-500/30 bg-red-500/10 text-red-200"
+                    : "border-gold/20 bg-ink-soft/50 text-paper/80"
+                }`}
+              >
+                <span className="capitalize">{lastReview.decision.replace(/_/g, " ")}</span> — {lastReview.note}
+              </div>
+            </Section>
+          )}
           {Array.isArray(s.mediaUris) && (s.mediaUris as string[]).length > 0 && (
             <Section title="Evidence">
               <div className="grid grid-cols-3 gap-2">

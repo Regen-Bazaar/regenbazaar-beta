@@ -16,6 +16,7 @@ export default function Verify() {
   const [subs, setSubs] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  const [notes, setNotes] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -33,7 +34,7 @@ export default function Verify() {
     await fetch("/api/verifications", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ submissionId: id, decision }),
+      body: JSON.stringify({ submissionId: id, decision, note: notes[id]?.trim() || undefined }),
     });
     setBusy(null);
     await load();
@@ -75,7 +76,14 @@ export default function Verify() {
                   <div className="text-xl font-bold text-gold">{Number(s.ivValue ?? 0).toLocaleString()}</div>
                 </div>
               </div>
-              <div className="mt-4 flex gap-3">
+              <textarea
+                value={notes[s.id] ?? ""}
+                onChange={(e) => setNotes((n) => ({ ...n, [s.id]: e.target.value }))}
+                rows={2}
+                placeholder="Optional note / reason (required-by-convention for rejections)"
+                className="mt-4 w-full rounded-md border border-gold/15 bg-ink-soft px-3 py-2 text-sm outline-none focus:border-gold"
+              />
+              <div className="mt-3 flex gap-3">
                 <button
                   onClick={() => decide(s.id, "approve")}
                   disabled={busy === s.id}
