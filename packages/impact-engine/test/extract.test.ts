@@ -21,6 +21,18 @@ test("extracts across the impact spectrum", () => {
   assert.equal(got.students_taught, 200);
 });
 
+test("extracts expanded taxonomy actions", () => {
+  const got = byType(
+    "We planted 500 mangroves, administered 1,200 vaccinations, created 30 jobs, and mobilized 80 volunteers.",
+  );
+  assert.equal(got.mangroves_planted, 500);
+  assert.equal(got.vaccinations_administered, 1200);
+  assert.equal(got.jobs_created, 30);
+  assert.equal(got.volunteers_mobilized, 80);
+  // mangroves must not also be counted as generic trees
+  assert.equal(got.trees_planted, undefined);
+});
+
 test("handles thousands separators", () => {
   const got = byType("We provided 12,000 meals.");
   assert.equal(got.meals_provided, 12000);

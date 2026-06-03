@@ -18,14 +18,9 @@ async function init(): Promise<DB> {
   const client = new PGlite(process.env.PGLITE_DIR ?? ".pglite-dev");
   await client.exec(DEV_SCHEMA_SQL);
   const db = drizzle(client, { schema }) as unknown as DB;
-  await db
-    .insert(schema.organizations)
-    .values({
-      walletAddress: "0x000000000000000000000000000000000000d3m0",
-      name: "Clean Phangan",
-      slug: "clean-phangan",
-    })
-    .onConflictDoNothing();
+  // Idempotent demo seed (dev only): NGOs + verified/tokenized submissions across the impact spectrum.
+  const { seedDev } = await import("./dev-seed");
+  await seedDev(db);
   return db;
 }
 

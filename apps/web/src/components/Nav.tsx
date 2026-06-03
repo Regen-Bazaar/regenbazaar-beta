@@ -20,6 +20,9 @@ export function Nav() {
           <Link href="/leaderboard" className="text-paper/75 transition-colors hover:text-gold">
             Leaderboard
           </Link>
+          <Link href="/methodology" className="text-paper/75 transition-colors hover:text-gold">
+            Methodology
+          </Link>
           <Link href="/verify" className="text-paper/75 transition-colors hover:text-gold">
             Verify
           </Link>

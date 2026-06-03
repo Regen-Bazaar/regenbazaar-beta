@@ -45,6 +45,24 @@ test("unknown action types contribute zero", () => {
   assert.equal(r.breakdown.length, 0);
 });
 
+test("expanded taxonomy: schools_built scores with its SDG tags", () => {
+  const r = computeImpactValue([{ actionType: "schools_built", quantity: 2, unit: "schools" }]);
+  // 50 aw * 2 * 1.0 sm(<100) = 100 ; education domain -> no ESM, no EBF
+  assert.equal(r.impactValue, 100);
+  assert.deepEqual(r.frameworkTags.sdg, ["SDG-4", "SDG-9"]);
+  assert.deepEqual(r.frameworkTags.ebf, []);
+});
+
+test("expanded taxonomy: mangroves in a coral reef get ESM + blue-carbon EBF tags", () => {
+  const r = computeImpactValue([{ actionType: "mangroves_planted", quantity: 1000, unit: "trees" }], {
+    regionCode: "coral_reef",
+  });
+  // 0.15 aw * 1000 * 1.5 sm(>=500) * 1 tbv * 1.5 esm(coral_reef) * 1 pim * 1 acdm = 337.5
+  assert.equal(r.impactValue, 337.5);
+  assert.deepEqual(r.frameworkTags.sdg, ["SDG-13", "SDG-14", "SDG-15"]);
+  assert.deepEqual(r.frameworkTags.ebf, ["biodiversity", "carbon", "water"]);
+});
+
 test("multipliers: density, complexity and period apply", () => {
   const complexity: ComplexityAnswers = {
     technicalExpertise: "high", // 1.5

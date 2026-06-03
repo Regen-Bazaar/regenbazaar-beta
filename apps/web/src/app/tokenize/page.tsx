@@ -217,7 +217,10 @@ export default function Tokenize() {
           <div className="rounded-xl border border-gold/25 bg-ink-soft/60 p-6">
             <div className="text-xs uppercase tracking-wide text-paper/55">Impact Value (live)</div>
             <div className="mt-1 text-5xl font-bold text-gold">{iv.impactValue.toLocaleString()}</div>
-            <div className="mt-1 text-[11px] text-paper/45">platform-assessed (beta) · not third-party certified · {iv.tablesVersion}</div>
+            <div className="mt-1 text-[11px] text-paper/45">
+              platform-assessed (beta) · not third-party certified ·{" "}
+              <a href="/methodology" className="underline hover:text-gold">{iv.tablesVersion}</a>
+            </div>
 
             <div className="mt-5">
               <div className="mb-2 text-xs uppercase tracking-wide text-paper/55">Frameworks</div>
