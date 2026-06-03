@@ -1,23 +1,27 @@
 import Link from "next/link";
+import { desc } from "drizzle-orm";
+import { impactSubmissions } from "@rb/db/schema";
+import { getDb } from "../../lib/db";
 
-// Mock data for the UI preview (real data comes from /api once a DB is connected).
-const SUBMISSIONS = [
-  { title: "Beach reforestation & cleanup — Koh Phangan", domain: "environment", iv: 1287.5, status: "tokenized", tags: ["SDG-13", "SDG-15"] },
-  { title: "Street dog rescue & sterilization", domain: "animal_welfare", iv: 342, status: "verified", tags: ["SDG-15"] },
-  { title: "After-school STEM program", domain: "education", iv: 96, status: "pending_verification", tags: ["SDG-4"] },
-  { title: "Community kitchen — monthly meals", domain: "poverty", iv: 60, status: "draft", tags: ["SDG-1", "SDG-2"] },
-];
+export const dynamic = "force-dynamic";
 
 const STATUS_STYLES: Record<string, string> = {
   draft: "bg-paper/10 text-paper/60",
+  scored: "bg-paper/10 text-paper/60",
   pending_verification: "bg-gold/20 text-gold",
   verified: "bg-green/40 text-paper",
   tokenized: "bg-green-soft/50 text-paper",
   rejected: "bg-red-500/20 text-red-300",
 };
 
-export default function Dashboard() {
-  const totalIV = SUBMISSIONS.reduce((s, x) => s + x.iv, 0);
+type Tags = { sdg: string[]; ebf: string[] } | null;
+
+export default async function Dashboard() {
+  const db = await getDb();
+  const rows = await db.select().from(impactSubmissions).orderBy(desc(impactSubmissions.createdAt)).limit(100);
+  const totalIV = rows.reduce((s, r) => s + Number(r.ivValue ?? 0), 0);
+  const tokenized = rows.filter((r) => r.status === "tokenized").length;
+
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
       <div className="flex items-end justify-between">
@@ -31,38 +35,48 @@ export default function Dashboard() {
       </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
-        <Stat label="Submissions" value={String(SUBMISSIONS.length)} />
+        <Stat label="Submissions" value={String(rows.length)} />
         <Stat label="Total Impact Value" value={totalIV.toLocaleString()} accent />
-        <Stat label="Tokenized" value={String(SUBMISSIONS.filter((s) => s.status === "tokenized").length)} />
+        <Stat label="Tokenized" value={String(tokenized)} />
       </div>
 
-      <div className="mt-10 overflow-hidden rounded-xl border border-gold/15">
-        {SUBMISSIONS.map((s, i) => (
-          <div
-            key={s.title}
-            className={`flex items-center justify-between gap-4 px-5 py-4 ${i ? "border-t border-gold/10" : ""}`}
-          >
-            <div className="min-w-0">
-              <div className="truncate font-medium">{s.title}</div>
-              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-paper/50">
-                <span className="capitalize">{s.domain.replace(/_/g, " ")}</span>
-                {s.tags.map((t) => (
-                  <span key={t} className="rounded-full bg-green/25 px-2 py-0.5 text-paper/80">{t}</span>
-                ))}
-              </div>
-            </div>
-            <div className="flex items-center gap-5">
-              <div className="text-right">
-                <div className="text-xs text-paper/45">Impact Value</div>
-                <div className="font-semibold text-gold">{s.iv.toLocaleString()}</div>
-              </div>
-              <span className={`rounded-full px-3 py-1 text-xs ${STATUS_STYLES[s.status]}`}>
-                {s.status.replace(/_/g, " ")}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
+      {rows.length === 0 ? (
+        <div className="mt-10 rounded-xl border border-gold/15 bg-ink-soft/40 p-10 text-center text-paper/60">
+          No submissions yet. <Link href="/tokenize" className="text-gold underline">Tokenize your first impact</Link>.
+        </div>
+      ) : (
+        <div className="mt-10 overflow-hidden rounded-xl border border-gold/15">
+          {rows.map((s, i) => {
+            const tags = s.frameworkTags as Tags;
+            return (
+              <Link
+                key={s.id}
+                href={`/submission/${s.id}`}
+                className={`flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-ink-soft/40 ${i ? "border-t border-gold/10" : ""}`}
+              >
+                <div className="min-w-0">
+                  <div className="truncate font-medium">{s.title}</div>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-paper/50">
+                    {s.domain && <span className="capitalize">{s.domain.replace(/_/g, " ")}</span>}
+                    {tags?.sdg.slice(0, 4).map((t) => (
+                      <span key={t} className="rounded-full bg-green/25 px-2 py-0.5 text-paper/80">{t}</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center gap-5">
+                  <div className="text-right">
+                    <div className="text-xs text-paper/45">Impact Value</div>
+                    <div className="font-semibold text-gold">{Number(s.ivValue ?? 0).toLocaleString()}</div>
+                  </div>
+                  <span className={`rounded-full px-3 py-1 text-xs ${STATUS_STYLES[s.status] ?? ""}`}>
+                    {s.status.replace(/_/g, " ")}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </main>
   );
 }
