@@ -1,0 +1,30 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# next / build
+.next/
+out/
+dist/
+build/
+
+# env / secrets (NEVER commit)
+.env
+.env.*
+!.env.example
+
+# foundry
+packages/contracts/out/
+packages/contracts/cache/
+packages/contracts/broadcast/
+packages/contracts/lib/
+
+# ponder
+apps/indexer/.ponder/
+generated/
+
+# misc
+.DS_Store
+*.log
+coverage/
+*.tsbuildinfo

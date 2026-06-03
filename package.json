@@ -1,0 +1,18 @@
+{
+  "name": "regenbazaar",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@9.15.5",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "web:dev": "pnpm --filter web dev",
+    "web:build": "pnpm --filter web build",
+    "indexer:dev": "pnpm --filter indexer dev",
+    "db:generate": "pnpm --filter @rb/db generate",
+    "db:migrate": "pnpm --filter @rb/db migrate",
+    "contracts:build": "forge build --root packages/contracts",
+    "contracts:test": "forge test --root packages/contracts"
+  }
+}
