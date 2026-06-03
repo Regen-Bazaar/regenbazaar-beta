@@ -1,0 +1,18 @@
+{
+  "network": "celo-sepolia",
+  "chainId": 11142220,
+  "startBlock": 27205954,
+  "deployer": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB",
+  "schemaUID": "0x836d37174fff1eb2e5a2af8d20d87a908283eec088e38cf21cedaaa9a2658633",
+  "impactClaimSchema": "address ngo,uint256 impactValue,string metadataURI",
+  "explorer": "https://celo-sepolia.blockscout.com",
+  "contracts": {
+    "SchemaRegistry": "0xd58120Aa88783867f6F29498754E399fd3033eDa",
+    "EAS": "0x142dFB78c9DFDb447Fad7e327B139Bb622c81c1c",
+    "AuthorizedAttesterResolver": "0xabF828ea9CdF3c6cE95E97BC5E882b29880CeDc1",
+    "REBAZ": "0x8e5F9e9E67688F75D4303a5395F78ff1E3B71975",
+    "TRWIProxy": "0xa511F92336d9DcBe62caEA46F82DcaFa82BC3E65",
+    "TRWIImpl": "0xa5fDaaDA7eFE882a4C957b0839064F7B8fef2ec9",
+    "TRWIStaking": "0x665C8964Be8cA3C1F429Aee75Ebe709FF67ef2C1"
+  }
+}
