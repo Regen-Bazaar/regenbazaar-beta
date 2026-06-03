@@ -1,0 +1,61 @@
+# Decisions log
+
+Append-only record of significant choices, why we made them, and the trade-offs accepted.
+
+## 2026-06 — Build a new beta dApp (not revive the old MVP)
+- **What:** Start a fresh monorepo instead of reviving `Demo-Regen-Bazaar` (Vite MVP) or `dapp`.
+- **Why:** The three old repos (dapp ↔ Supabase, backend ↔ Mongo, contracts ↔ dead Celo Alfajores) were
+  never integrated; dependencies were 12–16 months stale; Alfajores was sunset. Re-assembling them was
+  more work than a clean, reuse-first build.
+- **Trade-off:** Lose the old UI; gain a coherent, current, testable foundation.
+
+## 2026-06 — Reuse-first, custom only the moat
+- **What:** Use battle-tested OSS/ecosystem primitives (EAS, Hypercerts, thirdweb, Privy, Allo…) and
+  custom-build only the **AI Impact-Value engine** and the **$REBAZ** token.
+- **Why:** Less code to maintain, more trust, easier grants/promotion, ecosystem interoperability.
+- **Trade-off:** Dependence on external SDKs (some early-stage, e.g. Hypercerts) — mitigated by a plain
+  ERC-1155 fallback.
+
+## 2026-06 — LLM extracts, deterministic formula scores
+- **What:** The language model only parses free text into structured actions. A pure, versioned formula
+  computes Impact Value. The LLM is never in the scoring path.
+- **Why:** Auditability and anti-gaming. The same report always produces the same score; nobody can argue
+  a number up with wording. Methodology is published at `/methodology`.
+- **Trade-off:** The formula's seed weights are not yet expert-calibrated (labelled "platform-assessed,
+  not certified").
+
+## 2026-06 — DeepSeek as the LLM (not Anthropic)
+- **What:** Swapped the LLM extractor from Anthropic to **DeepSeek** (OpenAI-compatible, function-calling).
+- **Why:** Owner already has a DeepSeek API key across other projects; same capability for this task.
+- **How:** OpenAI SDK pointed at `api.deepseek.com`; the prompt constrains output to the engine's canonical
+  action keys so it scores correctly; a deterministic keyword parser is the fallback. Server-side only.
+- **Trade-off:** None material; provider is swappable (the extractor is one file behind an interface).
+
+## 2026-06 — tRWI = ERC-1155 with fractional editions
+- **What:** One verified impact mints as ERC-1155 with the Impact Value split across editions.
+- **Why:** A single real-world impact has many funders and tiers; fractional editions avoid
+  double-counting and allow "retire to claim offset".
+- **Trade-off:** Staking and marketplace must be ERC-1155-aware (handled).
+
+## 2026-06 — Local dev with no Docker (PGlite + Foundry + Node)
+- **What:** Development runs entirely in-process: PGlite for Postgres, Foundry for contracts, Node/tsx.
+- **Why:** Fast iteration, no infrastructure to manage; the server is a deploy target, not a dev box.
+- **Trade-off:** A second DB code path (dev schema snapshot) that must be kept in sync with migrations.
+
+## 2026-06 — Network = Celo Sepolia
+- **What:** Beta targets Celo Sepolia (chainId 11142220).
+- **Why:** Celo Alfajores was sunset; Sepolia is live with ERC-4337 EntryPoint deployed (gasless feasible).
+  EAS/Hypercerts will be self-deployed there.
+- **Trade-off:** Some ecosystem contracts exist only on Celo mainnet → we deploy our own instances on testnet.
+
+## 2026-06 — Server = deploy target only; everything isolated as `regenbazaar_*`
+- **What:** The shared HelpRent VPS receives containers via Docker, fully namespaced and on its own
+  network/volume, behind a new nginx server block. We never develop on the live box.
+- **Why:** The VPS runs HelpRent in production; a mistake there breaks someone's service.
+- **Trade-off:** Extra packaging discipline; deploy is gated on an explicit "go".
+
+## 2026-06 — Versioned reference tables; taxonomy expanded to v0.1
+- **What:** Expanded the action taxonomy across the full impact spectrum without changing existing
+  weights; bumped `TABLES_VERSION` to `v0.1-seed-2026-06`.
+- **Why:** Broader coverage (animals/education/poverty/social/health), while keeping historical scores stable.
+- **Trade-off:** Weights remain seed values pending expert calibration.
