@@ -64,6 +64,22 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
           <Section title="Report">
             <p className="text-paper/80">{s.description}</p>
           </Section>
+          {Array.isArray(s.mediaUris) && (s.mediaUris as string[]).length > 0 && (
+            <Section title="Evidence">
+              <div className="grid grid-cols-3 gap-2">
+                {(s.mediaUris as string[]).map((u) => (
+                  <a key={u} href={u} target="_blank" rel="noopener noreferrer" className="group block">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={u}
+                      alt="evidence"
+                      className="h-24 w-full rounded-md border border-gold/15 object-cover transition-opacity group-hover:opacity-80"
+                    />
+                  </a>
+                ))}
+              </div>
+            </Section>
+          )}
           <Section title="Recognised actions">
             <div className="space-y-2">
               {(iv?.breakdown ?? []).map((b) => (

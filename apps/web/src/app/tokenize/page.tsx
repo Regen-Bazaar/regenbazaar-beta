@@ -53,6 +53,11 @@ export default function Tokenize() {
     regulatory: "low",
     environmentalConditions: "challenging",
   });
+  const [mediaText, setMediaText] = useState("");
+  const mediaUris = mediaText
+    .split(/[\n,]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
 
   const iv = useMemo(
     () =>
@@ -85,6 +90,7 @@ export default function Tokenize() {
           title,
           description,
           domain,
+          mediaUris,
           context: { regionCode, populationDensity: density, complexity, periodStart, periodEnd },
         }),
       });
@@ -187,6 +193,20 @@ export default function Tokenize() {
                 <Select value={complexity.environmentalConditions} onChange={setC("environmentalConditions")} options={["easy", "moderate", "challenging"]} />
               </div>
             </div>
+          </div>
+
+          <div>
+            <Label>Media (optional) — photo/video URLs, one per line</Label>
+            <textarea
+              value={mediaText}
+              onChange={(e) => setMediaText(e.target.value)}
+              rows={2}
+              placeholder="https://…/photo1.jpg"
+              className="w-full rounded-md border border-gold/20 bg-ink-soft px-3 py-2 text-sm outline-none focus:border-gold"
+            />
+            {mediaUris.length > 0 && (
+              <p className="mt-1 text-xs text-paper/45">{mediaUris.length} link(s) attached</p>
+            )}
           </div>
 
           <div className="space-y-3">
