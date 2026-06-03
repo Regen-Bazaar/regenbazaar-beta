@@ -1,15 +1,19 @@
 @import "tailwindcss";
 
-:root {
-  --ink: #25150d;
-  --gold: #bd9e48;
-  --green: #3f6c3b;
-  --paper: #f7f3e4;
+@theme {
+  --color-ink: #25150d;
+  --color-ink-soft: #1b0f08;
+  --color-gold: #bd9e48;
+  --color-gold-soft: #d8b85a;
+  --color-green: #3f6c3b;
+  --color-green-soft: #5a8a52;
+  --color-paper: #f7f3e4;
+  --font-serif: "EB Garamond", ui-serif, Georgia, serif;
 }
 
 html,
 body {
-  background: var(--ink);
-  color: var(--paper);
-  font-family: ui-serif, "EB Garamond", Georgia, serif;
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+  font-family: var(--font-serif);
 }
