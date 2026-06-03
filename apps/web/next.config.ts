@@ -1,7 +1,33 @@
 import type { NextConfig } from "next";
 import { fileURLToPath } from "node:url";
 
+// Permissive enough not to break Next/RSC, strict enough to add real defense.
+// img-src allows https: so externally-hosted impact evidence images render.
+const csp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "frame-ancestors 'self'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join("; ");
+
+const securityHeaders = [
+  { key: "Content-Security-Policy", value: csp },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "X-DNS-Prefetch-Control", value: "on" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+];
+
 const nextConfig: NextConfig = {
+  async headers() {
+    return [{ source: "/:path*", headers: securityHeaders }];
+  },
   // Self-contained server bundle for the Docker image (apps/web/.next/standalone/…/server.js).
   output: "standalone",
   // Monorepo root, so file tracing pulls in the workspace packages' files for the standalone output.

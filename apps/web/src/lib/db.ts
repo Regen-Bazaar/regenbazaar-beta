@@ -13,7 +13,7 @@ async function init(): Promise<DB> {
   // Local dev (no Docker): in-process PGlite seeded from the schema snapshot. Resets on dev-server restart.
   const { PGlite } = await import("@electric-sql/pglite");
   const { drizzle } = await import("drizzle-orm/pglite");
-  const { DEV_SCHEMA_SQL } = await import("./dev-schema");
+  const { DEV_SCHEMA_SQL } = await import("@rb/db/dev-schema");
   // Persistent file so data survives Next-dev module re-evaluation between requests.
   const client = new PGlite(process.env.PGLITE_DIR ?? ".pglite-dev");
   await client.exec(DEV_SCHEMA_SQL);

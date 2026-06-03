@@ -6,19 +6,20 @@
   "exports": {
     ".": "./src/index.ts",
     "./schema": "./src/schema.ts",
-    "./testing": "./src/testing.ts"
+    "./testing": "./src/testing.ts",
+    "./dev-schema": "./src/dev-schema.ts"
   },
   "scripts": {
     "generate": "drizzle-kit generate",
     "migrate": "node --experimental-strip-types src/migrate.ts",
-    "test": "node --experimental-strip-types --test test/db.test.ts"
+    "test": "node --experimental-strip-types --test test/db.test.ts test/dev-schema-drift.test.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.2.0",
-    "drizzle-orm": "^0.36.0",
+    "drizzle-orm": "^0.45.2",
     "postgres": "^3.4.9"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.28.0"
+    "drizzle-kit": "^0.30.0"
   }
 }

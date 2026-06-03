@@ -2,13 +2,13 @@
 
 Things that work but are brittle, edge cases not yet handled, and debt taken on knowingly.
 
-## Dev schema snapshot can drift from migrations
-- `apps/web/src/lib/dev-schema.ts` is a hand-maintained SQL snapshot used by the local PGlite dev DB.
-  The production path uses real Drizzle migrations (`packages/db/migrations`). If you change the schema in
-  `packages/db/src/schema.ts`, you must update **both** the migration (via `pnpm db:generate`) and the dev
-  snapshot, or dev and prod diverge.
-- _Better fix later:_ apply the real migrations to PGlite in dev too (the test helper already does this),
-  removing the hand-maintained snapshot.
+## Dev schema snapshot is a separate code path (now guarded)
+- The local PGlite dev DB applies an inline SQL snapshot (`@rb/db` `dev-schema`) instead of the real
+  Drizzle migrations (to keep the migrations folder out of the web bundle). If you change
+  `packages/db/src/schema.ts`, update **both** the migration (`pnpm db:generate`) and `src/dev-schema.ts`.
+- This is now guarded: `packages/db` `dev-schema-drift` test introspects both schemas and fails if they
+  diverge. So drift is caught by CI rather than discovered at runtime.
+- _Better fix later:_ apply the real migrations to PGlite in dev too, removing the snapshot entirely.
 
 ## IV reference tables are seed values, not certified
 - Weights and multipliers in `impact-engine/src/tables.ts` are placeholders spanning the full spectrum.
@@ -46,6 +46,13 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   submodule. A fresh clone must run `bash packages/contracts/scripts/install-deps.sh` before building
   contracts (CI does this). forge-std is pinned to v1.9.6 in that script; the local working copy is
   1.16.1 — standard cheatcodes are stable across both, but bump the pin if a newer cheatcode is needed.
+
+## Dependency audit status
+- The HIGH advisory (drizzle-orm SQL injection via SQL identifiers, GHSA-gpj5-g38j-94v9) is **fixed** —
+  drizzle-orm bumped to ^0.45.2 across `@rb/db` and `apps/web`; all tests green on the new version.
+- Remaining `pnpm audit` findings are **moderate, dev/build-tooling only** (esbuild dev-server, postcss
+  build-time stringify) — pulled transitively via Next/tailwind, not reachable in the production runtime.
+  Accepted for beta; revisit on a Next/Tailwind bump.
 
 ## Operational reminders
 - Rotate the GitHub `admin:org` token used during earlier org operations (it appeared in chat).

@@ -1,6 +1,7 @@
 // Schema snapshot applied to the in-process PGlite dev DB (no Docker). Mirrors
-// packages/db/migrations/0000_*.sql — regenerate this string if the schema changes.
-// `--> statement-breakpoint` lines are SQL comments and are ignored by PGlite.exec().
+// packages/db/migrations/0000_*.sql. The `dev-schema-drift` test asserts this stays structurally
+// identical to the migrations, so it cannot silently diverge. `--> statement-breakpoint` lines are
+// SQL comments ignored by PGlite.exec(). CREATE TYPE is wrapped to be idempotent on a persistent dev DB.
 
 export const DEV_SCHEMA_SQL = `
 DO $$ BEGIN CREATE TYPE "public"."impact_domain" AS ENUM('environment','animal_welfare','education','poverty','social','health'); EXCEPTION WHEN duplicate_object THEN null; END $$;
