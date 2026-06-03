@@ -101,8 +101,13 @@ later phases, not yet wired.
 - **Secrets** — never commit `.env`. Keys live only in server environment. The browser never sees them.
 
 ## 8. What's done vs. pending
-- **Done & tested locally:** the scoring engine, the database layer, the full submit→verify→marketplace
-  →leaderboard flow, the DeepSeek extractor, the smart contracts (40 automated tests passing).
-- **Built, not yet validated:** the Docker/nginx deploy artifacts (need a Docker host).
-- **Pending (needs a funded deployer key + your "go"):** deploying contracts to Celo Sepolia, wiring the
-  on-chain mint/marketplace, the blockchain indexer, embedded-wallet onboarding, and the actual VPS deploy.
+- **Done & live on Celo Sepolia testnet:** scoring engine, database layer, DeepSeek extractor, smart
+  contracts (deployed + Blockscout-verified, 29 tests), the **full on-chain mint** (approve → IPFS pin →
+  EAS attest → fractional tRWI; minted tokenId 1 & 2), and the **Ponder indexer** (indexes real mints).
+  Web app runs locally with the complete submit→verify→tokenize→marketplace→leaderboard flow.
+- **Code-ready, not yet run:** the Docker/compose deploy stack (web + indexer + IPFS + Postgres), validated
+  at first VPS deploy.
+- **Pending (needs owner inputs — see HANDOVER.md):** marketplace buy/"Fund" (thirdweb Marketplace V3 +
+  non-crypto wallet onboarding), and the live VPS deploy ("go" + DNS).
+
+See `docs/HANDOVER.md` for the full list of what's needed from the owner and what happens next.

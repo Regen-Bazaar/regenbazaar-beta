@@ -59,3 +59,19 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   weights; bumped `TABLES_VERSION` to `v0.1-seed-2026-06`.
 - **Why:** Broader coverage (animals/education/poverty/social/health), while keeping historical scores stable.
 - **Trade-off:** Weights remain seed values pending expert calibration.
+
+## 2026-06 — Deployed core to Celo Sepolia + on-chain mint wiring (round 7)
+- **What:** Deployed the core (self-deployed EAS + SchemaRegistry, REBAZ, tRWI UUPS proxy, staking, attester
+  resolver) to Celo Sepolia and verified source on Blockscout. Wired the app: approve → pin metadata to IPFS
+  → EAS attest → mint fractional tRWI. Activated the Ponder indexer.
+- **Key decisions:**
+  - **On-chain `impactValue = IV × 1e18`** (the human IV is scaled to wei) so the staking reward math
+    (built for 1e18) is correct. Metadata keeps the human-readable IV. Caught during the plan double-check.
+  - **Self-host IPFS (kubo)** for metadata pinning (owner choice); a read gateway resolves CIDs. Broad
+    third-party resolvability can add a pinning service later without changing the token.
+  - **Indexer = Ponder** (reads `.env.local`, not `.env`); writes to Postgres schema `indexer`; the chain is
+    the source of truth, Postgres is the queryable index.
+  - **Operator = the deployer key for beta** (holds TOKENIZER+ATTESTER). Recommended: a separate operator key
+    with admin kept offline; mandatory before mainnet.
+- **Trade-off:** Deployer/operator is a single hot key (testnet burner, exposed in chat) — acceptable on
+  testnet, must rotate + move admin to a multisig before mainnet.

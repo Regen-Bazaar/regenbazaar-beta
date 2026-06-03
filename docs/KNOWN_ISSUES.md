@@ -54,6 +54,21 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   build-time stringify) — pulled transitively via Next/tailwind, not reachable in the production runtime.
   Accepted for beta; revisit on a Next/Tailwind bump.
 
+## On-chain / deploy (round 7)
+- **Public RPC is rate-limited.** The indexer + app use `forno.celo-sepolia.celo-testnet.org` (Ponder
+  warns). Use a provider RPC (Alchemy/dRPC/Infura) for production throughput.
+- **IPFS resolvability.** Metadata is pinned to a self-hosted kubo node; external readers (wallets/explorers)
+  resolve it only via our read gateway or the DHT. For broad reach, add a pinning service (Pinata/web3.storage)
+  later — the token's `ipfs://<cid>` does not change.
+- **Operator is a hot key.** The web server signs attest/mint with the operator key (= deployer for beta).
+  Use a dedicated operator key and keep admin offline; rotate + multisig before mainnet.
+- **Marketplace buy + non-crypto onboarding not built.** "Fund" needs thirdweb Marketplace V3 + an
+  embedded-wallet onboarding provider (client IDs pending from owner).
+- **Deploy artifacts not Docker-validated.** `deploy/` (compose: web+migrate+ipfs+indexer+postgres) is
+  code-ready but unrun on a Docker host; expect first-deploy iteration on the VPS.
+- **Ponder reads `.env.local`** (not `.env`); contract addresses + start blocks must be set there (or in the
+  process env) or it syncs from block 0.
+
 ## Operational reminders
 - Rotate the GitHub `admin:org` token used during earlier org operations (it appeared in chat).
 - Secrets (DeepSeek, deployer, DB) live only in server env / local `.env` files, never committed.
