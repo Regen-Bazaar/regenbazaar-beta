@@ -1,15 +1,14 @@
 // DB client factories.
 //  - createPgliteDb(): in-process Postgres (PGlite) for local dev/tests — no Docker needed.
-//  - production uses a real Postgres on the VPS; wire a node-postgres/postgres-js client here later,
-//    selected via env (DATABASE_URL). Schema + queries are identical (postgresql dialect).
+//  - createPostgresDb(): production Postgres (postgres-js), selected via DATABASE_URL.
+// Schema + queries are identical (postgresql dialect). The migration-applying test helper lives in
+// ./testing.ts (kept out of this module so app bundlers don't pull `new URL("../migrations", ...)`).
 
 import { drizzle } from "drizzle-orm/pglite";
 import { drizzle as drizzlePg } from "drizzle-orm/postgres-js";
-import { migrate } from "drizzle-orm/pglite/migrator";
 import { PGlite } from "@electric-sql/pglite";
 import postgres from "postgres";
 import type { PgDatabase } from "drizzle-orm/pg-core";
-import { fileURLToPath } from "node:url";
 import * as schema from "./schema.ts";
 
 // Driver-agnostic DB type: both the PGlite (dev) and postgres-js (prod) drivers return a PgDatabase
@@ -28,13 +27,5 @@ export function createPgliteDb(dataDir?: string) {
 export function createPostgresDb(url: string) {
   const client = postgres(url);
   const db = drizzlePg(client, { schema });
-  return { db, client };
-}
-
-/** Ephemeral in-memory DB with all migrations applied — for dev/tests (no Docker). */
-export async function createTestDb(): Promise<{ db: DB; client: PGlite }> {
-  const { db, client } = createPgliteDb();
-  const migrationsFolder = fileURLToPath(new URL("../migrations", import.meta.url));
-  await migrate(db, { migrationsFolder });
   return { db, client };
 }

@@ -69,6 +69,35 @@ export default function Tokenize() {
   const setC = (k: keyof ComplexityAnswers) => (v: string) =>
     setComplexity((c) => ({ ...c, [k]: v }) as ComplexityAnswers);
 
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState<{ id: string; status: string; impactValue: number } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    setSubmitting(true);
+    setError(null);
+    setResult(null);
+    try {
+      const res = await fetch("/api/submissions", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          title,
+          description,
+          domain,
+          context: { regionCode, populationDensity: density, complexity, periodStart, periodEnd },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+      setResult(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
       <h1 className="text-3xl font-bold">Tokenize impact</h1>
@@ -160,9 +189,27 @@ export default function Tokenize() {
             </div>
           </div>
 
-          <button className="rounded-md bg-gold px-5 py-3 font-semibold text-ink transition-colors hover:bg-gold-soft">
-            Submit for verification
-          </button>
+          <div className="space-y-3">
+            <button
+              onClick={submit}
+              disabled={submitting}
+              className="rounded-md bg-gold px-5 py-3 font-semibold text-ink transition-colors hover:bg-gold-soft disabled:opacity-50"
+            >
+              {submitting ? "Submitting…" : "Submit for verification"}
+            </button>
+            {result && (
+              <div className="rounded-md border border-green/40 bg-green/15 px-4 py-3 text-sm">
+                Submitted ✓ — status <b>{result.status.replace(/_/g, " ")}</b>, Impact Value{" "}
+                <b className="text-gold">{result.impactValue.toLocaleString()}</b>. Now in the{" "}
+                <a href="/verify" className="underline">verification queue</a>.
+              </div>
+            )}
+            {error && (
+              <div className="rounded-md border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                Error: {error}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* live IV preview */}

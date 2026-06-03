@@ -10,13 +10,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.2.0",
     "@rb/db": "workspace:*",
     "@rb/impact-engine": "workspace:*",
     "@rb/pipeline": "workspace:*",
     "drizzle-orm": "^0.36.0",
     "lucide-react": "^0.511.0",
-    "postgres": "^3.4.9",
     "next": "^15.5.16",
+    "postgres": "^3.4.9",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.2"

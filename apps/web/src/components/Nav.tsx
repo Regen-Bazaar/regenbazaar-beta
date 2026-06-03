@@ -17,6 +17,9 @@ export function Nav() {
           <Link href="/marketplace" className="text-paper/75 transition-colors hover:text-gold">
             Marketplace
           </Link>
+          <Link href="/verify" className="text-paper/75 transition-colors hover:text-gold">
+            Verify
+          </Link>
         </nav>
       </div>
     </header>

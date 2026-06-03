@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createTestDb } from "@rb/db";
+import { createTestDb } from "@rb/db/testing";
 import * as schema from "@rb/db/schema";
 import { processSubmission, sanitizeActions, createAnthropicExtractor } from "../src/index.ts";
 

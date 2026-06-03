@@ -1,11 +1,25 @@
 import { NextResponse } from "next/server";
 import { processSubmission, createAnthropicExtractor } from "@rb/pipeline";
-import { getDb } from "../../../lib/db";
+import { impactSubmissions } from "@rb/db/schema";
+import { desc, eq } from "drizzle-orm";
+import { getDb, getDemoOrgId } from "../../../lib/db";
 
 export const runtime = "nodejs";
 
-// POST /api/submissions — NGO submits an impact report; the server extracts (LLM or rule-based),
-// deterministically scores it, and persists it into the verification queue. Returns the IV + tags.
+// GET /api/submissions?status=pending_verification — list submissions (newest first).
+export async function GET(req: Request) {
+  const db = await getDb();
+  const status = new URL(req.url).searchParams.get("status");
+  const rows = await db
+    .select()
+    .from(impactSubmissions)
+    .where(status ? eq(impactSubmissions.status, status as never) : undefined)
+    .orderBy(desc(impactSubmissions.createdAt))
+    .limit(100);
+  return NextResponse.json(rows);
+}
+
+// POST /api/submissions — extract -> deterministically score -> persist into the verification queue.
 export async function POST(req: Request) {
   let body: Record<string, unknown>;
   try {
@@ -13,22 +27,19 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
-
-  if (
-    typeof body.orgId !== "string" ||
-    typeof body.title !== "string" ||
-    typeof body.description !== "string"
-  ) {
-    return NextResponse.json({ error: "orgId, title and description are required" }, { status: 422 });
+  if (typeof body.title !== "string" || typeof body.description !== "string") {
+    return NextResponse.json({ error: "title and description are required" }, { status: 422 });
   }
 
+  const db = await getDb();
+  const orgId = typeof body.orgId === "string" ? body.orgId : await getDemoOrgId(db);
   const extractor = process.env.ANTHROPIC_API_KEY ? createAnthropicExtractor() : undefined;
 
   try {
     const { submission, iv } = await processSubmission(
-      getDb(),
+      db,
       {
-        orgId: body.orgId,
+        orgId,
         title: body.title,
         description: body.description,
         domain: body.domain as never,
@@ -38,13 +49,7 @@ export async function POST(req: Request) {
       { extractor },
     );
     return NextResponse.json(
-      {
-        id: submission.id,
-        status: submission.status,
-        impactValue: iv.impactValue,
-        tablesVersion: iv.tablesVersion,
-        frameworkTags: iv.frameworkTags,
-      },
+      { id: submission.id, status: submission.status, impactValue: iv.impactValue, frameworkTags: iv.frameworkTags },
       { status: 201 },
     );
   } catch {
