@@ -1,0 +1,25 @@
+# Build context hygiene — keep the image small and never bake secrets or local state.
+**/node_modules
+**/.next
+**/.turbo
+**/dist
+**/coverage
+
+# Local dev DB state (PGlite) — must never enter the image
+**/.pglite-dev
+
+# Foundry contracts are not needed to build the web app (49M of vendored libs)
+packages/contracts
+
+# Secrets / env — never copy into the image (compose injects env at runtime)
+**/.env
+**/.env.*
+!**/.env.example
+
+# VCS / OS / editor
+.git
+.gitignore
+**/.DS_Store
+**/*.log
+.claude
+.vscode

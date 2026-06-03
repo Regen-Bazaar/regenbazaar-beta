@@ -1,0 +1,29 @@
+# Host nginx reverse proxy for the Regen Bazaar beta — a NEW server block, separate from HelpRent's.
+# Install on the VPS as /etc/nginx/sites-available/regenbazaar.conf, symlink into sites-enabled,
+# then:  sudo nginx -t  &&  sudo systemctl reload nginx
+# Replace app.regenbazaar.com with your chosen subdomain and WEB_PORT (default 8010) to match .env.
+#
+# Step 1 — start with this HTTP-only block so certbot can issue a cert:
+server {
+    listen 80;
+    listen [::]:80;
+    server_name app.regenbazaar.com;
+
+    # Allow media uploads from the tokenize flow.
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass http://127.0.0.1:8010;
+        proxy_http_version 1.1;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade           $http_upgrade;
+        proxy_set_header Connection        "upgrade";
+        proxy_read_timeout 60s;
+    }
+}
+
+# Step 2 — issue TLS:  sudo certbot --nginx -d app.regenbazaar.com
+# certbot rewrites this block to listen on 443 with the cert and adds an 80->443 redirect.

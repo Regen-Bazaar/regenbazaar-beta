@@ -1,0 +1,82 @@
+# Regen Bazaar beta — isolated stack for the shared HelpRent VPS.
+# Everything is namespaced `regenbazaar_*` with its own bridge network and volume; nothing here
+# touches HelpRent's containers/ports/nginx. The web port binds to 127.0.0.1 only — public traffic
+# reaches it solely through the host nginx reverse proxy (see deploy/nginx/regenbazaar.conf.example).
+#
+# Run from this directory:  docker compose --env-file .env up -d --build
+name: regenbazaar
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: regenbazaar_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - regenbazaar_pgdata:/var/lib/postgresql/data
+    networks: [regenbazaar_net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+    # No host port published — Postgres is reachable only inside regenbazaar_net.
+
+  # One-shot: apply Drizzle migrations, then exit. web waits for this to complete.
+  migrate:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: build
+    image: regenbazaar_build:latest
+    container_name: regenbazaar_migrate
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    command: ["pnpm", "--filter", "@rb/db", "migrate"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [regenbazaar_net]
+    restart: "no"
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: runtime
+    image: regenbazaar_web:latest
+    container_name: regenbazaar_web
+    environment:
+      NODE_ENV: production
+      HOSTNAME: "0.0.0.0"
+      PORT: "3000"
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+    ports:
+      # localhost-only bind; nginx on the host proxies the public subdomain to this.
+      - "127.0.0.1:${WEB_PORT:-8010}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks: [regenbazaar_net]
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+networks:
+  regenbazaar_net:
+    name: regenbazaar_net
+    driver: bridge
+
+volumes:
+  regenbazaar_pgdata:
+    name: regenbazaar_pgdata
