@@ -1,7 +1,20 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import localFont from "next/font/local";
 import { Nav } from "../components/Nav";
 import "./globals.css";
+
+// Brand fonts (self-hosted, from the landing site): EB Garamond = body serif, PP Acma = display.
+const ebGaramond = localFont({
+  src: "./fonts/eb-garamond.ttf",
+  variable: "--font-eb",
+  display: "swap",
+});
+const ppAcma = localFont({
+  src: "./fonts/pp-acma.ttf",
+  variable: "--font-acma",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Regen Bazaar",
@@ -11,7 +24,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${ebGaramond.variable} ${ppAcma.variable}`}>
       <body className="min-h-screen antialiased">
         <Nav />
         {children}

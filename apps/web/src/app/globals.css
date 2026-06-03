@@ -8,7 +8,8 @@
   --color-green: #3f6c3b;
   --color-green-soft: #5a8a52;
   --color-paper: #f7f3e4;
-  --font-serif: "EB Garamond", ui-serif, Georgia, serif;
+  --font-serif: var(--font-eb), "EB Garamond", ui-serif, Georgia, serif;
+  --font-display: var(--font-acma), var(--font-eb), "EB Garamond", serif;
 }
 
 html,
@@ -16,4 +17,10 @@ body {
   background-color: var(--color-ink);
   color: var(--color-paper);
   font-family: var(--font-serif);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
 }
