@@ -1,0 +1,17 @@
+{
+  "name": "@rb/pipeline",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "node --import tsx --test test/pipeline.test.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.100.1",
+    "@rb/db": "workspace:*",
+    "@rb/impact-engine": "workspace:*"
+  }
+}

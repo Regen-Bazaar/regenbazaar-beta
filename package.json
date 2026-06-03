@@ -14,5 +14,8 @@
     "db:migrate": "pnpm --filter @rb/db migrate",
     "contracts:build": "forge build --root packages/contracts",
     "contracts:test": "forge test --root packages/contracts"
+  },
+  "devDependencies": {
+    "tsx": "^4.22.4"
   }
 }

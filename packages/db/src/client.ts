@@ -4,7 +4,9 @@
 //    selected via env (DATABASE_URL). Schema + queries are identical (postgresql dialect).
 
 import { drizzle } from "drizzle-orm/pglite";
+import { migrate } from "drizzle-orm/pglite/migrator";
 import { PGlite } from "@electric-sql/pglite";
+import { fileURLToPath } from "node:url";
 import * as schema from "./schema.ts";
 
 export type DB = ReturnType<typeof drizzle<typeof schema>>;
@@ -13,5 +15,13 @@ export type DB = ReturnType<typeof drizzle<typeof schema>>;
 export function createPgliteDb(dataDir?: string): { db: DB; client: PGlite } {
   const client = new PGlite(dataDir);
   const db = drizzle(client, { schema });
+  return { db, client };
+}
+
+/** Ephemeral in-memory DB with all migrations applied — for dev/tests (no Docker). */
+export async function createTestDb(): Promise<{ db: DB; client: PGlite }> {
+  const { db, client } = createPgliteDb();
+  const migrationsFolder = fileURLToPath(new URL("../migrations", import.meta.url));
+  await migrate(db, { migrationsFolder });
   return { db, client };
 }
