@@ -41,6 +41,12 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
 ## Buyer dashboard / purchases absent
 - There is no buyer-side dashboard because purchases require the on-chain marketplace, which is pending.
 
+## Contract dependencies are fetched, not vendored
+- `packages/contracts/lib/` (OpenZeppelin, EAS, forge-std) is git-ignored, not committed and not a git
+  submodule. A fresh clone must run `bash packages/contracts/scripts/install-deps.sh` before building
+  contracts (CI does this). forge-std is pinned to v1.9.6 in that script; the local working copy is
+  1.16.1 — standard cheatcodes are stable across both, but bump the pin if a newer cheatcode is needed.
+
 ## Operational reminders
 - Rotate the GitHub `admin:org` token used during earlier org operations (it appeared in chat).
 - Secrets (DeepSeek, deployer, DB) live only in server env / local `.env` files, never committed.

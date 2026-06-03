@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  offchain:
+    name: Off-chain (engine, db, pipeline, web build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @rb/impact-engine test
+      - run: pnpm --filter @rb/db test
+      - run: pnpm --filter @rb/pipeline test
+      - run: pnpm --filter web build
+
+  contracts:
+    name: Contracts (Foundry)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+      - name: Fetch contract dependencies (pinned)
+        run: bash packages/contracts/scripts/install-deps.sh
+      - name: forge test
+        run: forge test --root packages/contracts -vvv

@@ -1,47 +1,66 @@
 # Regen Bazaar — beta dApp (monorepo)
 
 Marketplace for **tokenized real-world impact (tRWI)**: NGOs across the full impact spectrum
-(environment, animal welfare, education, poverty, social) capture impact, it's scored by a custom
-AI engine, tokenized on-chain, then funded by buyers. Product backbone: **Work → Tokenize →
-Evaluate → Fund**. Reuse-first: battle-tested ReFi/OSS primitives where possible; custom only where
-it's our moat (the AI Impact-Value engine and the $REBAZ token).
+(environment, animal welfare, education, poverty, social, health) report impact, a custom AI engine
+scores it, a human verifies it, it's tokenized on-chain, then funded by buyers (people **and** AI
+agents). Product backbone: **Work → Tokenize → Evaluate → Fund**. Reuse-first: battle-tested ReFi/OSS
+primitives where possible; custom only where it's the moat — the AI Impact-Value engine and the
+$REBAZ token.
 
 > Beta target network: **Celo Sepolia** (chainId 11142220). Audience: non-crypto users (embedded /
-> account-abstraction wallets, gasless). Status: early build.
+> account-abstraction wallets, gasless). Status: off-chain stack working locally; on-chain wiring and
+> deploy are pending a funded deployer key.
 
 ## Layout
-
 ```
 apps/
-  web/        Next.js 15 app (App Router). Seeded from the old `dapp` repo, UI being rebuilt.
-  indexer/    On-chain event indexer (Ponder/Envio) → Postgres. (to add)
+  web/        Next.js 15 app: tokenize, verify, dashboard, marketplace, leaderboard, methodology,
+              + APIs (/api/submissions, /api/verifications, public /api/impact for AI agents).
+  indexer/    Ponder on-chain event indexer → Postgres. Scaffold/template; activates after deploy.
 packages/
-  contracts/  Foundry project: $REBAZ token, ERC1155 tRWI + staking, deploy scripts
-              (self-deployed EAS + Hypercerts on Celo Sepolia). (in progress)
-  db/         Drizzle schema + migrations (Postgres). (to add)
+  impact-engine/  ★ The moat. Deterministic, versioned Impact-Value scoring (no dependencies).
+  pipeline/       submit → extract (DeepSeek LLM) → score → persist. Rule-based fallback.
+  db/             Drizzle schema + migrations; PGlite (dev) / postgres-js (prod) + migration runner.
+  contracts/      Foundry: $REBAZ (ERC20), tRWI (ERC1155 UUPS, fractional editions), staking,
+                  EAS attester resolver, unified deploy script.
+deploy/       Dockerfile + isolated compose + nginx + runbook for the VPS (code-ready).
+docs/         ARCHITECTURE.md · DECISIONS.md · KNOWN_ISSUES.md.
 ```
 
-## Architecture (target)
-- **Chain = source of truth** for ownership/sales/stakes. **Postgres** = indexed read-cache + off-chain
-  data (profiles, drafts, AI outputs, verification queue), written by the indexer.
-- **tRWI** = ERC-1155 (Hypercerts-compatible metadata), transferable, rich machine-readable attributes
-  (SDG / IRIS+ / EBF tags, quantity, geo, dates, EAS attestation UID) + image → human + AI-agent buyers.
-- **AI Impact-Value engine** (custom): LLM extraction of NGO free-text → deterministic, versioned,
-  auditable scoring (`IV = Σ(AW·SM·TBV·ESM·PIM·ACDM)`). LLM never scores; human confirms before mint.
-- **Onboarding**: ERC-4337 smart accounts + gasless paymaster (EntryPoint v0.6/0.7/0.8 live on Celo Sepolia).
-- **Verification**: EAS attestations (admin/AI-assisted in beta; decentralized validators later).
-- **Marketplace / staking / funding**: reuse thirdweb Marketplace V3, $REBAZ staking; Allo QF later.
-- **Storage**: Cloudflare R2 + CDN primary, self-hosted IPFS (kubo) backup, multi-gateway fallback.
+## Architecture
+- **Chain = source of truth** for ownership/sales/stakes (indexed into Postgres). **Postgres** = off-chain
+  data (profiles, submissions, verification queue, AI outputs) + the on-chain read-cache.
+- **AI Impact-Value engine** (custom): LLM extraction of NGO free text → deterministic, versioned,
+  auditable scoring `IV = Σ(AW·SM·TBV·ESM·PIM·ACDM)`. The LLM never scores; a human confirms before mint.
+  Methodology is published in-app at `/methodology`.
+- **tRWI** = ERC-1155 with fractional editions (Impact Value split across editions; retire to claim offset),
+  EAS-attestation-gated mint, ERC-2981 royalties.
+- **Onboarding** (later): ERC-4337 smart accounts + gasless paymaster (EntryPoint v0.6/0.7/0.8 live on Celo Sepolia).
+- **Storage** (later): Cloudflare R2 + CDN primary, self-hosted IPFS (kubo) backup.
 
 ## Toolchain
-pnpm workspaces · Next.js 15 / React 19 / Tailwind · Foundry (Solidity) · Drizzle · Ponder.
+pnpm workspaces · Next.js 15 / React 19 / Tailwind 4 · Foundry (Solidity 0.8.29) · Drizzle · PGlite · Ponder.
+Local development needs **no Docker** (in-process PGlite + Foundry + Node/tsx).
 
-## Dev
+## Run
 ```bash
 pnpm install
-pnpm contracts:build && pnpm contracts:test
-pnpm web:dev
+pnpm web:dev            # http://localhost:3000 — in-process PGlite, auto-seeded demo data
 ```
 
+## Test
+```bash
+bash packages/contracts/scripts/install-deps.sh   # one-time: fetch pinned Foundry deps into lib/
+pnpm contracts:test                        # Foundry: 26 tests
+pnpm --filter @rb/impact-engine test       # 12
+pnpm --filter @rb/db test                  # 1
+pnpm --filter @rb/pipeline test            # 4
+pnpm web:build                             # production build
+```
+
+## Configuration
 Secrets live only in `.env` (never committed); see each package's `.env.example`.
-Full plan: `~/.claude/plans/sprightly-twirling-crayon.md`.
+- `DEEPSEEK_API_KEY` (web) — optional; without it, extraction uses the deterministic rule-based fallback.
+- `DATABASE_URL` (web) — set to use Postgres; omit locally for the in-process dev DB.
+
+See `docs/ARCHITECTURE.md` for a plain-language overview and `docs/KNOWN_ISSUES.md` for current limitations.
