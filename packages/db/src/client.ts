@@ -18,16 +18,16 @@ import * as schema from "./schema.ts";
 export type DB = PgDatabase<any, typeof schema, any>;
 
 /** In-process Postgres (PGlite). Pass a path to persist, omit for ephemeral in-memory. Dev/tests only. */
-export function createPgliteDb(dataDir?: string): { db: DB; client: PGlite } {
+export function createPgliteDb(dataDir?: string) {
   const client = new PGlite(dataDir);
-  const db = drizzle(client, { schema }) as unknown as DB;
+  const db = drizzle(client, { schema });
   return { db, client };
 }
 
 /** Production Postgres client (postgres-js). Pass a DATABASE_URL. */
-export function createPostgresDb(url: string): { db: DB; client: ReturnType<typeof postgres> } {
+export function createPostgresDb(url: string) {
   const client = postgres(url);
-  const db = drizzlePg(client, { schema }) as unknown as DB;
+  const db = drizzlePg(client, { schema });
   return { db, client };
 }
 

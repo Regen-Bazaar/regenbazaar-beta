@@ -9,7 +9,8 @@ import {
   type ImpactContext,
   type LLMExtractor,
 } from "@rb/impact-engine";
-import { impactSubmissions, type DB } from "@rb/db";
+import { impactSubmissions } from "@rb/db/schema";
+import type { DB } from "@rb/db";
 
 export type SubmissionDomain =
   | "environment"
