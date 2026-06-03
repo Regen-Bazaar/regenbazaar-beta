@@ -16,6 +16,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Copy only manifests first so `pnpm install` is cached until deps change.
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY apps/web/package.json apps/web/package.json
+COPY apps/indexer/package.json apps/indexer/package.json
 COPY packages/db/package.json packages/db/package.json
 COPY packages/impact-engine/package.json packages/impact-engine/package.json
 COPY packages/pipeline/package.json packages/pipeline/package.json

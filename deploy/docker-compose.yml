@@ -95,6 +95,31 @@ services:
         limits:
           memory: 512M
 
+  # On-chain indexer (Ponder) — syncs contract events into Postgres (schema "indexer"); web reads them.
+  indexer:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: build
+    image: regenbazaar_build:latest
+    container_name: regenbazaar_indexer
+    command: ["pnpm", "--filter", "indexer", "start"]
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DATABASE_SCHEMA: indexer
+      PONDER_RPC_URL_11142220: ${CELO_SEPOLIA_RPC_URL:-https://forno.celo-sepolia.celo-testnet.org}
+      TRWI_ADDRESS: ${TRWI_ADDRESS}
+      TRWI_START_BLOCK: ${TRWI_START_BLOCK}
+      STAKING_ADDRESS: ${STAKING_ADDRESS}
+      STAKING_START_BLOCK: ${STAKING_START_BLOCK}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks: [regenbazaar_net]
+    restart: unless-stopped
+
 networks:
   regenbazaar_net:
     name: regenbazaar_net
