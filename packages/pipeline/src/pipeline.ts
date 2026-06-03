@@ -57,9 +57,18 @@ export function sanitizeActions(actions: unknown): ExtractedAction[] {
 }
 
 export async function processSubmission(db: DB, input: SubmissionInput, opts: ProcessOptions = {}) {
-  const actions: ExtractedAction[] = opts.extractor
-    ? sanitizeActions(await opts.extractor.extract(input.description))
-    : ruleBasedExtract(input.description);
+  let actions: ExtractedAction[];
+  if (opts.extractor) {
+    // LLM extraction, with a deterministic rule-based fallback on error or empty output.
+    try {
+      actions = sanitizeActions(await opts.extractor.extract(input.description));
+      if (actions.length === 0) actions = ruleBasedExtract(input.description);
+    } catch {
+      actions = ruleBasedExtract(input.description);
+    }
+  } else {
+    actions = ruleBasedExtract(input.description);
+  }
 
   const iv = computeImpactValue(actions, input.context ?? {});
 

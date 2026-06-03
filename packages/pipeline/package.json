@@ -10,8 +10,8 @@
     "test": "node --import tsx --test test/pipeline.test.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.100.1",
     "@rb/db": "workspace:*",
-    "@rb/impact-engine": "workspace:*"
+    "@rb/impact-engine": "workspace:*",
+    "openai": "^6.41.0"
   }
 }

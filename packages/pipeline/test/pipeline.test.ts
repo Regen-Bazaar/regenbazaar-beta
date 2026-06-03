@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createTestDb } from "@rb/db/testing";
 import * as schema from "@rb/db/schema";
-import { processSubmission, sanitizeActions, createAnthropicExtractor } from "../src/index.ts";
+import { processSubmission, sanitizeActions, createDeepSeekExtractor } from "../src/index.ts";
 
 test("processSubmission: extract -> score -> persist into verification queue", async () => {
   const { db } = await createTestDb();
@@ -56,8 +56,8 @@ test("LLM extractor path with sanitization of bad output", async () => {
   assert.equal((submission.extractedActions as unknown[]).length, 1);
 });
 
-test("anthropic extractor factory constructs (no network)", () => {
-  const ex = createAnthropicExtractor({ apiKey: "sk-test", model: "x" });
+test("deepseek extractor factory constructs (no network)", () => {
+  const ex = createDeepSeekExtractor({ apiKey: "sk-test", model: "deepseek-chat" });
   assert.equal(typeof ex.extract, "function");
 });
 

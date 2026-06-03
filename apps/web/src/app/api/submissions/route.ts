@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { processSubmission, createAnthropicExtractor } from "@rb/pipeline";
+import { processSubmission, createDeepSeekExtractor } from "@rb/pipeline";
 import { impactSubmissions } from "@rb/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { getDb, getDemoOrgId } from "../../../lib/db";
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
   const db = await getDb();
   const orgId = typeof body.orgId === "string" ? body.orgId : await getDemoOrgId(db);
-  const extractor = process.env.ANTHROPIC_API_KEY ? createAnthropicExtractor() : undefined;
+  const extractor = process.env.DEEPSEEK_API_KEY ? createDeepSeekExtractor() : undefined;
 
   try {
     const { submission, iv } = await processSubmission(

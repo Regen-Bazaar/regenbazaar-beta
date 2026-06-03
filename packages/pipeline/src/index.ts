@@ -1,2 +1,2 @@
 export * from "./pipeline.ts";
-export * from "./extractor-anthropic.ts";
+export * from "./extractor-deepseek.ts";
