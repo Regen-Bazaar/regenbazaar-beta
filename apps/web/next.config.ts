@@ -38,6 +38,17 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["@electric-sql/pglite", "postgres"],
   // ESLint not configured for the new app yet; lint is run separately.
   eslint: { ignoreDuringBuilds: true },
+  // wagmi/walletconnect connectors reference optional React-Native / pretty-logging deps we don't use
+  // in the browser — externalize them so the build doesn't warn about unresolved optional modules.
+  webpack: (config) => {
+    config.externals = [...(config.externals ?? []), "pino-pretty", "lokijs", "encoding"];
+    config.resolve = config.resolve ?? {};
+    config.resolve.fallback = {
+      ...(config.resolve.fallback ?? {}),
+      "@react-native-async-storage/async-storage": false,
+    };
+    return config;
+  },
 };
 
 export default nextConfig;

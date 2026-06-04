@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ConnectButton } from "./ConnectButton";
 
 const LINKS = [
   { href: "/dashboard", label: "Dashboard" },
@@ -17,17 +18,20 @@ export function Nav() {
           Regen <span className="text-gold">Bazaar</span>
         </Link>
 
-        {/* desktop */}
-        <nav className="hidden gap-7 text-sm sm:flex">
-          {LINKS.map((l) => (
-            <Link key={l.href} href={l.href} className="text-paper/75 transition-colors hover:text-gold">
-              {l.label}
-            </Link>
-          ))}
-        </nav>
+        <div className="flex items-center gap-4">
+          {/* desktop */}
+          <nav className="hidden gap-7 text-sm sm:flex">
+            {LINKS.map((l) => (
+              <Link key={l.href} href={l.href} className="text-paper/75 transition-colors hover:text-gold">
+                {l.label}
+              </Link>
+            ))}
+          </nav>
 
-        {/* mobile (no-JS disclosure) */}
-        <details className="relative sm:hidden">
+          <ConnectButton />
+
+          {/* mobile (no-JS disclosure) */}
+          <details className="relative sm:hidden">
           <summary className="cursor-pointer list-none rounded-md border border-gold/30 px-3 py-1.5 text-sm text-paper/80">
             Menu
           </summary>
@@ -38,7 +42,8 @@ export function Nav() {
               </Link>
             ))}
           </nav>
-        </details>
+          </details>
+        </div>
       </div>
     </header>
   );

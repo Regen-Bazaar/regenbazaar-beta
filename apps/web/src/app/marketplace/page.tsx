@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { desc, inArray } from "drizzle-orm";
-import { impactSubmissions } from "@rb/db/schema";
+import { desc, eq, inArray } from "drizzle-orm";
+import { impactSubmissions, listings } from "@rb/db/schema";
 import { getDb } from "../../lib/db";
+import { BuyButton } from "../../components/BuyButton";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,13 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
     .where(inArray(impactSubmissions.status, ["verified", "tokenized"]))
     .orderBy(desc(impactSubmissions.ivValue))
     .limit(120);
+
+  // Active primary listings (v2): submissionId -> listingId. A listed item is buyable via voucher redeem.
+  const listingRows = await db
+    .select({ submissionId: listings.submissionId, id: listings.id })
+    .from(listings)
+    .where(eq(listings.active, true));
+  const listingBySubmission = new Map(listingRows.map((r) => [r.submissionId, r.id]));
 
   // Filter facets derived from the full set (so chips reflect what's actually available).
   const domains = [...new Set(all.map((r) => r.domain).filter(Boolean) as string[])].sort();
@@ -149,12 +157,16 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
                     {tokenized ? "on-chain" : "verified"}
                   </span>
                 </div>
-                <button
-                  disabled={!tokenized}
-                  className="mt-4 rounded-md border border-gold/40 py-2 text-sm transition-colors enabled:hover:border-gold enabled:hover:text-gold disabled:opacity-50"
-                >
-                  {tokenized ? "Fund this impact" : "Awaiting on-chain mint"}
-                </button>
+                {listingBySubmission.has(l.id) ? (
+                  <BuyButton listingId={listingBySubmission.get(l.id)!} />
+                ) : (
+                  <button
+                    disabled
+                    className="mt-4 rounded-md border border-gold/40 py-2 text-sm opacity-50"
+                  >
+                    {tokenized ? "Listing pending" : "Awaiting verification"}
+                  </button>
+                )}
               </div>
             );
           })}

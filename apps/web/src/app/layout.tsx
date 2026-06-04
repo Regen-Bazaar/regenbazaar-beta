@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import localFont from "next/font/local";
 import { Nav } from "../components/Nav";
+import { Providers } from "../components/Providers";
 import "./globals.css";
 
 // Brand fonts (self-hosted, from the landing site): EB Garamond = body serif, PP Acma = display.
@@ -26,8 +27,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${ebGaramond.variable} ${ppAcma.variable}`}>
       <body className="min-h-screen antialiased">
-        <Nav />
-        {children}
+        <Providers>
+          <Nav />
+          {children}
+        </Providers>
       </body>
     </html>
   );
