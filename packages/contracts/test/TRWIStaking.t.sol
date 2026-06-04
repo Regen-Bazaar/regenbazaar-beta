@@ -36,7 +36,7 @@ contract TRWIStakingTest is Test {
         staking = new TRWIStaking(address(this), address(trwi), address(rebaz), 1000); // 10%/yr base
 
         rebaz.grantRole(rebaz.MINTER_ROLE(), address(staking));
-        trwi.grantRole(trwi.TOKENIZER_ROLE(), address(this));
+        trwi.grantRole(trwi.MINTER_ROLE(), address(this));
 
         // mint 100 editions of impact id 1 (totalIV 1000) to the NGO
         eas.set(
@@ -53,7 +53,19 @@ contract TRWIStakingTest is Test {
                 data: abi.encode(ngo, uint256(1000 ether), "ipfs://m")
             })
         );
-        trwi.mintImpact(UID1, 100, address(0), 0);
+        trwi.mint(
+            TRWI.MintParams({
+                tokenId: 1,
+                creator: ngo,
+                totalIV: 1000 ether,
+                maxEditions: 100,
+                easUID: UID1,
+                metadataURI: "ipfs://m",
+                royaltyBps: 0
+            }),
+            ngo,
+            100
+        );
 
         vm.prank(ngo);
         trwi.setApprovalForAll(address(staking), true);

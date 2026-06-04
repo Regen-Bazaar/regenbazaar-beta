@@ -19,7 +19,7 @@
   },
   {
     "type": "function",
-    "name": "TOKENIZER_ROLE",
+    "name": "MINTER_ROLE",
     "inputs": [],
     "outputs": [
       {
@@ -100,6 +100,52 @@
         "name": "",
         "type": "uint256[]",
         "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "collection",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct TRWI.Collection",
+        "components": [
+          {
+            "name": "creator",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "totalIV",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "maxEditions",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "minted",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "easUID",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          }
+        ]
       }
     ],
     "stateMutability": "view"
@@ -215,7 +261,7 @@
     "name": "impactValueOf",
     "inputs": [
       {
-        "name": "id",
+        "name": "tokenId",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -283,80 +329,18 @@
   },
   {
     "type": "function",
-    "name": "lastId",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "mintImpact",
+    "name": "mint",
     "inputs": [
       {
-        "name": "easUID",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "editions",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "royaltyReceiver",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "royaltyBps",
-        "type": "uint96",
-        "internalType": "uint96"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "proxiableUUID",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "record",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
+        "name": "p",
         "type": "tuple",
-        "internalType": "struct TRWI.ImpactRecord",
+        "internalType": "struct TRWI.MintParams",
         "components": [
+          {
+            "name": "tokenId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
           {
             "name": "creator",
             "type": "address",
@@ -368,7 +352,7 @@
             "internalType": "uint256"
           },
           {
-            "name": "editions",
+            "name": "maxEditions",
             "type": "uint256",
             "internalType": "uint256"
           },
@@ -376,8 +360,42 @@
             "name": "easUID",
             "type": "bytes32",
             "internalType": "bytes32"
+          },
+          {
+            "name": "metadataURI",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "royaltyBps",
+            "type": "uint96",
+            "internalType": "uint96"
           }
         ]
+      },
+      {
+        "name": "to",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "proxiableUUID",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
       }
     ],
     "stateMutability": "view"
@@ -405,7 +423,7 @@
     "name": "retire",
     "inputs": [
       {
-        "name": "id",
+        "name": "tokenId",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -423,7 +441,7 @@
     "name": "retiredEditions",
     "inputs": [
       {
-        "name": "id",
+        "name": "tokenId",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -573,7 +591,7 @@
     "name": "setURI",
     "inputs": [
       {
-        "name": "id",
+        "name": "tokenId",
         "type": "uint256",
         "internalType": "uint256"
       },
@@ -679,7 +697,7 @@
     "name": "uri",
     "inputs": [
       {
-        "name": "id",
+        "name": "tokenId",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -720,10 +738,84 @@
   },
   {
     "type": "event",
+    "name": "CollectionRegistered",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "creator",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "totalIV",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "maxEditions",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "easUID",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "uri",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ImpactMinted",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "to",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "easUID",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "ImpactRetired",
     "inputs": [
       {
-        "name": "id",
+        "name": "tokenId",
         "type": "uint256",
         "indexed": true,
         "internalType": "uint256"
@@ -745,49 +837,6 @@
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "ImpactTokenized",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "creator",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "totalIV",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "editions",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "easUID",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
-      },
-      {
-        "name": "uri",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
       }
     ],
     "anonymous": false
@@ -1207,12 +1256,22 @@
   },
   {
     "type": "error",
+    "name": "ExceedsMax",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "FailedCall",
     "inputs": []
   },
   {
     "type": "error",
     "name": "InvalidInitialization",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "Mismatch",
     "inputs": []
   },
   {

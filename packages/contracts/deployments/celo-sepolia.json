@@ -1,23 +1,24 @@
 {
   "network": "celo-sepolia",
   "chainId": 11142220,
-  "startBlock": 27205954,
+  "version": "v2-lazy-mint-voucher",
+  "startBlock": 27265822,
   "deployer": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB",
-  "schemaUID": "0x836d37174fff1eb2e5a2af8d20d87a908283eec088e38cf21cedaaa9a2658633",
+  "schemaUID": "0x35151bab2b9912417175bbf5b49112d9828f4493811bf611f888c1cdd013e92a",
   "impactClaimSchema": "address ngo,uint256 impactValue,string metadataURI",
   "explorer": "https://celo-sepolia.blockscout.com",
   "contracts": {
-    "SchemaRegistry": "0xd58120Aa88783867f6F29498754E399fd3033eDa",
-    "EAS": "0x142dFB78c9DFDb447Fad7e327B139Bb622c81c1c",
-    "AuthorizedAttesterResolver": "0xabF828ea9CdF3c6cE95E97BC5E882b29880CeDc1",
-    "REBAZ": "0x8e5F9e9E67688F75D4303a5395F78ff1E3B71975",
-    "TRWIProxy": "0xa511F92336d9DcBe62caEA46F82DcaFa82BC3E65",
-    "TRWIImpl": "0xa5fDaaDA7eFE882a4C957b0839064F7B8fef2ec9",
-    "TRWIStaking": "0x665C8964Be8cA3C1F429Aee75Ebe709FF67ef2C1",
-    "RegenMarketplace": "0x50867a0BCd150f6CA66fC61Fd420F176997E15D5"
+    "SchemaRegistry": "0x25aD7aB2542372E46d16992B96B04ebE2Fe07534",
+    "EAS": "0x317D1b35608Eb8CF390d0280042a0cDbBA238Cf9",
+    "AuthorizedAttesterResolver": "0x625fe4B8da26F57D63c1d5681AFb85635D236999",
+    "REBAZ": "0xC367a4601D8e7D4f83DA5AFd549262886C33177F",
+    "TRWIProxy": "0x796B521EBF9221A0f4212C10767898AfCd81087d",
+    "TRWIImpl": "0xBd7FF41169707ee623C1ea26395D9DCA0e66DbbA",
+    "TRWIStaking": "0x35BcD5DCb8A82197eC268f6E97e3e32d816E8A9b",
+    "RegenMarketplace": "0x09c0cbB98Dbb0E37B684abF33e7Beac7f62B4A21",
+    "RegenPrimarySale": "0x49A5a77e3DBd76411737820fd968142b6154be26"
   },
-  "marketplace": {
-    "feeBps": 250,
-    "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB"
-  }
+  "marketplace": { "feeBps": 250, "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB" },
+  "primarySale": { "feeBps": 250, "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB", "signer": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB" },
+  "note": "v2 supersedes the earlier v1 deployment (mint-on-approve). Platform-issued lazy mint via EIP-712 vouchers (RegenPrimarySale); RegenMarketplace = secondary escrow."
 }

@@ -44,7 +44,7 @@ contract IntegrationTest is Test {
         staking = new TRWIStaking(address(this), address(trwi), address(rebaz), 1000);
 
         rebaz.grantRole(rebaz.MINTER_ROLE(), address(staking));
-        trwi.grantRole(trwi.TOKENIZER_ROLE(), address(this));
+        trwi.grantRole(trwi.MINTER_ROLE(), address(this));
         resolver.grantRole(resolver.ATTESTER_ROLE(), attester);
     }
 
@@ -67,9 +67,21 @@ contract IntegrationTest is Test {
         vm.prank(attester);
         bytes32 uid = eas.attest(_req(ngo, 1000 ether, "ipfs://meta"));
 
-        // tokenizer mints fractional editions to the NGO, gated by that attestation
-        uint256 id = trwi.mintImpact(uid, 100, address(0), 0);
-        assertEq(id, 1);
+        // minter registers + mints fractional editions to the NGO (here the NGO holds, to exercise staking),
+        // gated by that attestation (params must match it)
+        trwi.mint(
+            TRWI.MintParams({
+                tokenId: 1,
+                creator: ngo,
+                totalIV: 1000 ether,
+                maxEditions: 100,
+                easUID: uid,
+                metadataURI: "ipfs://meta",
+                royaltyBps: 0
+            }),
+            ngo,
+            100
+        );
         assertEq(trwi.balanceOf(ngo, 1), 100);
 
         // NGO stakes 50 editions for 90 days, accrues + claims REBAZ
@@ -93,6 +105,18 @@ contract IntegrationTest is Test {
 
     function test_MintRejectsUnknownUID() public {
         vm.expectRevert(TRWI.UID_Unknown.selector);
-        trwi.mintImpact(bytes32(uint256(0xdead)), 100, address(0), 0);
+        trwi.mint(
+            TRWI.MintParams({
+                tokenId: 1,
+                creator: ngo,
+                totalIV: 1 ether,
+                maxEditions: 100,
+                easUID: bytes32(uint256(0xdead)),
+                metadataURI: "x",
+                royaltyBps: 0
+            }),
+            ngo,
+            1
+        );
     }
 }
