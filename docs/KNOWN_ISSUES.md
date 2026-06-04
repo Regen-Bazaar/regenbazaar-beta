@@ -69,20 +69,23 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
 - **Ponder reads `.env.local`** (not `.env`); contract addresses + start blocks must be set there (or in the
   process env) or it syncs from block 0.
 
-## Hardening pass (mainnet-readiness) — follow-ups (see `docs/AUDIT.md`)
-- **Redeploy required, not done.** The fixes change immutable contracts (and TRWIStaking storage layout), so
-  the currently-deployed Celo Sepolia set is now stale. A fresh split-role redeploy is prepared in
-  `Deploy.s.sol` but **gated on explicit approval** — not broadcast.
-- **Voucher typehash changed (`feeBps` added).** Until the off-chain signer + frontend EIP-712 types are
-  updated in lockstep with the new deployment, `redeem` will revert `BadSignature`. Exact files listed in
-  `docs/AUDIT.md` (`apps/web/src/lib/onchain.ts`, `.../listings/[id]/voucher/route.ts`, `BuyButton.tsx`,
-  `apps/indexer/src/abis.ts`). The live frontend was intentionally left pointing at the old contracts.
+## Hardening pass (mainnet-readiness) — status (see `docs/AUDIT.md`)
+- **DONE: v3 deployed + verified.** Audited contracts deployed to Celo Sepolia (addresses in
+  `deployments/celo-sepolia.json`, startBlock 27285071), live-verified on-chain (deployer NOT a TRWI minter,
+  REBAZ cap=1e27, e2e attest→feeBps-voucher→redeem→mint smoke), and source-verified on Blockscout. Off-chain
+  signer + frontend EIP-712 updated with `feeBps` and pointed at v3. Branch merged to local `main`.
+- **NOT DONE — production cutover (gated).** `app.regenbazaar.com` on the HelpRent VPS still serves the
+  **v2** contracts. Switching requires: rsync the repo, set the web + indexer env to the v3 addresses +
+  startBlock 27285071, `docker compose --env-file .env up -d --build`, verify HelpRent untouched. This needs
+  explicit approval to SSH into the shared production box (62.72.44.6).
+- **NOT DONE — push to remote.** `main` is merged locally only; not pushed to `origin`
+  (`Regen-Bazaar/regenbazaar-beta`) per the never-push-to-main policy. Push the branch + open a PR instead.
 - **Emissions still mint-on-claim (now capped).** REBAZ has a hard cap, but staking still mints rewards on
   demand; once the cap is hit, normal `claim`/`unstake` revert (principal still exits via `emergencyUnstake`).
   A funded-reserve emission model is the intended longer-term replacement.
-- **Multisig + timelock are config, not yet provisioned.** Role separation is supported by the deploy script
-  but a Gnosis Safe (admin) and an OZ `TimelockController` for sensitive setters still need to be created and
-  passed via env before the mainnet deploy.
+- **Multisig + timelock — needs a Safe address (not provisionable in code).** The deploy script supports
+  role separation + an admin→multisig handoff via env (`ADMIN_MULTISIG`, `RENOUNCE_DEPLOYER_ADMIN`, etc.),
+  but a Gnosis Safe and an OZ `TimelockController` must be created and their addresses supplied before mainnet.
 - **Branch coverage gaps.** Line coverage on changed contracts is ~80–87% and the security-critical paths
   (pause/exit, royalty cap, RoyaltyTooHigh, currency-allowlist toggle, emergency exit, non-retroactive rate)
   have direct tests (61 total). Remaining gaps are branch-level (some revert/edge branches, the deploy-script
