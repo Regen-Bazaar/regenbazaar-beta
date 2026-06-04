@@ -120,6 +120,26 @@ export const tokenizations = pgTable("tokenizations", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Off-chain primary listing for a v2 "impact collection": registered at approve-time (no mint), an
+// EIP-712 voucher is signed on demand from these fields, and the buyer lazily mints on redeem.
+export const listings = pgTable("listings", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  submissionId: uuid("submission_id")
+    .notNull()
+    .references(() => impactSubmissions.id),
+  tokenId: numeric("token_id", { precision: 78, scale: 0 }).notNull().unique(), // on-chain tRWI id
+  totalIvWei: numeric("total_iv_wei", { precision: 78, scale: 0 }).notNull(), // IV * 1e18
+  maxEditions: integer("max_editions").notNull(),
+  pricePerEdition: numeric("price_per_edition", { precision: 78, scale: 0 }).notNull(), // currency smallest unit
+  currency: varchar("currency", { length: 42 }).notNull(), // 0x000..0 = native CELO
+  beneficiary: varchar("beneficiary", { length: 42 }).notNull(), // NGO payout
+  easUid: varchar("eas_uid", { length: 66 }).notNull(),
+  metadataUri: text("metadata_uri").notNull(),
+  nonce: integer("nonce").notNull().default(0),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const actionWeights = pgTable(
   "action_weights",
   {

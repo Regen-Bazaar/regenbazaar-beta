@@ -1,23 +1,24 @@
 import { NextResponse } from "next/server";
-import { verifications, impactSubmissions, organizations, attestations, tokenizations } from "@rb/db/schema";
+import { verifications, impactSubmissions, organizations, listings } from "@rb/db/schema";
 import { buildTokenMetadata } from "@rb/pipeline";
-import type { ExtractedAction, FrameworkTags } from "@rb/impact-engine";
-import { eq } from "drizzle-orm";
+import { computePrice, type ExtractedAction, type FrameworkTags } from "@rb/impact-engine";
+import { eq, sql } from "drizzle-orm";
+import { parseUnits } from "viem";
 import { getDb } from "../../../lib/db";
 import { pinJson } from "../../../lib/ipfs";
-import { onchainEnabled, operatorAddress, impactClaimSchemaUid, attestImpact, mintImpact } from "../../../lib/onchain";
+import { onchainEnabled, attestImpact, ivToWei } from "../../../lib/onchain";
 import type { DB } from "@rb/db";
 
 export const runtime = "nodejs";
 
-const EDITIONS = 100n;
-const ROYALTY_BPS = 500;
+const MAX_EDITIONS = 100;
+const NATIVE = "0x0000000000000000000000000000000000000000";
 
 type Hex = `0x${string}`;
 
-// On approve with on-chain enabled: pin metadata -> EAS attest (impactValue scaled 1e18 in onchain.ts)
-// -> mint fractional tRWI -> record attestation + tokenization. Returns the new status + on-chain refs.
-async function tokenize(db: DB, submissionId: string, reqUrl: string) {
+// On approve (v2 lazy mint): pin metadata -> EAS attest (platform) -> register an off-chain primary
+// LISTING (no mint; the buyer lazily mints on redeem via a signed voucher). Returns the listing refs.
+async function registerListing(db: DB, submissionId: string, reqUrl: string) {
   const [s] = await db.select().from(impactSubmissions).where(eq(impactSubmissions.id, submissionId)).limit(1);
   if (!s || !s.ivValue) throw new Error("submission not found or unscored");
   const [org] = await db.select().from(organizations).where(eq(organizations.id, s.orgId)).limit(1);
@@ -31,7 +32,7 @@ async function tokenize(db: DB, submissionId: string, reqUrl: string) {
     actions: (s.extractedActions ?? []) as ExtractedAction[],
     frameworks: s.frameworkTags as FrameworkTags | null,
     impactValue: Number(s.ivValue),
-    editions: Number(EDITIONS),
+    editions: MAX_EDITIONS,
     regionCode: c.regionCode ?? null,
     periodStart: c.periodStart ?? null,
     periodEnd: c.periodEnd ?? null,
@@ -40,29 +41,33 @@ async function tokenize(db: DB, submissionId: string, reqUrl: string) {
   });
 
   const metadataURI = await pinJson(meta); // ipfs://<cid>
-  const { uid, txHash: attestTx } = await attestImpact(ngo, s.ivValue, metadataURI);
-  const { tokenId, txHash: mintTx } = await mintImpact(uid, ngo, EDITIONS, ROYALTY_BPS);
+  const { uid } = await attestImpact(ngo, s.ivValue, metadataURI); // platform attests provenance
 
-  await db.insert(attestations).values({
+  // assign the next on-chain tokenId off-chain (collection materializes on first redeem)
+  const [{ m }] = await db.select({ m: sql<string>`coalesce(max(${listings.tokenId}), 0)` }).from(listings);
+  const tokenId = (BigInt(m ?? "0") + 1n).toString();
+
+  const price = computePrice(Number(s.ivValue), MAX_EDITIONS);
+  const pricePerEditionWei = parseUnits(price.pricePerEdition.toFixed(18), 18).toString();
+
+  await db.insert(listings).values({
     submissionId,
+    tokenId,
+    totalIvWei: ivToWei(s.ivValue).toString(),
+    maxEditions: MAX_EDITIONS,
+    pricePerEdition: pricePerEditionWei,
+    currency: NATIVE,
+    beneficiary: ngo,
     easUid: uid,
-    schemaUid: impactClaimSchemaUid,
-    attester: operatorAddress(),
-    txHash: attestTx,
-  });
-  await db.insert(tokenizations).values({
-    submissionId,
-    easUid: uid,
-    tokenId: tokenId.toString(),
-    editions: Number(EDITIONS),
-    txHash: mintTx,
+    metadataUri: metadataURI,
+    nonce: 0,
+    active: true,
   });
 
-  return { tokenId: tokenId.toString(), easUid: uid, attestTx, mintTx, metadataURI };
+  return { tokenId, easUid: uid, metadataURI, pricePerEditionWei };
 }
 
-// POST /api/verifications — a validator records a decision; the submission status advances.
-// Approve attests + mints the tRWI on-chain when configured; otherwise it just marks it verified.
+// POST /api/verifications — validator decision. Approve registers the on-chain-ready listing (lazy mint).
 export async function POST(req: Request) {
   let body: Record<string, unknown>;
   try {
@@ -97,13 +102,12 @@ export async function POST(req: Request) {
   // approve
   if (onchainEnabled()) {
     try {
-      const onchain = await tokenize(db, submissionId, req.url);
+      const listing = await registerListing(db, submissionId, req.url);
       await db.update(impactSubmissions).set({ status: "tokenized", updatedAt: new Date() }).where(eq(impactSubmissions.id, submissionId));
-      return NextResponse.json({ ok: true, status: "tokenized", onchain });
+      return NextResponse.json({ ok: true, status: "tokenized", listing });
     } catch (e) {
-      // Verified, but tokenization failed (pinning/RPC/etc) — leave it retryable, don't lose the approval.
       await db.update(impactSubmissions).set({ status: "verified", updatedAt: new Date() }).where(eq(impactSubmissions.id, submissionId));
-      return NextResponse.json({ ok: true, status: "verified", tokenizeError: e instanceof Error ? e.message : "tokenize failed" });
+      return NextResponse.json({ ok: true, status: "verified", listingError: e instanceof Error ? e.message : "listing failed" });
     }
   }
   await db.update(impactSubmissions).set({ status: "verified", updatedAt: new Date() }).where(eq(impactSubmissions.id, submissionId));

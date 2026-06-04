@@ -1,8 +1,10 @@
-// On-chain wiring for Celo Sepolia: create an EAS ImpactClaim attestation, then mint the tRWI.
-// SERVER-ONLY (uses OPERATOR_PRIVATE_KEY = the TOKENIZER+ATTESTER key). Never import from client code.
+// On-chain wiring for Celo Sepolia (v2 — platform-issued lazy mint via vouchers). SERVER-ONLY.
+// The platform operator (OPERATOR_PRIVATE_KEY) is both the EAS ATTESTER and the voucher SIGNER. It:
+//  1) creates an EAS ImpactClaim attestation for a verified impact (provenance, source of truth), and
+//  2) signs an EIP-712 ImpactVoucher (commercial terms) that a buyer redeems to lazily mint editions.
+// The token (TRWI) is never minted server-side here — minting happens on buyer redeem (RegenPrimarySale).
 //
-// IV scale: the engine's Impact Value is a human decimal (e.g. "515.2583"); on-chain impactValue is
-// scaled to 1e18 (parseUnits(iv, 18)) so the staking reward math (1e18-based) is correct.
+// IV scale: on-chain impactValue = IV × 1e18 (parseUnits(iv, 18)) so the staking/fraction math is correct.
 
 import {
   createPublicClient,
@@ -18,14 +20,15 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 
 const RPC = process.env.CELO_SEPOLIA_RPC_URL ?? "https://forno.celo-sepolia.celo-testnet.org";
-// Public addresses (overridable via env); defaults = the live Celo Sepolia deployment.
-const EAS_ADDRESS = (process.env.EAS_ADDRESS ?? "0x142dFB78c9DFDb447Fad7e327B139Bb622c81c1c") as Hex;
-const TRWI_ADDRESS = (process.env.TRWI_ADDRESS ?? "0xa511F92336d9DcBe62caEA46F82DcaFa82BC3E65") as Hex;
+// Public v2 addresses (overridable via env); defaults = the live Celo Sepolia v2 deployment.
+const EAS_ADDRESS = (process.env.EAS_ADDRESS ?? "0x317D1b35608Eb8CF390d0280042a0cDbBA238Cf9") as Hex;
+const PRIMARY_SALE_ADDRESS = (process.env.PRIMARY_SALE_ADDRESS ?? "0x49A5a77e3DBd76411737820fd968142b6154be26") as Hex;
 const SCHEMA_UID = (process.env.IMPACT_CLAIM_SCHEMA_UID ??
-  "0x836d37174fff1eb2e5a2af8d20d87a908283eec088e38cf21cedaaa9a2658633") as Hex;
+  "0x35151bab2b9912417175bbf5b49112d9828f4493811bf611f888c1cdd013e92a") as Hex;
+const CHAIN_ID = 11142220;
 
 export const celoSepolia = defineChain({
-  id: 11142220,
+  id: CHAIN_ID,
   name: "Celo Sepolia",
   nativeCurrency: { name: "CELO", symbol: "CELO", decimals: 18 },
   rpcUrls: { default: { http: [RPC] } },
@@ -74,44 +77,41 @@ const easAbi = [
   },
 ] as const;
 
-const trwiAbi = [
-  {
-    type: "function",
-    name: "mintImpact",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "easUID", type: "bytes32" },
-      { name: "editions", type: "uint256" },
-      { name: "royaltyReceiver", type: "address" },
-      { name: "royaltyBps", type: "uint96" },
-    ],
-    outputs: [{ name: "id", type: "uint256" }],
-  },
-  {
-    type: "event",
-    name: "ImpactTokenized",
-    inputs: [
-      { name: "id", type: "uint256", indexed: true },
-      { name: "creator", type: "address", indexed: true },
-      { name: "totalIV", type: "uint256", indexed: false },
-      { name: "editions", type: "uint256", indexed: false },
-      { name: "easUID", type: "bytes32", indexed: true },
-      { name: "uri", type: "string", indexed: false },
-    ],
-    anonymous: false,
-  },
-] as const;
+// EIP-712 voucher type — MUST match RegenPrimarySale's VOUCHER_TYPEHASH field order.
+const VOUCHER_TYPES = {
+  Voucher: [
+    { name: "tokenId", type: "uint256" },
+    { name: "creator", type: "address" },
+    { name: "totalIV", type: "uint256" },
+    { name: "maxEditions", type: "uint256" },
+    { name: "pricePerEdition", type: "uint256" },
+    { name: "currency", type: "address" },
+    { name: "beneficiary", type: "address" },
+    { name: "easUID", type: "bytes32" },
+    { name: "metadataURI", type: "string" },
+    { name: "royaltyBps", type: "uint96" },
+    { name: "nonce", type: "uint256" },
+    { name: "deadline", type: "uint256" },
+  ],
+} as const;
 
-/** True when the server is configured to perform on-chain attest+mint. */
-export function onchainEnabled(): boolean {
-  return !!process.env.OPERATOR_PRIVATE_KEY;
+export interface ImpactVoucher {
+  tokenId: bigint;
+  creator: Hex;
+  totalIV: bigint;
+  maxEditions: bigint;
+  pricePerEdition: bigint;
+  currency: Hex;
+  beneficiary: Hex;
+  easUID: Hex;
+  metadataURI: string;
+  royaltyBps: bigint;
+  nonce: bigint;
+  deadline: bigint;
 }
 
-export const impactClaimSchemaUid = SCHEMA_UID;
-
-/** The operator (attester/tokenizer) address derived from OPERATOR_PRIVATE_KEY. */
-export function operatorAddress(): Hex {
-  return clients().account.address;
+export function onchainEnabled(): boolean {
+  return !!process.env.OPERATOR_PRIVATE_KEY;
 }
 
 function clients() {
@@ -123,12 +123,21 @@ function clients() {
   return { account, wallet, pub };
 }
 
-/** Create the EAS ImpactClaim attestation. `ivDecimal` is the human IV string (scaled to 1e18 here). */
+export function operatorAddress(): Hex {
+  return clients().account.address;
+}
+
+/** Build the on-chain impactValue (IV scaled to 1e18) from the human IV decimal string. */
+export function ivToWei(ivDecimal: string): bigint {
+  return parseUnits(ivDecimal, 18);
+}
+
+/** Create an EAS ImpactClaim attestation (operator = authorized attester). Returns the UID + tx hash. */
 export async function attestImpact(ngo: Hex, ivDecimal: string, metadataURI: string): Promise<{ uid: Hex; txHash: Hex }> {
   const { account, wallet, pub } = clients();
   const data = encodeAbiParameters(
     [{ type: "address" }, { type: "uint256" }, { type: "string" }],
-    [ngo, parseUnits(ivDecimal, 18), metadataURI],
+    [ngo, ivToWei(ivDecimal), metadataURI],
   );
   const txHash = await wallet.writeContract({
     address: EAS_ADDRESS,
@@ -145,25 +154,14 @@ export async function attestImpact(ngo: Hex, ivDecimal: string, metadataURI: str
   return { uid, txHash };
 }
 
-/** Mint fractional tRWI editions for a verified, attested impact. Returns the on-chain token id. */
-export async function mintImpact(
-  easUID: Hex,
-  ngo: Hex,
-  editions = 100n,
-  royaltyBps = 500,
-): Promise<{ tokenId: bigint; txHash: Hex }> {
-  const { account, wallet, pub } = clients();
-  const txHash = await wallet.writeContract({
-    address: TRWI_ADDRESS,
-    abi: trwiAbi,
-    functionName: "mintImpact",
-    args: [easUID, editions, ngo, BigInt(royaltyBps)],
+/** Sign an ImpactVoucher (EIP-712) with the operator key. The buyer redeems it at RegenPrimarySale. */
+export async function signVoucher(v: ImpactVoucher): Promise<Hex> {
+  const { account, wallet } = clients();
+  return wallet.signTypedData({
     account,
-    chain: celoSepolia,
+    domain: { name: "RegenPrimarySale", version: "1", chainId: CHAIN_ID, verifyingContract: PRIMARY_SALE_ADDRESS },
+    types: VOUCHER_TYPES,
+    primaryType: "Voucher",
+    message: v,
   });
-  const receipt = await pub.waitForTransactionReceipt({ hash: txHash });
-  const logs = parseEventLogs({ abi: trwiAbi, eventName: "ImpactTokenized", logs: receipt.logs });
-  const tokenId = logs[0]?.args?.id;
-  if (tokenId === undefined) throw new Error("mintImpact: no token id in receipt logs");
-  return { tokenId, txHash };
 }

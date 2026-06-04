@@ -85,6 +85,22 @@ CREATE TABLE IF NOT EXISTS "tokenizations" (
   "tx_hash" varchar(66),
   "created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
+CREATE TABLE IF NOT EXISTS "listings" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "submission_id" uuid NOT NULL REFERENCES "impact_submissions"("id"),
+  "token_id" numeric(78, 0) NOT NULL,
+  "total_iv_wei" numeric(78, 0) NOT NULL,
+  "max_editions" integer NOT NULL,
+  "price_per_edition" numeric(78, 0) NOT NULL,
+  "currency" varchar(42) NOT NULL,
+  "beneficiary" varchar(42) NOT NULL,
+  "eas_uid" varchar(66) NOT NULL,
+  "metadata_uri" text NOT NULL,
+  "nonce" integer DEFAULT 0 NOT NULL,
+  "active" boolean DEFAULT true NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  CONSTRAINT "listings_token_id_unique" UNIQUE("token_id")
+);
 CREATE UNIQUE INDEX IF NOT EXISTS "aw_version_type_idx" ON "action_weights" USING btree ("version","action_type");
 CREATE INDEX IF NOT EXISTS "submission_org_idx" ON "impact_submissions" USING btree ("org_id");
 CREATE INDEX IF NOT EXISTS "submission_status_idx" ON "impact_submissions" USING btree ("status");
