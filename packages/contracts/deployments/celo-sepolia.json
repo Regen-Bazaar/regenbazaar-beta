@@ -7,6 +7,7 @@
   "schemaUID": "0xc9c7678fbad9ec95e2ef6f480b10391bb7dcb1df7feec189411a439fd850f64e",
   "impactClaimSchema": "address ngo,uint256 impactValue,string metadataURI",
   "explorer": "https://celo-sepolia.blockscout.com",
+  "verified": "blockscout — REBAZ, TRWI (impl + ERC1967 proxy), TRWIStaking, RegenMarketplace, RegenPrimarySale, AuthorizedAttesterResolver all source-verified",
   "contracts": {
     "SchemaRegistry": "0x28747503194756DF51503902949c66D2F3579625",
     "EAS": "0x82448c9c9b95Da5dCe9905F9C59CcCA0DF346df8",
