@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Test} from "forge-std/Test.sol";
-import {RegenPrimarySale} from "../src/RegenPrimarySale.sol";
-import {TRWI} from "../src/TRWI.sol";
-import {MockEAS} from "./mocks/MockEAS.sol";
-import {MockERC20} from "./mocks/MockERC20.sol";
-import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import {Attestation} from "@ethereum-attestation-service/eas-contracts/Common.sol";
+import { Test } from "forge-std/Test.sol";
+import { RegenPrimarySale } from "../src/RegenPrimarySale.sol";
+import { TRWI } from "../src/TRWI.sol";
+import { MockEAS } from "./mocks/MockEAS.sol";
+import { MockERC20 } from "./mocks/MockERC20.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { Attestation } from "@ethereum-attestation-service/eas-contracts/Common.sol";
 
 contract RegenPrimarySaleTest is Test {
     RegenPrimarySale internal sale;
@@ -31,10 +31,17 @@ contract RegenPrimarySaleTest is Test {
         eas = new MockEAS();
         usd = new MockERC20();
         TRWI impl = new TRWI();
-        trwi = TRWI(address(new ERC1967Proxy(address(impl), abi.encodeCall(TRWI.initialize, (admin, address(eas), SCHEMA)))));
-        sale = new RegenPrimarySale(admin, address(trwi), feeRecipient, 250); // 2.5%
+        trwi = TRWI(
+            address(
+                new ERC1967Proxy(
+                    address(impl), abi.encodeCall(TRWI.initialize, (admin, address(eas), SCHEMA))
+                )
+            )
+        );
+        sale = new RegenPrimarySale(admin, address(trwi), feeRecipient);
         trwi.grantRole(trwi.MINTER_ROLE(), address(sale));
         sale.grantRole(sale.SIGNER_ROLE(), signer);
+        sale.setCurrencyAllowed(address(usd), true); // allowlist the ERC-20 payment currency
         eas.set(_att(ngo, 1000 ether, "ipfs://meta1"));
     }
 
@@ -53,7 +60,11 @@ contract RegenPrimarySaleTest is Test {
         });
     }
 
-    function _voucher(address currency, uint256 nonce) internal view returns (RegenPrimarySale.Voucher memory) {
+    function _voucher(address currency, uint256 nonce)
+        internal
+        view
+        returns (RegenPrimarySale.Voucher memory)
+    {
         return RegenPrimarySale.Voucher({
             tokenId: 1,
             creator: ngo,
@@ -65,6 +76,7 @@ contract RegenPrimarySaleTest is Test {
             easUID: UID1,
             metadataURI: "ipfs://meta1",
             royaltyBps: 500,
+            feeBps: 250, // 2.5% platform fee, now part of the signed voucher
             nonce: nonce,
             deadline: block.timestamp + 1 days
         });
@@ -82,7 +94,7 @@ contract RegenPrimarySaleTest is Test {
         uint256 total = 10 * PRICE;
         vm.deal(buyer, total);
         vm.prank(buyer);
-        sale.redeem{value: total}(v, 10, sig);
+        sale.redeem{ value: total }(v, 10, sig);
 
         assertEq(trwi.balanceOf(buyer, 1), 10);
         assertEq(trwi.collection(1).minted, 10);
@@ -114,7 +126,7 @@ contract RegenPrimarySaleTest is Test {
         vm.deal(buyer, 1 ether);
         vm.prank(buyer);
         vm.expectRevert(RegenPrimarySale.BadSignature.selector);
-        sale.redeem{value: 10 * PRICE}(v, 10, sig);
+        sale.redeem{ value: 10 * PRICE }(v, 10, sig);
     }
 
     function test_Revert_Expired() public {
@@ -124,7 +136,7 @@ contract RegenPrimarySaleTest is Test {
         vm.deal(buyer, 1 ether);
         vm.prank(buyer);
         vm.expectRevert(RegenPrimarySale.Expired.selector);
-        sale.redeem{value: 10 * PRICE}(v, 10, sig);
+        sale.redeem{ value: 10 * PRICE }(v, 10, sig);
     }
 
     function test_Revert_StaleNonce_AfterBump() public {
@@ -135,7 +147,7 @@ contract RegenPrimarySaleTest is Test {
         vm.deal(buyer, 1 ether);
         vm.prank(buyer);
         vm.expectRevert(RegenPrimarySale.StaleVoucher.selector);
-        sale.redeem{value: 10 * PRICE}(v, 10, sig);
+        sale.redeem{ value: 10 * PRICE }(v, 10, sig);
     }
 
     function test_BumpNonce_RepriceWorks() public {
@@ -145,7 +157,7 @@ contract RegenPrimarySaleTest is Test {
         bytes memory sig = _sign(v, signerPk);
         vm.deal(buyer, 1 ether);
         vm.prank(buyer);
-        sale.redeem{value: 10 * PRICE}(v, 10, sig);
+        sale.redeem{ value: 10 * PRICE }(v, 10, sig);
         assertEq(trwi.balanceOf(buyer, 1), 10);
     }
 
@@ -155,7 +167,7 @@ contract RegenPrimarySaleTest is Test {
         vm.deal(buyer, 1 ether);
         vm.prank(buyer);
         vm.expectRevert(RegenPrimarySale.WrongPayment.selector);
-        sale.redeem{value: 1 ether}(v, 10, sig); // should be 10*PRICE
+        sale.redeem{ value: 1 ether }(v, 10, sig); // should be 10*PRICE
     }
 
     function test_Revert_ExceedsMaxAcrossRedeems() public {
@@ -163,9 +175,58 @@ contract RegenPrimarySaleTest is Test {
         bytes memory sig = _sign(v, signerPk);
         vm.deal(buyer, 200 * PRICE);
         vm.startPrank(buyer);
-        sale.redeem{value: 100 * PRICE}(v, 100, sig);
+        sale.redeem{ value: 100 * PRICE }(v, 100, sig);
         vm.expectRevert(TRWI.ExceedsMax.selector);
-        sale.redeem{value: 1 * PRICE}(v, 1, sig);
+        sale.redeem{ value: 1 * PRICE }(v, 1, sig);
+        vm.stopPrank();
+    }
+
+    /// M2: the platform fee is part of the signed voucher — changing it invalidates the signature.
+    function test_TamperedFeeBps_RevertsBadSignature() public {
+        RegenPrimarySale.Voucher memory v = _voucher(address(0), 0);
+        bytes memory sig = _sign(v, signerPk);
+        v.feeBps = 1000; // tamper after signing
+        vm.deal(buyer, 10 * PRICE);
+        vm.prank(buyer);
+        vm.expectRevert(RegenPrimarySale.BadSignature.selector);
+        sale.redeem{ value: 10 * PRICE }(v, 10, sig);
+    }
+
+    /// L1: only NATIVE + allowlisted ERC-20s are accepted.
+    function test_NonAllowlistedCurrency_Reverts() public {
+        MockERC20 other = new MockERC20();
+        RegenPrimarySale.Voucher memory v = _voucher(address(other), 0);
+        bytes memory sig = _sign(v, signerPk);
+        other.mint(buyer, 10 * PRICE);
+        vm.startPrank(buyer);
+        other.approve(address(sale), 10 * PRICE);
+        vm.expectRevert(RegenPrimarySale.BadCurrency.selector);
+        sale.redeem(v, 10, sig);
+        vm.stopPrank();
+    }
+
+    /// M4: a pause blocks redemption.
+    function test_Paused_BlocksRedeem() public {
+        sale.grantRole(sale.PAUSER_ROLE(), address(this));
+        sale.pause();
+        RegenPrimarySale.Voucher memory v = _voucher(address(0), 0);
+        bytes memory sig = _sign(v, signerPk);
+        vm.deal(buyer, 10 * PRICE);
+        vm.prank(buyer);
+        vm.expectRevert(); // EnforcedPause
+        sale.redeem{ value: 10 * PRICE }(v, 10, sig);
+    }
+
+    /// L1: an allowlisted currency can be de-listed, after which it is rejected.
+    function test_SetCurrencyAllowed_Toggle_Off_Reverts() public {
+        sale.setCurrencyAllowed(address(usd), false);
+        RegenPrimarySale.Voucher memory v = _voucher(address(usd), 0);
+        bytes memory sig = _sign(v, signerPk);
+        usd.mint(buyer, 10 * PRICE);
+        vm.startPrank(buyer);
+        usd.approve(address(sale), 10 * PRICE);
+        vm.expectRevert(RegenPrimarySale.BadCurrency.selector);
+        sale.redeem(v, 10, sig);
         vm.stopPrank();
     }
 }

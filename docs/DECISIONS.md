@@ -89,3 +89,28 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   edition accounting. Pricing is off-chain by formula (IV × rate).
 - **Trade-off:** custom payment/voucher contracts (self-reviewed, not third-party audited); secondary is open
   (no forced royalty); operator hot key (testnet burner → multisig before mainnet).
+
+## 2026-06 — Mainnet-readiness hardening pass (security/gas audit) — see `docs/AUDIT.md`
+- **What:** Audited all six contracts (manual + Slither + OpenZeppelin MCP/Skills ruleset) and remediated
+  for mainnet. Key changes:
+  - **Role/key separation** (`Deploy.s.sol`): distinct env addresses for admin-multisig / signer / attester /
+    upgrader / pauser / feeRecipient / treasury; explicit `UPGRADER_ROLE`+`PAUSER_ROLE` grants; the deployer
+    EOA is no longer a TRWI minter; optional guarded admin→multisig handoff.
+  - **Reward accounting → global cumulative index** in `TRWIStaking` (Σ rate·seconds). Rate changes settle
+    first, so accrual is never retroactive; rewards are per-stake APR (not pool-diluted), so no totals or
+    div-by-zero. Chosen over per-stake checkpoint loops (unbounded) and over a Synthetix pool index (wrong
+    model here — accrual isn't shared).
+  - **`emergencyUnstake`**: principal exit decoupled from reward minting (and from the lock while paused) so
+    tRWI can never be trapped by a revoked/capped minter.
+  - **`Pausable`** everywhere (entry paths gated; principal exits always open).
+  - **Fee baked into the signed voucher** (`feeBps` in struct + typehash) so the NGO/buyer split is tamper-proof.
+  - **REBAZ capped** (`ERC20Capped`); **royalty capped** at 10% (registration + proportional marketplace clamp);
+    **currency allowlist** (blocks fee-on-transfer/rebasing tokens); **metadata immutable** post-registration
+    (removed `setURI`); `EnumerableSet` for stake bookkeeping; CEI reorder; `unchecked` on proven-safe math.
+- **Why:** Code was explicitly "testnet placeholder"; the owner requested a full mainnet-readiness pass.
+- **Trade-offs accepted:** TRWIStaking storage layout changed (immutable contract → fresh redeploy required,
+  no migration). The voucher typehash changed → off-chain signer + frontend EIP-712 must update in lockstep
+  with the redeploy (documented in `docs/AUDIT.md`). Emissions remain mint-on-claim (now capped); a funded
+  reserve is the longer-term model. Secondary marketplace remains open (royalty now capped, not removed).
+- **Verification:** `forge test` 55/55 green; Slither `reentrancy-benign` on `list`/`stake` cleared; no real
+  high/medium in `src/` (remaining detectors are OZ-lib false positives or by-design, triaged in `docs/AUDIT.md`).
