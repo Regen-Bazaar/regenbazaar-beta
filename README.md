@@ -8,8 +8,9 @@ primitives where possible; custom only where it's the moat — the AI Impact-Val
 $REBAZ token.
 
 > Beta target network: **Celo Sepolia** (chainId 11142220). Audience: non-crypto users (embedded /
-> account-abstraction wallets, gasless). Status: off-chain stack working locally; on-chain wiring and
-> deploy are pending a funded deployer key.
+> account-abstraction wallets, gasless — later phase).
+> **🟢 Live: https://app.regenbazaar.com** (isolated VPS, TLS). Full end-to-end on testnet: tokenize →
+> verify → EAS-attest + IPFS → buyer redeems a platform-signed voucher → lazy mint → indexed.
 
 ## Layout
 ```

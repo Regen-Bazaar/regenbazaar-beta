@@ -41,10 +41,10 @@ Deployed addresses + explorer links: `packages/contracts/deployments/celo-sepoli
 ### B. Manual actions (only you can do)
 | # | Action | Notes |
 |---|---|---|
-| B1 | 🔴 **Rotate the GitHub org token** `ghp_RZyH…` | It was pasted in chat → treat as compromised |
-| B2 | **Push this monorepo to GitHub** (decide repo name + visibility) | CI (GitHub Actions) runs automatically on push |
-| B3 | **DNS A-record** for a subdomain (e.g. `app.regenbazaar.com`) → `62.72.44.6` | Needed before TLS/cert on the VPS |
-| B4 | **Explicit "go" to deploy on the HelpRent VPS** | I will not touch the live prod box without it |
+| B1 | 🔴 **Rotate the GitHub org token** `ghp_RZyH…` | It was pasted in chat → treat as compromised (still pending) |
+| B2 | ✅ Pushed → **github.com/Regen-Bazaar/regenbazaar-beta** (private). CI runs on push. | done |
+| B3 | ✅ DNS `app.regenbazaar.com` → `62.72.44.6` | done |
+| B4 | ✅ Deployed (isolated) on the HelpRent VPS + TLS | done |
 | B5 | **Fund the operator** with testnet CELO if it runs low | Currently ~9.4 CELO (plenty for now) |
 | B6 | (Before mainnet) **Rotate deployer/operator key + move admin to a multisig** | Current key is a testnet burner exposed in chat |
 | B7 | (Before mainnet/real money) **Legal review** | Selling "impact" + a token with rewards → securities/greenwashing/CSRD |
@@ -81,5 +81,40 @@ Say the word and I'll pick these up; otherwise they wait until the product direc
 
 ## Pointers
 - Architecture: `docs/ARCHITECTURE.md` · Decisions: `docs/DECISIONS.md` · Known issues: `docs/KNOWN_ISSUES.md`
-- Deployed addresses: `packages/contracts/deployments/celo-sepolia.json`
-- Deploy runbook: `deploy/README.md`
+- Smart-contract design (v2): `docs/SMART_CONTRACT_DESIGN.md`
+- Deployed addresses: `packages/contracts/deployments/celo-sepolia.json` · Deploy runbook: `deploy/README.md`
+- Repo: github.com/Regen-Bazaar/regenbazaar-beta (private) · Live: https://app.regenbazaar.com
+
+---
+
+## Session closeout (2026-06-04) — next steps
+
+**Status: Phase A v2 is LIVE.** Contracts (deployed + Blockscout-verified), full lazy-mint voucher flow,
+buy frontend, indexer, IPFS — all proven end-to-end on Celo Sepolia and running at https://app.regenbazaar.com
+(isolated on the VPS, TLS, HelpRent untouched). Code pushed to the private org repo.
+
+### ▶ YOUR side (manual / decisions)
+1. 🔴 **Rotate the GitHub token** `ghp_RZyH…` (compromised — pasted in chat).
+2. **Test a real purchase**: connect MetaMask (add Celo Sepolia, get testnet CELO from a faucet), open the
+   marketplace, click **Fund** on a listing, confirm the tx. (Needs a real wallet — I can't click it headless;
+   the on-chain redeem itself is already proven.)
+3. **Decide & tell me**: seed the prod DB with demo NGOs/impacts (so the live site isn't empty)? listing
+   currency (CELO vs a test-stablecoin)? wallet-less-NGO proceeds (payout address vs custodial ledger)?
+4. **Provide (optional) keys** when ready: DeepSeek API key for prod LLM extraction; a paid Celo Sepolia RPC
+   (public forno is rate-limited).
+5. **Before mainnet**: move admin/operator/signer keys to a **multisig**; **3rd-party contract audit**; legal
+   review (selling "impact" + a rewards token); accredited 3rd-party impact verification (corporate tier).
+6. Keep the **operator** account funded with testnet CELO (it pays attest gas; ~9.4 CELO now).
+
+### ▶ MY side (next session, on your "go" / inputs)
+- **Seed prod demo data** (if you want the live site populated) — quick.
+- **Surface on-chain proof in the UI** (Blockscout token + EAS links on submissions; read holdings/leaderboard
+  from the indexer now that prod has a shared Postgres). No keys needed.
+- **Gasless / embedded onboarding** for non-crypto buyers — self-host ERC-4337 bundler + paymaster (free, no
+  paid provider). Bigger workstream.
+- **Buyer dashboard**, secondary-marketplace UI, richer home/discovery, monitoring/health, more tests.
+- Anything new you choose.
+
+### How to redeploy after changes
+`git pull` (or rsync) on the VPS → `cd /root/regenbazaar/deploy && docker compose --env-file .env up -d --build`.
+Server `deploy/.env` (600 perms, not in git) holds the operator burner key + generated PG password.
