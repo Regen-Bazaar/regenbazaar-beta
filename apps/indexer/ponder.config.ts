@@ -1,8 +1,7 @@
-// Ponder config — Celo Sepolia. Addresses + start blocks come from env (filled after contract deploy).
-// Verify this API against the Ponder version you install (see README).
+// Ponder config — Celo Sepolia v2 (platform-issued lazy mint). Addresses + start blocks from env.
 import { createConfig } from "ponder";
 import { http } from "viem";
-import { TRWIAbi, TRWIStakingAbi } from "./src/abis";
+import { TRWIAbi, PrimarySaleAbi, TRWIStakingAbi } from "./src/abis";
 
 export default createConfig({
   networks: {
@@ -16,6 +15,12 @@ export default createConfig({
       network: "celoSepolia",
       abi: TRWIAbi,
       address: process.env.TRWI_ADDRESS as `0x${string}`,
+      startBlock: Number(process.env.TRWI_START_BLOCK ?? 0),
+    },
+    RegenPrimarySale: {
+      network: "celoSepolia",
+      abi: PrimarySaleAbi,
+      address: process.env.PRIMARY_SALE_ADDRESS as `0x${string}`,
       startBlock: Number(process.env.TRWI_START_BLOCK ?? 0),
     },
     TRWIStaking: {

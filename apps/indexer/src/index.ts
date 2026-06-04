@@ -1,26 +1,40 @@
-// Event handlers. Verify `ponder:registry` / db API against your installed Ponder version (see README).
+// Event handlers (v2). Verify ponder:registry / db API against your installed Ponder version.
 import { ponder } from "ponder:registry";
-import { impactToken, stake } from "../ponder.schema";
+import { impactToken, sale, stake } from "../ponder.schema";
 
-// tRWI minted: a verified impact became a token with fractional editions.
-ponder.on("TRWI:ImpactTokenized", async ({ event, context }) => {
+// A collection is registered on its first lazy mint (CollectionRegistered precedes ImpactMinted in-tx).
+ponder.on("TRWI:CollectionRegistered", async ({ event, context }) => {
   await context.db.insert(impactToken).values({
-    id: event.args.id,
+    id: event.args.tokenId,
     creator: event.args.creator,
     totalIV: event.args.totalIV,
-    editions: event.args.editions,
+    maxEditions: event.args.maxEditions,
+    minted: 0n,
+    retired: 0n,
     easUID: event.args.easUID,
     uri: event.args.uri,
-    ivRetired: 0n,
     createdAt: event.block.timestamp,
   });
 });
 
-// Editions retired to claim the offset: accumulate retired IV.
+ponder.on("TRWI:ImpactMinted", async ({ event, context }) => {
+  await context.db.update(impactToken, { id: event.args.tokenId }).set((row) => ({ minted: row.minted + event.args.amount }));
+});
+
 ponder.on("TRWI:ImpactRetired", async ({ event, context }) => {
-  await context.db
-    .update(impactToken, { id: event.args.id })
-    .set((row) => ({ ivRetired: row.ivRetired + event.args.ivRetired }));
+  await context.db.update(impactToken, { id: event.args.tokenId }).set((row) => ({ retired: row.retired + event.args.amount }));
+});
+
+ponder.on("RegenPrimarySale:Sold", async ({ event, context }) => {
+  await context.db.insert(sale).values({
+    id: `${event.args.tokenId}-${event.transaction.hash}-${event.log.logIndex}`,
+    tokenId: event.args.tokenId,
+    buyer: event.args.buyer,
+    amount: event.args.amount,
+    total: event.args.total,
+    currency: event.args.currency,
+    ts: event.block.timestamp,
+  });
 });
 
 ponder.on("TRWIStaking:Staked", async ({ event, context }) => {
@@ -32,15 +46,8 @@ ponder.on("TRWIStaking:Staked", async ({ event, context }) => {
     ivStaked: event.args.ivStaked,
     lockEnd: event.args.lockEnd,
     multiplierBps: event.args.multiplierBps,
-    rewardClaimed: 0n,
     active: true,
   });
-});
-
-ponder.on("TRWIStaking:Claimed", async ({ event, context }) => {
-  await context.db
-    .update(stake, { id: event.args.stakeId })
-    .set((row) => ({ rewardClaimed: row.rewardClaimed + event.args.reward }));
 });
 
 ponder.on("TRWIStaking:Unstaked", async ({ event, context }) => {

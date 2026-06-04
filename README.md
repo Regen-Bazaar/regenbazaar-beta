@@ -38,21 +38,22 @@ docs/         ARCHITECTURE.md · DECISIONS.md · KNOWN_ISSUES.md.
 - **Onboarding** (later): ERC-4337 smart accounts + gasless paymaster (EntryPoint v0.6/0.7/0.8 live on Celo Sepolia).
 - **Storage** (later): Cloudflare R2 + CDN primary, self-hosted IPFS (kubo) backup.
 
-## Deployed (Celo Sepolia testnet, chainId 11142220)
-Core is live and source-verified on Blockscout (`celo-sepolia.blockscout.com/address/<addr>`). Full record:
-`packages/contracts/deployments/celo-sepolia.json`.
+## Deployed (Celo Sepolia testnet, chainId 11142220) — v2 (platform-issued lazy mint)
+Live and source-verified on Blockscout (`celo-sepolia.blockscout.com/address/<addr>`). Full record:
+`packages/contracts/deployments/celo-sepolia.json`. Design: `docs/SMART_CONTRACT_DESIGN.md`.
 
 | Contract | Address |
 |---|---|
-| TRWI (proxy) | `0xa511F92336d9DcBe62caEA46F82DcaFa82BC3E65` |
-| TRWIStaking | `0x665C8964Be8cA3C1F429Aee75Ebe709FF67ef2C1` |
-| REBAZ | `0x8e5F9e9E67688F75D4303a5395F78ff1E3B71975` |
-| EAS | `0x142dFB78c9DFDb447Fad7e327B139Bb622c81c1c` |
-| AuthorizedAttesterResolver | `0xabF828ea9CdF3c6cE95E97BC5E882b29880CeDc1` |
-| SchemaRegistry | `0xd58120Aa88783867f6F29498754E399fd3033eDa` |
+| TRWI (proxy) | `0x796B521EBF9221A0f4212C10767898AfCd81087d` |
+| RegenPrimarySale (voucher lazy-mint) | `0x49A5a77e3DBd76411737820fd968142b6154be26` |
+| RegenMarketplace (secondary escrow) | `0x09c0cbB98Dbb0E37B684abF33e7Beac7f62B4A21` |
+| TRWIStaking | `0x35BcD5DCb8A82197eC268f6E97e3e32d816E8A9b` |
+| REBAZ | `0xC367a4601D8e7D4f83DA5AFd549262886C33177F` |
+| EAS / Resolver / SchemaRegistry | `0x317D…8Cf9` / `0x625f…6999` / `0x25aD…7534` |
 
-ImpactClaim schemaUID `0x836d37174fff1eb2e5a2af8d20d87a908283eec088e38cf21cedaaa9a2658633`. Roles wired
-(REBAZ MINTER→staking; TRWI TOKENIZER + resolver ATTESTER→admin). App wiring (attest→mint) is next.
+ImpactClaim schemaUID `0x35151bab2b9912417175bbf5b49112d9828f4493811bf611f888c1cdd013e92a`.
+Flow (proven live): approve → EAS-attest + IPFS + register listing (no mint) → buyer redeems a platform-signed
+voucher → lazy mint + fee/NGO split → indexer. Secondary via the escrow marketplace.
 
 ## Toolchain
 pnpm workspaces · Next.js 15 / React 19 / Tailwind 4 · Foundry (Solidity 0.8.29) · Drizzle · PGlite · Ponder.

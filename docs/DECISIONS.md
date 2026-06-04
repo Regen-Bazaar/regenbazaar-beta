@@ -75,3 +75,17 @@ Append-only record of significant choices, why we made them, and the trade-offs 
     with admin kept offline; mandatory before mainnet.
 - **Trade-off:** Deployer/operator is a single hot key (testnet burner, exposed in chat) — acceptable on
   testnet, must rotate + move admin to a multisig before mainnet.
+
+## 2026-06 — v2: platform-issued lazy mint via vouchers (supersedes mint-on-approve)
+- **What:** dropped thirdweb (it became paid / heavy registration) and built our own. tRWI is **platform-issued
+  and lazily minted on purchase** via platform-signed EIP-712 vouchers (`RegenPrimarySale`); secondary trading
+  via our own escrow `RegenMarketplace`. Redeployed the core to Celo Sepolia (v2).
+- **Why:** on-chain NGO attribution adds no verifiable value (a wallet is just an address; corporate buyers
+  require accredited third-party verification) — the **platform's** authority is what matters. **Lazy mint**
+  avoids pre-sale gas and the need for NGOs to have wallets. thirdweb's marketplace went paid → a minimal own
+  contract is free and fits our custody model (NGO never holds; impact goes to market).
+- **Hardenings:** token/sale split; voucher `deadline` + per-token `nonce` (reprice/delist); EAS is the source
+  of truth (TRWI re-checks the attestation on register); separate SIGNER vs ATTESTER keys; correct lazy-mint
+  edition accounting. Pricing is off-chain by formula (IV × rate).
+- **Trade-off:** custom payment/voucher contracts (self-reviewed, not third-party audited); secondary is open
+  (no forced royalty); operator hot key (testnet burner → multisig before mainnet).

@@ -11,15 +11,17 @@ end-to-end against real contracts and real IPFS:
 
 | Workstream | State |
 |---|---|
-| Smart contracts (REBAZ, tRWI, staking, EAS resolver) | ✅ deployed + source-verified on Blockscout (29 tests) |
-| AI Impact-Value engine + DeepSeek extraction | ✅ working (43 off-chain tests) |
-| Tokenize → verify → **on-chain mint** (attest + mint tRWI) | ✅ live-validated (minted tokenId 1 & 2) |
+| Smart contracts v2 (tRWI lazy-mint, **RegenPrimarySale** voucher, **RegenMarketplace**, staking, EAS) | ✅ deployed + Blockscout-verified (45 forge tests) |
+| AI Impact-Value engine + DeepSeek + price formula | ✅ working (off-chain tests green) |
+| Tokenize → verify → EAS-attest + register listing (no mint) | ✅ |
+| Buyer redeem (voucher → pay → lazy mint) | ✅ live-proven on Celo Sepolia |
 | Self-host IPFS metadata pinning | ✅ proven (uri resolves to pinned JSON) |
-| Indexer (Ponder) | ✅ live-validated (indexes real mints → GraphQL) |
-| Web app (tokenize, verify, dashboard, marketplace, leaderboard, methodology, agent API) | ✅ runs locally |
-| Deploy artifacts (Docker/compose/nginx) | 🟡 code-ready, not yet run on a Docker host |
-| Marketplace buy ("Fund") | ⛔ needs thirdweb + wallet onboarding (see below) |
+| Indexer (Ponder, v2 events) | ✅ live-validated (CollectionRegistered/ImpactMinted/Sold → GraphQL) |
+| Web app + **wallet connect + Fund (buy) UI** | ✅ renders; buy needs a real wallet (MetaMask) to click through |
+| Deploy artifacts (Docker/compose/nginx/ipfs/indexer) | 🟡 code-ready, not yet run on a Docker host |
+| Marketplace **own contracts** (thirdweb dropped — went paid) | ✅ built (primary voucher + secondary escrow) |
 | Live VPS deploy | ⛔ needs your "go" + DNS |
+| Non-crypto onboarding (embedded/gasless) | ⏳ later — self-host ERC-4337 (free), not built |
 
 Deployed addresses + explorer links: `packages/contracts/deployments/celo-sepolia.json` and the README.
 
@@ -30,8 +32,8 @@ Deployed addresses + explorer links: `packages/contracts/deployments/celo-sepoli
 ### A. Accounts / keys to create or hand over
 | # | Item | Why | How to get it |
 |---|---|---|---|
-| A1 | **thirdweb client ID** (+ a connected wallet for deploy) | To stand up Marketplace V3 and wire buy/"Fund" (W6) | Free signup at thirdweb.com → create a project → copy the client ID |
-| A2 | **Wallet-onboarding provider** (Privy **or** Thirdweb embedded) + its API key/client ID | So non-crypto users get a wallet (email/phone) and can buy gaslessly | Privy.io or thirdweb dashboard → app keys |
+| A1 | ~~thirdweb~~ — **dropped** (went paid/heavy). Marketplace is our own free contracts. | n/a | n/a |
+| A2 | Non-crypto onboarding (embedded/gasless) — **no paid provider**; plan = self-host ERC-4337 (free). | So wallet-less users can buy gaslessly (later phase). | Self-hosted bundler (Alto/rundler) + paymaster on the VPS — no signup |
 | A3 | **DeepSeek API key for this project** | Production LLM extraction (now only borrowed from another project's .env for tests) | platform.deepseek.com → API key (server env only) |
 | A4 | **Production RPC for Celo Sepolia** (optional but recommended) | The public `forno` RPC is rate-limited (Ponder warned) | Alchemy / dRPC / Infura Celo Sepolia endpoint |
 | A5 | **Pinata/web3.storage key** (optional, later) | Broad third-party resolvability of IPFS metadata beyond our own gateway | pinata.cloud / web3.storage token |
