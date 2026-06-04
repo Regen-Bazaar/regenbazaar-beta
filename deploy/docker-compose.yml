@@ -112,6 +112,7 @@ services:
       TRWI_START_BLOCK: ${TRWI_START_BLOCK}
       STAKING_ADDRESS: ${STAKING_ADDRESS}
       STAKING_START_BLOCK: ${STAKING_START_BLOCK}
+      PRIMARY_SALE_ADDRESS: ${PRIMARY_SALE_ADDRESS}
     depends_on:
       postgres:
         condition: service_healthy
