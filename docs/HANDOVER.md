@@ -20,7 +20,7 @@ end-to-end against real contracts and real IPFS:
 | Web app + **wallet connect + Fund (buy) UI** | ✅ renders; buy needs a real wallet (MetaMask) to click through |
 | Deploy artifacts (Docker/compose/nginx/ipfs/indexer) | 🟡 code-ready, not yet run on a Docker host |
 | Marketplace **own contracts** (thirdweb dropped — went paid) | ✅ built (primary voucher + secondary escrow) |
-| Live VPS deploy | ⛔ needs your "go" + DNS |
+| **Live VPS deploy** | ✅ **LIVE at https://app.regenbazaar.com** (isolated `regenbazaar_*`, TLS, HelpRent untouched) |
 | Non-crypto onboarding (embedded/gasless) | ⏳ later — self-host ERC-4337 (free), not built |
 
 Deployed addresses + explorer links: `packages/contracts/deployments/celo-sepolia.json` and the README.
