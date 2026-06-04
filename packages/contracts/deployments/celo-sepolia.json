@@ -1,24 +1,28 @@
 {
   "network": "celo-sepolia",
   "chainId": 11142220,
-  "version": "v2-lazy-mint-voucher",
-  "startBlock": 27265822,
+  "version": "v3-hardened-lazy-mint-voucher",
+  "startBlock": 27285071,
   "deployer": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB",
-  "schemaUID": "0x35151bab2b9912417175bbf5b49112d9828f4493811bf611f888c1cdd013e92a",
+  "schemaUID": "0xc9c7678fbad9ec95e2ef6f480b10391bb7dcb1df7feec189411a439fd850f64e",
   "impactClaimSchema": "address ngo,uint256 impactValue,string metadataURI",
   "explorer": "https://celo-sepolia.blockscout.com",
   "contracts": {
-    "SchemaRegistry": "0x25aD7aB2542372E46d16992B96B04ebE2Fe07534",
-    "EAS": "0x317D1b35608Eb8CF390d0280042a0cDbBA238Cf9",
-    "AuthorizedAttesterResolver": "0x625fe4B8da26F57D63c1d5681AFb85635D236999",
-    "REBAZ": "0xC367a4601D8e7D4f83DA5AFd549262886C33177F",
-    "TRWIProxy": "0x796B521EBF9221A0f4212C10767898AfCd81087d",
-    "TRWIImpl": "0xBd7FF41169707ee623C1ea26395D9DCA0e66DbbA",
-    "TRWIStaking": "0x35BcD5DCb8A82197eC268f6E97e3e32d816E8A9b",
-    "RegenMarketplace": "0x09c0cbB98Dbb0E37B684abF33e7Beac7f62B4A21",
-    "RegenPrimarySale": "0x49A5a77e3DBd76411737820fd968142b6154be26"
+    "SchemaRegistry": "0x28747503194756DF51503902949c66D2F3579625",
+    "EAS": "0x82448c9c9b95Da5dCe9905F9C59CcCA0DF346df8",
+    "AuthorizedAttesterResolver": "0x3FA9342F15cC570AF17e48BC4E04eFb0E73BAcD4",
+    "REBAZ": "0x2DAc57d0F01187A2a0726269563b6E265155c9d8",
+    "TRWIProxy": "0xA1A10570534681606eF67Bc8DDeda6061Dd8a8f0",
+    "TRWIImpl": "0x788E349Ef6A27b7359a4214F0e78f6A1a9157E4A",
+    "TRWIStaking": "0x1c950aBbab6D1f86E9C742b1EB4780B96F13FFcc",
+    "RegenMarketplace": "0xBE6E584F0eE49f99351E3bB05746cA469Db38C3a",
+    "RegenPrimarySale": "0x2b4A3aE4E69771cdf2Fd4e2075A7B3Ab2e0498B2"
   },
-  "marketplace": { "feeBps": 250, "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB" },
-  "primarySale": { "feeBps": 250, "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB", "signer": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB" },
-  "note": "v2 supersedes the earlier v1 deployment (mint-on-approve). Platform-issued lazy mint via EIP-712 vouchers (RegenPrimarySale); RegenMarketplace = secondary escrow."
+  "rebaz": { "cap": "1000000000000000000000000000", "capHuman": "1000000000 REBAZ" },
+  "marketplace": { "feeBps": 250, "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB", "maxRoyaltyBps": 1000 },
+  "primarySale": { "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB", "signer": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB", "note": "feeBps is now per-voucher (signed), not a contract field" },
+  "roles": {
+    "note": "Testnet refresh: roles default to the deployer EOA EXCEPT the deployer is NOT a TRWI MINTER (minting only via RegenPrimarySale). Set ADMIN_MULTISIG/SIGNER_ADDR/ATTESTER_ADDR/UPGRADER_ADDR/PAUSER_ADDR/FEE_RECIPIENT envs + RENOUNCE_DEPLOYER_ADMIN before mainnet."
+  },
+  "note": "v3 hardened (security/gas audit, docs/AUDIT.md) supersedes v2. Changes affecting integrators: REBAZ is capped (ERC20Capped); the EIP-712 Voucher gained a `feeBps` field (uint96, after royaltyBps, before nonce) so VOUCHER_TYPEHASH changed; all contracts are Pausable; TRWIStaking adds emergencyUnstake and uses a reward-index accumulator; TRWI setURI removed (metadata immutable). Off-chain signer + frontend EIP-712 types MUST include feeBps or redeem reverts BadSignature."
 }

@@ -16,6 +16,7 @@ type VoucherJson = {
   easUID: `0x${string}`;
   metadataURI: string;
   royaltyBps: string;
+  feeBps: string;
   nonce: string;
   deadline: string;
 };
@@ -55,6 +56,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
         easUID: voucher.easUID,
         metadataURI: voucher.metadataURI,
         royaltyBps: BigInt(voucher.royaltyBps),
+        feeBps: BigInt(voucher.feeBps),
         nonce: BigInt(voucher.nonce),
         deadline: BigInt(voucher.deadline),
       };

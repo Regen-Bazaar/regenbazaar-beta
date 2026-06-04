@@ -16,11 +16,6 @@
         "name": "feeRecipient_",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "feeBps_",
-        "type": "uint96",
-        "internalType": "uint96"
       }
     ],
     "stateMutability": "nonpayable"
@@ -79,6 +74,19 @@
   },
   {
     "type": "function",
+    "name": "PAUSER_ROLE",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "SIGNER_ROLE",
     "inputs": [],
     "outputs": [
@@ -86,6 +94,25 @@
         "name": "",
         "type": "bytes32",
         "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "allowedCurrency",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
     "stateMutability": "view"
@@ -161,19 +188,6 @@
         "name": "extensions",
         "type": "uint256[]",
         "internalType": "uint256[]"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "feeBps",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint96",
-        "internalType": "uint96"
       }
     ],
     "stateMutability": "view"
@@ -312,6 +326,11 @@
             "internalType": "uint96"
           },
           {
+            "name": "feeBps",
+            "type": "uint96",
+            "internalType": "uint96"
+          },
+          {
             "name": "nonce",
             "type": "uint256",
             "internalType": "uint256"
@@ -329,6 +348,26 @@
         "name": "",
         "type": "bytes32",
         "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "pause",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "paused",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
     "stateMutability": "view"
@@ -389,6 +428,11 @@
           },
           {
             "name": "royaltyBps",
+            "type": "uint96",
+            "internalType": "uint96"
+          },
+          {
+            "name": "feeBps",
             "type": "uint96",
             "internalType": "uint96"
           },
@@ -456,17 +500,30 @@
   },
   {
     "type": "function",
-    "name": "setFee",
+    "name": "setCurrencyAllowed",
+    "inputs": [
+      {
+        "name": "currency",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "allowed",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setFeeRecipient",
     "inputs": [
       {
         "name": "feeRecipient_",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "feeBps_",
-        "type": "uint96",
-        "internalType": "uint96"
       }
     ],
     "outputs": [],
@@ -505,6 +562,32 @@
     "stateMutability": "view"
   },
   {
+    "type": "function",
+    "name": "unpause",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "CurrencyAllowed",
+    "inputs": [
+      {
+        "name": "currency",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "allowed",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
     "type": "event",
     "name": "EIP712DomainChanged",
     "inputs": [],
@@ -512,19 +595,13 @@
   },
   {
     "type": "event",
-    "name": "FeeUpdated",
+    "name": "FeeRecipientUpdated",
     "inputs": [
       {
         "name": "feeRecipient",
         "type": "address",
         "indexed": false,
         "internalType": "address"
-      },
-      {
-        "name": "feeBps",
-        "type": "uint96",
-        "indexed": false,
-        "internalType": "uint96"
       }
     ],
     "anonymous": false
@@ -544,6 +621,19 @@
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Paused",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
       }
     ],
     "anonymous": false
@@ -661,6 +751,19 @@
     "anonymous": false
   },
   {
+    "type": "event",
+    "name": "Unpaused",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
     "type": "error",
     "name": "AccessControlBadConfirmation",
     "inputs": []
@@ -680,6 +783,11 @@
         "internalType": "bytes32"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "BadCurrency",
+    "inputs": []
   },
   {
     "type": "error",
@@ -717,6 +825,16 @@
         "internalType": "bytes32"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "EnforcedPause",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ExpectedPause",
+    "inputs": []
   },
   {
     "type": "error",
