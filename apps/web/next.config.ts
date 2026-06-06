@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { fileURLToPath } from "node:url";
+import { withSentryConfig } from "@sentry/nextjs";
 
 // Permissive enough not to break Next/RSC, strict enough to add real defense.
 // img-src allows https: so externally-hosted impact evidence images render.
@@ -9,7 +10,8 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self'",
+  // allow the Sentry browser SDK to send events/traces to its ingest endpoint
+  "connect-src 'self' https://*.ingest.us.sentry.io https://*.ingest.sentry.io",
   "frame-ancestors 'self'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -51,4 +53,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Sentry wrap. Runtime capture is gated on the DSN env vars (no-op if unset); no auth token needed to build.
+export default withSentryConfig(nextConfig, {
+  org: "vitacrypt",
+  project: "regenbazaar",
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  disableLogger: true,
+});
