@@ -12,6 +12,6 @@
   "dependencies": {
     "@rb/db": "workspace:*",
     "@rb/impact-engine": "workspace:*",
-    "openai": "^6.41.0"
+    "openai": "^6.42.0"
   }
 }

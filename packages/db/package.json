@@ -15,11 +15,11 @@
     "test": "node --experimental-strip-types --test test/db.test.ts test/dev-schema-drift.test.ts"
   },
   "dependencies": {
-    "@electric-sql/pglite": "^0.2.0",
+    "@electric-sql/pglite": "^0.5.2",
     "drizzle-orm": "^0.45.2",
     "postgres": "^3.4.9"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.30.0"
+    "drizzle-kit": "^0.31.10"
   }
 }
