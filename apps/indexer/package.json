@@ -8,7 +8,7 @@
     "codegen": "ponder codegen"
   },
   "dependencies": {
-    "hono": "^4.12.23",
+    "hono": "^4.12.27",
     "kysely": "^0.27",
     "ponder": "^0.8.33",
     "viem": "^2.52.0"
