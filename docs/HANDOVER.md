@@ -20,7 +20,7 @@ end-to-end against real contracts and real IPFS:
 | Web app + **wallet connect + Fund (buy) UI** | ✅ renders; buy needs a real wallet (MetaMask) to click through |
 | Deploy artifacts (Docker/compose/nginx/ipfs/indexer) | 🟡 code-ready, not yet run on a Docker host |
 | Marketplace **own contracts** (thirdweb dropped — went paid) | ✅ built (primary voucher + secondary escrow) |
-| **Live VPS deploy** | ✅ **LIVE at https://app.regenbazaar.com** (isolated `regenbazaar_*`, TLS, HelpRent untouched) |
+| **Live VPS deploy** | ⚠️ was live at app.regenbazaar.com; that VPS is gone and the DNS record was removed 2026-09-07. Needs redeploying. |
 | Non-crypto onboarding (embedded/gasless) | ⏳ later — self-host ERC-4337 (free), not built |
 
 Deployed addresses + explorer links: `packages/contracts/deployments/celo-sepolia.json` and the README.
@@ -43,7 +43,7 @@ Deployed addresses + explorer links: `packages/contracts/deployments/celo-sepoli
 |---|---|---|
 | B1 | 🔴 **Rotate the GitHub org token** `ghp_RZyH…` | It was pasted in chat → treat as compromised (still pending) |
 | B2 | ✅ Pushed → **github.com/Regen-Bazaar/regenbazaar-beta** (private). CI runs on push. | done |
-| B3 | ✅ DNS `app.regenbazaar.com` → `62.72.44.6` | done |
+| B3 | ⚠️ DNS `app.regenbazaar.com` → `62.72.44.6` — record deleted 2026-09-07, that IP is no longer ours | needs redoing after a redeploy |
 | B4 | ✅ Deployed (isolated) on the HelpRent VPS + TLS | done |
 | B5 | **Fund the operator** with testnet CELO if it runs low | Currently ~9.4 CELO (plenty for now) |
 | B6 | (Before mainnet) **Rotate deployer/operator key + move admin to a multisig** | Current key is a testnet burner exposed in chat |
@@ -83,14 +83,14 @@ Say the word and I'll pick these up; otherwise they wait until the product direc
 - Architecture: `docs/ARCHITECTURE.md` · Decisions: `docs/DECISIONS.md` · Known issues: `docs/KNOWN_ISSUES.md`
 - Smart-contract design (v2): `docs/SMART_CONTRACT_DESIGN.md`
 - Deployed addresses: `packages/contracts/deployments/celo-sepolia.json` · Deploy runbook: `deploy/README.md`
-- Repo: github.com/Regen-Bazaar/regenbazaar-beta (private) · Live: https://app.regenbazaar.com
+- Repo: github.com/Regen-Bazaar/regenbazaar-beta (public since 2026-09-07) · no public deployment right now
 
 ---
 
 ## Session closeout (2026-06-04) — next steps
 
 **Status: Phase A v2 is LIVE.** Contracts (deployed + Blockscout-verified), full lazy-mint voucher flow,
-buy frontend, indexer, IPFS — all proven end-to-end on Celo Sepolia and running at https://app.regenbazaar.com
+buy frontend, indexer, IPFS — all proven end-to-end on Celo Sepolia; the hosted demo is currently down
 (isolated on the VPS, TLS, HelpRent untouched). Code pushed to the private org repo.
 
 ### ▶ YOUR side (manual / decisions)

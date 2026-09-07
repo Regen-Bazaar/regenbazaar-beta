@@ -9,8 +9,11 @@ $REBAZ token.
 
 > Beta target network: **Celo Sepolia** (chainId 11142220). Audience: non-crypto users (embedded /
 > account-abstraction wallets, gasless — later phase).
-> **🟢 Live: https://app.regenbazaar.com** (isolated VPS, TLS). Full end-to-end on testnet: tokenize →
-> verify → EAS-attest + IPFS → buyer redeems a platform-signed voucher → lazy mint → indexed.
+> **Not currently hosted.** The demo ran on a VPS that has since been decommissioned, and
+> `app.regenbazaar.com` was removed rather than left pointing at a machine we no longer control.
+> The flow it proved is intact in this repository and runs locally: tokenize → verify →
+> EAS-attest + IPFS → buyer redeems a platform-signed voucher → lazy mint → indexed, all on
+> Celo Sepolia.
 
 ## Layout
 ```
