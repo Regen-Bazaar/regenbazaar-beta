@@ -1,18 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Test} from "forge-std/Test.sol";
-import {REBAZ} from "../src/REBAZ.sol";
-import {TRWI} from "../src/TRWI.sol";
-import {TRWIStaking} from "../src/TRWIStaking.sol";
-import {AuthorizedAttesterResolver} from "../src/AuthorizedAttesterResolver.sol";
-import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { Test } from "forge-std/Test.sol";
+import { REBAZ } from "../src/REBAZ.sol";
+import { TRWI } from "../src/TRWI.sol";
+import { TRWIStaking } from "../src/TRWIStaking.sol";
+import { AuthorizedAttesterResolver } from "../src/AuthorizedAttesterResolver.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-import {SchemaRegistry} from "@ethereum-attestation-service/eas-contracts/SchemaRegistry.sol";
-import {EAS} from "@ethereum-attestation-service/eas-contracts/EAS.sol";
-import {ISchemaRegistry} from "@ethereum-attestation-service/eas-contracts/ISchemaRegistry.sol";
-import {ISchemaResolver} from "@ethereum-attestation-service/eas-contracts/resolver/ISchemaResolver.sol";
-import {IEAS, AttestationRequest, AttestationRequestData} from "@ethereum-attestation-service/eas-contracts/IEAS.sol";
+import { SchemaRegistry } from "@ethereum-attestation-service/eas-contracts/SchemaRegistry.sol";
+import { EAS } from "@ethereum-attestation-service/eas-contracts/EAS.sol";
+import { ISchemaRegistry } from "@ethereum-attestation-service/eas-contracts/ISchemaRegistry.sol";
+import { ISchemaResolver } from "@ethereum-attestation-service/eas-contracts/resolver/ISchemaResolver.sol";
+import {
+    IEAS,
+    AttestationRequest,
+    AttestationRequestData
+} from "@ethereum-attestation-service/eas-contracts/IEAS.sol";
 
 /// @notice End-to-end against a REAL self-deployed EAS (not a mock): attest -> mint tRWI -> stake -> claim,
 ///         plus the resolver blocking unauthorized attesters.
@@ -33,13 +37,15 @@ contract IntegrationTest is Test {
         registry = new SchemaRegistry();
         eas = new EAS(ISchemaRegistry(address(registry)));
         resolver = new AuthorizedAttesterResolver(IEAS(address(eas)), address(this));
-        schemaUID =
-            registry.register("address ngo,uint256 impactValue,string metadataURI", ISchemaResolver(address(resolver)), true);
+        schemaUID = registry.register(
+            "address ngo,uint256 impactValue,string metadataURI", ISchemaResolver(address(resolver)), true
+        );
 
-        rebaz = new REBAZ(address(this), address(this), 0);
+        rebaz = new REBAZ(address(this), address(this), 0, 1_000_000_000_000 ether);
         TRWI impl = new TRWI();
-        ERC1967Proxy proxy =
-            new ERC1967Proxy(address(impl), abi.encodeCall(TRWI.initialize, (address(this), address(eas), schemaUID)));
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(impl), abi.encodeCall(TRWI.initialize, (address(this), address(eas), schemaUID))
+        );
         trwi = TRWI(address(proxy));
         staking = new TRWIStaking(address(this), address(trwi), address(rebaz), 1000);
 
@@ -48,7 +54,11 @@ contract IntegrationTest is Test {
         resolver.grantRole(resolver.ATTESTER_ROLE(), attester);
     }
 
-    function _req(address ngo_, uint256 iv, string memory uri) internal view returns (AttestationRequest memory) {
+    function _req(address ngo_, uint256 iv, string memory uri)
+        internal
+        view
+        returns (AttestationRequest memory)
+    {
         return AttestationRequest({
             schema: schemaUID,
             data: AttestationRequestData({

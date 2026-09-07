@@ -20,11 +20,11 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 
 const RPC = process.env.CELO_SEPOLIA_RPC_URL ?? "https://forno.celo-sepolia.celo-testnet.org";
-// Public v2 addresses (overridable via env); defaults = the live Celo Sepolia v2 deployment.
-const EAS_ADDRESS = (process.env.EAS_ADDRESS ?? "0x317D1b35608Eb8CF390d0280042a0cDbBA238Cf9") as Hex;
-const PRIMARY_SALE_ADDRESS = (process.env.PRIMARY_SALE_ADDRESS ?? "0x49A5a77e3DBd76411737820fd968142b6154be26") as Hex;
+// Public v3 (hardened) addresses (overridable via env); defaults = the live Celo Sepolia v3 deployment.
+const EAS_ADDRESS = (process.env.EAS_ADDRESS ?? "0x82448c9c9b95Da5dCe9905F9C59CcCA0DF346df8") as Hex;
+const PRIMARY_SALE_ADDRESS = (process.env.PRIMARY_SALE_ADDRESS ?? "0x2b4A3aE4E69771cdf2Fd4e2075A7B3Ab2e0498B2") as Hex;
 const SCHEMA_UID = (process.env.IMPACT_CLAIM_SCHEMA_UID ??
-  "0x35151bab2b9912417175bbf5b49112d9828f4493811bf611f888c1cdd013e92a") as Hex;
+  "0xc9c7678fbad9ec95e2ef6f480b10391bb7dcb1df7feec189411a439fd850f64e") as Hex;
 const CHAIN_ID = 11142220;
 
 export const celoSepolia = defineChain({
@@ -90,6 +90,7 @@ const VOUCHER_TYPES = {
     { name: "easUID", type: "bytes32" },
     { name: "metadataURI", type: "string" },
     { name: "royaltyBps", type: "uint96" },
+    { name: "feeBps", type: "uint96" },
     { name: "nonce", type: "uint256" },
     { name: "deadline", type: "uint256" },
   ],
@@ -106,6 +107,7 @@ export interface ImpactVoucher {
   easUID: Hex;
   metadataURI: string;
   royaltyBps: bigint;
+  feeBps: bigint;
   nonce: bigint;
   deadline: bigint;
 }

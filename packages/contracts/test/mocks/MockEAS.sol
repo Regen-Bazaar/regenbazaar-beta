@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Attestation} from "@ethereum-attestation-service/eas-contracts/Common.sol";
+import { Attestation } from "@ethereum-attestation-service/eas-contracts/Common.sol";
 
 /// @dev Minimal EAS stand-in for unit tests: only `getAttestation` is exercised by TRWI.
 contract MockEAS {
