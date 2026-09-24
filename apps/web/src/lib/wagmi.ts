@@ -1,10 +1,10 @@
 import { createConfig, http } from "wagmi";
 import { injected } from "wagmi/connectors";
-import { celoSepolia, RPC } from "./chain";
+import { chain, RPC } from "./chain";
 
 export const wagmiConfig = createConfig({
-  chains: [celoSepolia],
+  chains: [chain],
   connectors: [injected()],
-  transports: { [celoSepolia.id]: http(RPC) },
+  transports: { [chain.id]: http(RPC) },
   ssr: true,
 });

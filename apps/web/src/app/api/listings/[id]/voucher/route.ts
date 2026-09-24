@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import { listings } from "@rb/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getDb } from "../../../../../lib/db";
 import { onchainEnabled, signVoucher, type ImpactVoucher } from "../../../../../lib/onchain";
+import { NETWORK } from "../../../../../lib/networks";
 
 export const runtime = "nodejs";
 
 const ROYALTY_BPS = 500; // secondary-sale royalty to the NGO creator (<= TRWI MAX_ROYALTY_BPS = 1000)
 const FEE_BPS = 250; // platform fee for the primary sale, now part of the SIGNED voucher (<= MAX_FEE_BPS = 1000)
 const DEADLINE_SECS = 3600;
-const PRIMARY_SALE = process.env.PRIMARY_SALE_ADDRESS ?? "0x2b4A3aE4E69771cdf2Fd4e2075A7B3Ab2e0498B2";
 
 // GET /api/listings/<id>/voucher — return a freshly platform-signed EIP-712 voucher for a primary listing.
 // The buyer submits {voucher, signature} to RegenPrimarySale.redeem() to pay + lazily mint editions.
@@ -17,7 +17,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   if (!onchainEnabled()) return NextResponse.json({ error: "onchain not configured" }, { status: 503 });
   const { id } = await ctx.params;
   const db = await getDb();
-  const [l] = await db.select().from(listings).where(eq(listings.id, id)).limit(1);
+  const [l] = await db.select().from(listings).where(and(eq(listings.id, id), eq(listings.chainId, NETWORK.chain.id))).limit(1);
   if (!l || !l.active) return NextResponse.json({ error: "listing not found" }, { status: 404 });
 
   const deadline = BigInt(Math.floor(Date.now() / 1000) + DEADLINE_SECS);
@@ -40,8 +40,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
 
   // bigints -> strings for JSON; the client reconstructs them for the redeem call.
   return NextResponse.json({
-    contract: PRIMARY_SALE,
-    chainId: 11142220,
+    contract: NETWORK.primarySale,
+    chainId: NETWORK.chain.id,
     signature,
     voucher: {
       tokenId: voucher.tokenId.toString(),

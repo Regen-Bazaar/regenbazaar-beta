@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useConnect, useChainId, useSwitchChain, useWriteContract } from "wagmi";
+import { useAccount, useConnect, useChainId, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { injected } from "wagmi/connectors";
-import { PRIMARY_SALE, NATIVE, celoSepolia, redeemAbi } from "../lib/chain";
+import { PRIMARY_SALE, NATIVE, chain, erc20Abi, redeemAbi } from "../lib/chain";
 
 type VoucherJson = {
   tokenId: string;
@@ -21,9 +21,10 @@ type VoucherJson = {
   deadline: string;
 };
 
-/** Connect → fetch a platform-signed voucher → redeem (pay + lazily mint 1 edition to the buyer). */
+/** Connect → fetch a platform-signed voucher → (approve ERC-20 if needed) → redeem (pay + lazily mint 1 edition). */
 export function BuyButton({ listingId }: { listingId: string }) {
-  const { isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
+  const publicClient = usePublicClient({ chainId: chain.id });
   const { connect } = useConnect();
   const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
@@ -40,7 +41,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
     setState("busy");
     setMsg("");
     try {
-      if (chainId !== celoSepolia.id) await switchChainAsync({ chainId: celoSepolia.id });
+      if (chainId !== chain.id) await switchChainAsync({ chainId: chain.id });
       const res = await fetch(`/api/listings/${listingId}/voucher`);
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "voucher unavailable");
       const { voucher, signature } = (await res.json()) as { voucher: VoucherJson; signature: `0x${string}` };
@@ -61,13 +62,35 @@ export function BuyButton({ listingId }: { listingId: string }) {
         deadline: BigInt(voucher.deadline),
       };
       const amount = 1n;
+      const total = v.pricePerEdition * amount;
+      if (v.currency !== NATIVE) {
+        if (!address || !publicClient) throw new Error("wallet not ready");
+        const allowance = await publicClient.readContract({
+          address: v.currency,
+          abi: erc20Abi,
+          functionName: "allowance",
+          args: [address, PRIMARY_SALE],
+        });
+        if (allowance < total) {
+          setMsg("Approve the payment token in your wallet…");
+          const approveHash = await writeContractAsync({
+            address: v.currency,
+            abi: erc20Abi,
+            functionName: "approve",
+            args: [PRIMARY_SALE, total],
+            chainId: chain.id,
+          });
+          await publicClient.waitForTransactionReceipt({ hash: approveHash });
+          setMsg("");
+        }
+      }
       const hash = await writeContractAsync({
         address: PRIMARY_SALE,
         abi: redeemAbi,
         functionName: "redeem",
         args: [v, amount, signature],
-        value: v.currency === NATIVE ? v.pricePerEdition * amount : 0n,
-        chainId: celoSepolia.id,
+        value: v.currency === NATIVE ? total : 0n,
+        chainId: chain.id,
       });
       setTx(hash);
       setState("done");
@@ -80,7 +103,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
   if (state === "done") {
     return (
       <a
-        href={`${celoSepolia.blockExplorers.default.url}/tx/${tx}`}
+        href={`${chain.blockExplorers?.default.url}/tx/${tx}`}
         target="_blank"
         rel="noopener noreferrer"
         className="mt-4 block rounded-md border border-green/50 py-2 text-center text-sm text-green-soft"
@@ -98,7 +121,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
       >
         {state === "busy" ? "Confirm in wallet…" : isConnected ? "Fund this impact" : "Connect to fund"}
       </button>
-      {state === "error" && <p className="mt-1 text-xs text-red-300">{msg}</p>}
+      {msg && <p className={`mt-1 text-xs ${state === "error" ? "text-red-300" : "text-paper/60"}`}>{msg}</p>}
     </div>
   );
 }

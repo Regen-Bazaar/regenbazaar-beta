@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { impactSubmissions, listings } from "@rb/db/schema";
 import { getDb } from "../../lib/db";
 import { BuyButton } from "../../components/BuyButton";
+import { NETWORK } from "../../lib/networks";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,7 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
   const listingRows = await db
     .select({ submissionId: listings.submissionId, id: listings.id })
     .from(listings)
-    .where(eq(listings.active, true));
+    .where(and(eq(listings.active, true), eq(listings.chainId, NETWORK.chain.id)));
   const listingBySubmission = new Map(listingRows.map((r) => [r.submissionId, r.id]));
 
   // Filter facets derived from the full set (so chips reflect what's actually available).
@@ -66,7 +67,8 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
     <main className="mx-auto max-w-6xl px-6 py-12">
       <h1 className="text-3xl font-bold">Marketplace</h1>
       <p className="mt-2 text-paper/70">
-        Fund verified real-world impact. Each edition is a fractional share of the claim.
+        Fund verified real-world impact. Each edition is a fractional share of the claim. Paid in{" "}
+        {NETWORK.saleCurrency.symbol} on {NETWORK.chain.name}.
       </p>
 
       {/* filter bar */}

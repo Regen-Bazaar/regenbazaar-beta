@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ConnectButton } from "./ConnectButton";
+import { NETWORK } from "../lib/networks";
 
 const LINKS = [
   { href: "/dashboard", label: "Dashboard" },
@@ -19,6 +20,12 @@ export function Nav() {
         </Link>
 
         <div className="flex items-center gap-4">
+          <span
+            title="Active network"
+            className="hidden rounded-full border border-gold/30 px-2.5 py-1 text-xs text-paper/70 md:inline"
+          >
+            {NETWORK.chain.name}
+          </span>
           {/* desktop */}
           <nav className="hidden gap-7 text-sm sm:flex">
             {LINKS.map((l) => (
