@@ -74,10 +74,8 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   `deployments/celo-sepolia.json`, startBlock 27285071), live-verified on-chain (deployer NOT a TRWI minter,
   REBAZ cap=1e27, e2e attest→feeBps-voucher→redeem→mint smoke), and source-verified on Blockscout. Off-chain
   signer + frontend EIP-712 updated with `feeBps` and pointed at v3. Branch merged to local `main`.
-- **NOT DONE — production cutover (gated).** `app.regenbazaar.com` on the HelpRent VPS still serves the
-  **v2** contracts. Switching requires: rsync the repo, set the web + indexer env to the v3 addresses +
-  startBlock 27285071, `docker compose --env-file .env up -d --build`, verify HelpRent untouched. This needs
-  explicit approval to SSH into the shared production box (62.72.44.6).
+- **Superseded (2026-09):** the old HelpRent VPS 62.72.44.6 was decommissioned 2026-07-12; the app now runs on
+  169.58.27.199 against the Arbitrum Sepolia deployment (see "Arbitrum buildathon deployment" below).
 - **NOT DONE — push to remote.** `main` is merged locally only; not pushed to `origin`
   (`Regen-Bazaar/regenbazaar-beta`) per the never-push-to-main policy. Push the branch + open a PR instead.
 - **Emissions still mint-on-claim (now capped).** REBAZ has a hard cap, but staking still mints rewards on
