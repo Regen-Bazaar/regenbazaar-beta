@@ -6,6 +6,7 @@ export const chain = NETWORK.chain;
 export const RPC = NETWORK.chain.rpcUrls.default.http[0];
 export const PRIMARY_SALE = NETWORK.primarySale;
 export const SALE_CURRENCY = NETWORK.saleCurrency;
+export const TRWI = NETWORK.trwi;
 
 // RegenPrimarySale.redeem ABI (Voucher tuple must match the contract field order).
 export const redeemAbi = [
@@ -61,5 +62,29 @@ export const erc20Abi = [
     stateMutability: "nonpayable",
     inputs: [{ name: "spender", type: "address" }, { name: "amount", type: "uint256" }],
     outputs: [{ name: "", type: "bool" }],
+  },
+] as const;
+
+export const trwiAbi = [
+  {
+    type: "function",
+    name: "balanceOf",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }, { name: "id", type: "uint256" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "impactValueOf",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }, { name: "amount", type: "uint256" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "retire",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "tokenId", type: "uint256" }, { name: "amount", type: "uint256" }],
+    outputs: [],
   },
 ] as const;
