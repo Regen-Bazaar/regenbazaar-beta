@@ -22,10 +22,42 @@
   },
   "paymentCurrencies": {
     "NATIVE": "0x0000000000000000000000000000000000000000",
-    "USDG": { "address": "0xFFC95faa3d63Cde504a05B567C600B78C0b41892", "decimals": 6, "issuer": "Paxos (testnet)", "allowlisted": true }
+    "USDG": {
+      "address": "0xFFC95faa3d63Cde504a05B567C600B78C0b41892",
+      "decimals": 6,
+      "issuer": "Paxos (testnet)",
+      "allowlisted": true
+    },
+    "tUSDG": {
+      "address": "0x738B0C655E050320764EA1A7191BEA226B053410",
+      "decimals": 6,
+      "issuer": "Regen Bazaar testnet stand-in (NOT Paxos), public mint <= 1000/call",
+      "allowlisted": true,
+      "allowlistTx": "0x60e42aa0561e091acb7599986460f225e6f1ad6a9571fede76361adb5d27eff2",
+      "reason": "Paxos testnet faucet not dispensing since 2026-09-22"
+    }
   },
-  "rebaz": { "cap": "1000000000000000000000000000", "capHuman": "1000000000 REBAZ" },
-  "marketplace": { "feeBps": 250, "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB", "maxRoyaltyBps": 1000 },
-  "primarySale": { "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB", "signer": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB" },
-  "roles": { "note": "Testnet: roles default to the deployer EOA except TRWI MINTER (RegenPrimarySale only). Same code and role model as the Celo Sepolia v3 deployment." }
+  "rebaz": {
+    "cap": "1000000000000000000000000000",
+    "capHuman": "1000000000 REBAZ"
+  },
+  "marketplace": {
+    "feeBps": 250,
+    "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB",
+    "maxRoyaltyBps": 1000
+  },
+  "primarySale": {
+    "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB",
+    "signer": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB"
+  },
+  "roles": {
+    "note": "Testnet: roles default to the deployer EOA except TRWI MINTER (RegenPrimarySale only). Same code and role model as the Celo Sepolia v3 deployment."
+  },
+  "e2e": {
+    "date": "2026-09-24",
+    "attestationUID": "0x44ae0c27f1fb9d79da21471cc3f130bc866f560b579217721c14d5bb1adcc50e",
+    "approveTx": "0x58969666b0d14f6598a1a32642c9345f479f0b5922023bee6cd04ffc8bf9a184",
+    "redeemTx": "0xc6cc5d5c0281b969a33f50918774a21d0fa4beef53d93f2fd0717f62927590aa",
+    "result": "10 editions of tokenId 1790250477 lazily minted for 0.1 tUSDG; impactValueOf(100)=292.5e18"
+  }
 }
