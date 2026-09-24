@@ -99,7 +99,15 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
 - **Public RPC** (`sepolia-rollup.arbitrum.io`) is rate-limited; set `RPC_URL` in `deploy/.env` to a provider.
 - **Two contracts are partial matches on Blockscout** (SchemaRegistry, ERC1967Proxy: metadata hash differs);
   sources are published and readable. Not verified on Arbiscan (needs an Etherscan API key).
-- **Server disk is ~88% full** on the shared VPS; see `~/Vibe_coding/Server/docs/PROMPT_SERVER_CLEANUP_2026-09-24.md`.
+- **Live at https://app.regenbazaar.com** (VPS 169.58.27.199, nginx `regenbazaar.conf`, Let's Encrypt via webroot,
+  renew hook reloads nginx). Cloudflare record `app` is **DNS-only (not proxied)**: proxying would break the
+  HTTP-01 webroot renewal unless the challenge path is also served on 443 or the cert moves to dns-cloudflare.
+- **`/api/verifications` has no auth** and the app is now public: anyone can approve a submission, which makes
+  the operator key pay gas for an EAS attestation. Testnet-only risk (burner key, ~0.00002 ETH per attest), but
+  add validator auth before any real use. Watch the operator balance during judging.
+- **Demo sells in tUSDG** (`SALE_CURRENCY=tUSDG`) because the Paxos testnet faucet stopped dispensing
+  (no outgoing transfers from `0xcc96…70a3` after 2026-09-22). Real USDG is allowlisted; switch = unset
+  `SALE_CURRENCY` + rebuild. Listings are priced in the currency active at approve time.
 
 ## Operational reminders
 - Rotate the GitHub `admin:org` token used during earlier org operations (it appeared in chat).

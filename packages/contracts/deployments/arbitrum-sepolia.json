@@ -59,5 +59,15 @@
     "approveTx": "0x58969666b0d14f6598a1a32642c9345f479f0b5922023bee6cd04ffc8bf9a184",
     "redeemTx": "0xc6cc5d5c0281b969a33f50918774a21d0fa4beef53d93f2fd0717f62927590aa",
     "result": "10 editions of tokenId 1790250477 lazily minted for 0.1 tUSDG; impactValueOf(100)=292.5e18"
+  },
+  "e2eLiveApp": {
+    "date": "2026-09-24",
+    "app": "https://app.regenbazaar.com",
+    "listingTokenId": "1",
+    "attestationUID": "0x80d7fd05171bb69c69508d98b47cb5a76dcdd2ede8513733bd05692e33f9ba53",
+    "metadataURI": "ipfs://bafkreigtezmutpuf6tfas4i57dirjmc7dpqy5rc5v5vrs2bws7p7ji6gla",
+    "approveTx": "0xdb05ecb1ab39f0ee37a21c0feca820282f20ef284da7e619edfa8b9a074f098d",
+    "redeemTx": "0x9b4a1d72107faf1dcc218754e3e3a419a34f31c92fde71d60a496166cd65ceb5",
+    "result": "2 editions bought for 1.245 tUSDG via the app's voucher API; indexed by Ponder (indexer_arbsep_v1)"
   }
 }
