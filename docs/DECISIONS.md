@@ -114,3 +114,25 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   reserve is the longer-term model. Secondary marketplace remains open (royalty now capped, not removed).
 - **Verification:** `forge test` 55/55 green; Slither `reentrancy-benign` on `list`/`stake` cleared; no real
   high/medium in `src/` (remaining detectors are OZ-lib false positives or by-design, triaged in `docs/AUDIT.md`).
+
+## 2026-09 — Arbitrum Sepolia deployment + multichain config (Arbitrum Open House buildathon)
+- **What:** Same v3 contracts deployed to Arbitrum Sepolia (`deployments/arbitrum-sepolia.json`, own EAS +
+  SchemaRegistry, USDG allowlisted on `RegenPrimarySale` via new `ALLOWED_CURRENCY` deploy env). Celo Sepolia
+  deployment untouched. Web: `apps/web/src/lib/networks.ts` is the single registry of chain + public addresses
+  + sale currency, selected by `NEXT_PUBLIC_NETWORK` at build (default `arbitrum-sepolia`); the four hardcoded
+  `11142220` sites now read it. Indexer: chain id / RPC / addresses from env. DB: `listings.chain_id` and a
+  per-chain unique `(chain_id, token_id)` so both networks can share one Postgres.
+- **Why build-time network, not runtime switch:** `NEXT_PUBLIC_*` is inlined into the browser bundle and wagmi
+  config; one image = one network keeps server signer, voucher EIP-712 domain, and wallet chain consistent by
+  construction. A runtime multi-network UI was more code for no demo benefit.
+- **Why own EAS instead of a canonical EAS:** keeps the deploy script identical across chains and the
+  `AuthorizedAttesterResolver` wiring unchanged.
+- **Payment in USDG (Paxos testnet token, 6 decimals):** price model output is converted with the sale
+  currency's decimals. Buyer flow = ERC-20 `approve` (exact amount) → `redeem`.
+- **Bridge instead of faucet:** Arbitrum Sepolia faucets required mainnet balance / LINK / were down; test ETH
+  was taken from the Google Cloud Sepolia faucet and bridged via the official Arbitrum Inbox (`depositEth`).
+- **Indexer crash loop (root cause):** Ponder 0.8 `start` throws a NonRetryableError when its DB schema was
+  created by a different build (contract addresses are part of the build), and `restart: unless-stopped`
+  looped it forever (~50% CPU). Fix: per-deployment `INDEXER_SCHEMA` + `restart: on-failure:5` + CPU/memory
+  limits.
+- **Verification:** Blockscout (no API key to store). Arbiscan would need an Etherscan key; not done.

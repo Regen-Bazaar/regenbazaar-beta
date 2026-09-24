@@ -20,10 +20,10 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   wording may be missed or mis-bucketed. The DeepSeek LLM path is the canonical extractor; rule-based is
   the no-API-key fallback. Quantities are read but units/synonyms are limited.
 
-## On-chain layer is built but not wired to the app
-- Contracts compile and pass tests (Foundry, 26 tests) but are **not deployed**. The web app's tokenize /
-  marketplace "Fund" actions are UI-level until a funded deployer key lets us deploy to Celo Sepolia and
-  connect the front end. Tokenized/verified status in the demo comes from seeded DB rows, not real chain state.
+## On-chain layer: deployed on Celo Sepolia and Arbitrum Sepolia (2026-09)
+- Both run the v3 contracts. The hosted app targets one network per build (`NEXT_PUBLIC_NETWORK`,
+  default Arbitrum Sepolia). Submissions are off-chain and shared; listings are per chain (`listings.chain_id`).
+  A submission approved on Celo has no Arbitrum listing until re-approved on an Arbitrum build.
 
 ## Deploy artifacts are unvalidated
 - `deploy/` (Dockerfile, compose, nginx, runbook) is code-ready but has **not been built on a Docker host**
@@ -90,6 +90,16 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   (pause/exit, royalty cap, RoyaltyTooHigh, currency-allowlist toggle, emergency exit, non-retroactive rate)
   have direct tests (61 total). Remaining gaps are branch-level (some revert/edge branches, the deploy-script
   multisig-handoff path). Add full branch coverage + a fork test of the real deploy before mainnet.
+
+## Arbitrum buildathon deployment (2026-09)
+- **Indexer schema must be bumped** (`INDEXER_SCHEMA` in `deploy/.env`) whenever contract addresses or indexer
+  config change, or Ponder exits (now capped at 5 restarts instead of looping).
+- **USDG is a Paxos testnet token**; buyers need testnet USDG (faucet.paxos.com, Arbitrum Sepolia) plus a
+  little ETH for gas. Approve is for the exact amount (one approval per purchase).
+- **Public RPC** (`sepolia-rollup.arbitrum.io`) is rate-limited; set `RPC_URL` in `deploy/.env` to a provider.
+- **Two contracts are partial matches on Blockscout** (SchemaRegistry, ERC1967Proxy: metadata hash differs);
+  sources are published and readable. Not verified on Arbiscan (needs an Etherscan API key).
+- **Server disk is ~88% full** on the shared VPS; see `~/Vibe_coding/Server/docs/PROMPT_SERVER_CLEANUP_2026-09-24.md`.
 
 ## Operational reminders
 - Rotate the GitHub `admin:org` token used during earlier org operations (it appeared in chat).
