@@ -136,3 +136,22 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   looped it forever (~50% CPU). Fix: per-deployment `INDEXER_SCHEMA` + `restart: on-failure:5` + CPU/memory
   limits.
 - **Verification:** Blockscout (no API key to store). Arbiscan would need an Etherscan key; not done.
+
+## 2026-09 — LLM extractor via OpenRouter, model chosen by eval
+- **What:** Production extractor points the existing OpenAI-compatible client at OpenRouter
+  (`DEEPSEEK_BASE_URL=https://openrouter.ai/api/v1`, `DEEPSEEK_MODEL=deepseek/deepseek-v4-flash-0731`). No code
+  path change; env names kept for backward compatibility.
+- **Why this model:** `packages/pipeline/eval/extract-eval.ts` (10 cases: units, multi-domain, Russian text,
+  no-numbers, future plans, prompt injection) over 8 cheap tool-calling models. DeepSeek V4 Flash: 20/21 (the
+  one "miss" is a defensible extra action), no invented numbers, ignored the injection; ~$0.00005 per report.
+  Rejected: Mistral Nemo (invented numbers, followed injection), GPT-4.1-nano and Llama 3.1 8B (followed
+  injection), Nova Micro and Gemini Flash-Lite (missed actions). Pinned version id, not the floating alias.
+- **Budget guard:** submission text capped (title 200, description 5000 chars); key has a $5 OpenRouter limit.
+- **Revisit:** with grant money, re-run the eval on a stronger model; add cases from real partner reports.
+
+## 2026-09 — Organisation identified by payout wallet (no auth yet)
+- **What:** `/api/submissions` accepts `orgName` + `payoutWallet`; the org is found (case-insensitive) or
+  created, unverified. Without them, submissions go to the demo org (renamed "Regen Bazaar demo org (sample
+  data)"). Arbitrary `orgId` from the client is no longer accepted.
+- **Trade-off:** anyone can create an org for any wallet; payouts only ever go to that wallet, so the harm is
+  spam, not theft. Wallet-signature auth (SIWE) is the proper fix.

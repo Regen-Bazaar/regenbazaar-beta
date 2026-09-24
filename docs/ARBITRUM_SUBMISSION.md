@@ -33,9 +33,10 @@ large projects and cost more to certify than a small project raises. Donations a
 one-directional: the funder gets a receipt, not an asset.
 
 ## Solution
-An NGO describes its impact in plain language. An AI engine extracts the actions and computes a deterministic,
-versioned Impact Value (the LLM never scores; weights are published and platform-assessed, not third-party
-certified). A human validator approves; the platform pins metadata to IPFS and attests the claim on-chain with
+An NGO describes its impact in plain language. An LLM extracts the actions (DeepSeek V4 Flash via OpenRouter,
+chosen by an eval of 8 low-cost models for zero invented numbers and resistance to prompt injection; the report
+is treated strictly as data and the output is validated). A deterministic, versioned formula then computes the
+Impact Value: the LLM never scores. Weights are published and platform-assessed, not third-party certified. A human validator approves; the platform pins metadata to IPFS and attests the claim on-chain with
 EAS. Funders buy fractional editions of that impact as **tRWI** (tokenized real-world impact, ERC-1155) and pay
 in **USDG**. The token is lazily minted at purchase from a platform-signed voucher, so nothing is minted until
 someone funds it, and the NGO is paid in the same transaction.
@@ -50,8 +51,13 @@ someone funds it, and the NGO is paid in the same transaction.
 - **NGOs** get paid directly in stablecoins, with no certification cost up front.
 - **Revenue model:** platform fee on primary sales (2.5%, signed into each voucher) and a capped royalty
   on secondary sales that goes back to the NGO.
-- **Status, stated plainly:** beta on testnets; no production users or revenue yet. [?] pilots / partners,
-  only if confirmed
+- **Where this comes from:** before Regen Bazaar existed, we ran two single-organisation pilots of this model:
+  Clean Phangan, a community beach-cleanup group on Koh Phangan (impact NFTs on Optimism,
+  `0x5f7d5dee10e4cc693f0f9b047286d752550b4323`, https://cleanphangan.regenbazaar.com), and EcoThailand
+  Foundation, a registered Thai foundation restoring mangroves (Celo, https://ecothailand.regenbazaar.com).
+  Regen Bazaar generalises what they proved into a multi-organisation marketplace with scoring, attestation and
+  stablecoin settlement.
+- **Status, stated plainly:** beta on testnets; no production users or revenue yet.
 
 ## Why on-chain, and why Arbitrum
 - **Provenance anyone can check:** each tRWI collection references an EAS attestation; the sale contract
