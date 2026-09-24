@@ -127,7 +127,8 @@ export const listings = pgTable("listings", {
   submissionId: uuid("submission_id")
     .notNull()
     .references(() => impactSubmissions.id),
-  tokenId: numeric("token_id", { precision: 78, scale: 0 }).notNull().unique(), // on-chain tRWI id
+  chainId: integer("chain_id").notNull().default(11142220), // network the listing is attested/sold on
+  tokenId: numeric("token_id", { precision: 78, scale: 0 }).notNull(), // on-chain tRWI id (unique per chain)
   totalIvWei: numeric("total_iv_wei", { precision: 78, scale: 0 }).notNull(), // IV * 1e18
   maxEditions: integer("max_editions").notNull(),
   pricePerEdition: numeric("price_per_edition", { precision: 78, scale: 0 }).notNull(), // currency smallest unit
@@ -138,7 +139,7 @@ export const listings = pgTable("listings", {
   nonce: integer("nonce").notNull().default(0),
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [uniqueIndex("listings_chain_token_idx").on(t.chainId, t.tokenId)]);
 
 export const actionWeights = pgTable(
   "action_weights",
