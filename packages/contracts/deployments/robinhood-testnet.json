@@ -1,0 +1,49 @@
+{
+  "network": "robinhood-testnet",
+  "chainId": 46630,
+  "version": "v3-hardened-lazy-mint-voucher",
+  "deployedAt": "2026-09-24",
+  "startBlock": 123616235,
+  "deployer": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB",
+  "schemaUID": "0xa702ff6a03caf077d7c3d9631cca826721f83f0b62c7d9c73640bf2bb749d983",
+  "impactClaimSchema": "address ngo,uint256 impactValue,string metadataURI",
+  "explorer": "https://explorer.testnet.chain.robinhood.com",
+  "verified": "blockscout: all 9 source-verified",
+  "note": "Same deployer + nonce sequence as Arbitrum Sepolia, so contract addresses coincide across both chains.",
+  "contracts": {
+    "SchemaRegistry": "0xa5dB5eC4d2F1435f7cb3504414981347E28340b4",
+    "EAS": "0x95cD0E3bDbC670e057416D65C89B584a9a24d95d",
+    "AuthorizedAttesterResolver": "0xA4B19AA834Db5cF19AcA0D3bcD0b1340e9c6abB1",
+    "REBAZ": "0x5Ea6AE9758472733144Eb24CCE7f310B21367b92",
+    "TRWIProxy": "0x6F2C6F81DDd35199d2e015710c61CC6D8B5de9da",
+    "TRWIImpl": "0x6446Cf9161F58A3FadEf2f3711265054c5DA84aC",
+    "TRWIStaking": "0xB051e3B360A54e6E4808A2A06bEC765D246612B6",
+    "RegenMarketplace": "0x3Cd225C24183a7bcE3EefD3C309b82A27f6Be214",
+    "RegenPrimarySale": "0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030"
+  },
+  "paymentCurrencies": {
+    "NATIVE": "0x0000000000000000000000000000000000000000",
+    "USDG": {
+      "address": "0x7E955252E15c84f5768B83c41a71F9eba181802F",
+      "decimals": 6,
+      "issuer": "Paxos (testnet)",
+      "allowlisted": true
+    }
+  },
+  "rebaz": {
+    "cap": "1000000000000000000000000000",
+    "capHuman": "1000000000 REBAZ"
+  },
+  "marketplace": {
+    "feeBps": 250,
+    "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB",
+    "maxRoyaltyBps": 1000
+  },
+  "primarySale": {
+    "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB",
+    "signer": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB"
+  },
+  "roles": {
+    "note": "Testnet: roles default to the deployer EOA except TRWI MINTER (RegenPrimarySale only). Same code and role model as the Celo Sepolia v3 deployment."
+  }
+}

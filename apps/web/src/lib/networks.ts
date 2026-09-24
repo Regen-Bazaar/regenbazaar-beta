@@ -90,10 +90,10 @@ function robinhoodTestnet(): Network {
       blockExplorers: { default: { name: "Blockscout", url: "https://explorer.testnet.chain.robinhood.com" } },
       testnet: true,
     }),
-    eas: NATIVE,
-    schemaUID: "0x0000000000000000000000000000000000000000000000000000000000000000",
-    primarySale: NATIVE,
-    trwi: NATIVE,
+    eas: "0x95cD0E3bDbC670e057416D65C89B584a9a24d95d",
+    schemaUID: "0xa702ff6a03caf077d7c3d9631cca826721f83f0b62c7d9c73640bf2bb749d983",
+    primarySale: "0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030",
+    trwi: "0x6F2C6F81DDd35199d2e015710c61CC6D8B5de9da",
     // Paxos Global Dollar (USDG) on Robinhood Chain testnet (the Paxos faucet dispenses here).
     saleCurrency: { address: "0x7E955252E15c84f5768B83c41a71F9eba181802F", symbol: "USDG", decimals: 6 },
   };
