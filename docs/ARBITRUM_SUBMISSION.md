@@ -17,11 +17,13 @@ Fund verified real-world impact on-chain, paid in USDG, with provenance anyone c
 
 ## At a glance (for judges)
 - **Live, two Arbitrum chains:** https://app.regenbazaar.com (Arbitrum Sepolia) and
-  https://robinhood.regenbazaar.com (Robinhood Chain testnet). [RH]
-- **Real Paxos USDG purchase on Robinhood Chain testnet:** [RH tx]
-- **All contracts source-verified** on Blockscout; 61 Foundry tests incl. fuzz; OpenZeppelin 5.1.
-- **One purchase = attest-backed lazy mint + stablecoin split to the NGO**, ~465k gas
-  (0.000022 ETH on Arbitrum Sepolia).
+  https://robinhood.regenbazaar.com (Robinhood Chain testnet).
+- **Real Paxos USDG purchase on Robinhood Chain testnet**, 97.5% paid straight to the NGO wallet in the same
+  transaction: https://explorer.testnet.chain.robinhood.com/tx/0xea4a18d20c2fc3c4ed2a46ef7681129a99b905118745ff2de9ad95609ca2ba77
+- **All contracts source-verified** (Blockscout on both chains, Arbiscan); 61 Foundry tests incl. fuzz;
+  OpenZeppelin 5.1.
+- **One purchase = attest-backed lazy mint + stablecoin split to the NGO** in one transaction:
+  ~465-518k gas, 0.000022 ETH on Arbitrum Sepolia, 0.0000052 ETH on Robinhood Chain testnet.
 - **No wallet needed to review:** 2-minute video [?] and the proof transactions below.
 
 ## Problem
@@ -74,7 +76,7 @@ someone funds it, and the NGO is paid in the same transaction.
 
 ## USDG (Paxos) integration
 - **Robinhood Chain testnet: real Paxos USDG** (`0x7E955252E15c84f5768B83c41a71F9eba181802F`) is the sale
-  currency. Purchase paid in USDG: [RH tx]
+  currency. Purchase paid in USDG (1.245 USDG: 1.213875 to the NGO, 0.031125 platform fee): https://explorer.testnet.chain.robinhood.com/tx/0xea4a18d20c2fc3c4ed2a46ef7681129a99b905118745ff2de9ad95609ca2ba77
 - **Arbitrum Sepolia:** Paxos USDG (`0xFFC95faa3d63Cde504a05B567C600B78C0b41892`) is allowlisted in the sale
   contract. The Paxos testnet faucet has not dispensed on Arbitrum Sepolia since 2026-09-22 (the faucet address
   `0xcc9644EC26A647de0B9b86f1560d5180232f70a3` has no outgoing USDG transfers there since then, while it keeps
@@ -85,21 +87,24 @@ someone funds it, and the NGO is paid in the same transaction.
 ## Try it
 - **Without a wallet:** video [?]; proof transactions below; contracts on Blockscout.
 - **With a wallet (Robinhood Chain testnet):** get test ETH and USDG from the Paxos faucet, open
-  Marketplace, "Fund this impact", then **My impact**. [RH]
+  Marketplace, "Fund this impact", then **My impact**.
 - **With a wallet (Arbitrum Sepolia):** "Get 100 test tUSDG" in the Marketplace, then "Fund this impact".
 
 ## Contract addresses
 
-**Robinhood Chain testnet (46630)** · explorer https://explorer.testnet.chain.robinhood.com [RH]
+**Robinhood Chain testnet (46630)** · explorer https://explorer.testnet.chain.robinhood.com
+
+Same deployer and nonce sequence as Arbitrum Sepolia, so the core addresses are identical on both chains.
 
 | Contract | Address |
 |---|---|
-| RegenPrimarySale | [RH] |
-| tRWI (ERC-1155, UUPS proxy) | [RH] |
-| RegenMarketplace | [RH] |
-| TRWIStaking | [RH] |
-| REBAZ | [RH] |
-| EAS / SchemaRegistry / AuthorizedAttesterResolver | [RH] |
+| RegenPrimarySale | `0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030` |
+| tRWI (ERC-1155, UUPS proxy) | `0x6F2C6F81DDd35199d2e015710c61CC6D8B5de9da` |
+| RegenMarketplace | `0x3Cd225C24183a7bcE3EefD3C309b82A27f6Be214` |
+| TRWIStaking | `0xB051e3B360A54e6E4808A2A06bEC765D246612B6` |
+| REBAZ | `0x5Ea6AE9758472733144Eb24CCE7f310B21367b92` |
+| EAS / SchemaRegistry / AuthorizedAttesterResolver | `0x95cD…d95d` / `0xa5dB…40b4` / `0xA4B1…abB1` (as on Arbitrum Sepolia) |
+| Paxos USDG (payment) | `0x7E955252E15c84f5768B83c41a71F9eba181802F` |
 
 **Arbitrum Sepolia (421614)** · explorer https://arbitrum-sepolia.blockscout.com
 
@@ -120,7 +125,7 @@ someone funds it, and the NGO is paid in the same transaction.
 redeem (no separate factory). REBAZ is the platform ERC-20.
 
 **Proof transactions**
-- Robinhood Chain testnet, purchase in real USDG: [RH tx]
+- Robinhood Chain testnet, purchase in real Paxos USDG through the live app: https://explorer.testnet.chain.robinhood.com/tx/0xea4a18d20c2fc3c4ed2a46ef7681129a99b905118745ff2de9ad95609ca2ba77
 - Arbitrum Sepolia, purchase through the live app (2 editions, 1.245 tUSDG):
   https://arbitrum-sepolia.blockscout.com/tx/0x9b4a1d72107faf1dcc218754e3e3a419a34f31c92fde71d60a496166cd65ceb5
 - Arbitrum Sepolia, scripted end-to-end (attest, voucher, approve, redeem):
@@ -138,7 +143,8 @@ during the buildathon, all on branch `feat/arbitrum-buildathon`
 - Arbitrum Sepolia deployment, Blockscout-verified; live app with TLS: `0a3a877`, `b3497a8`
 - tUSDG stand-in and in-app test-token mint: `86eee42`, `ca6295d`
 - **My impact** buyer page (live holdings, Impact Value funded, retire) and network switcher: `51b740c`
-- Robinhood Chain testnet as a second network with real USDG: `4662f5d` [RH commits]
+- Robinhood Chain testnet as a second network with real USDG, verified contracts, first USDG sale:
+  `4662f5d`, `a64e846`, `a170823`
 - Indexer reliability fix (Ponder schema crash loop): `9b6b816`
 
 ## Smart contract quality
@@ -152,7 +158,7 @@ during the buildathon, all on branch `feat/arbitrum-buildathon`
 
 ## Sponsor technologies
 - [x] Paxos / USDG
-- [x] Robinhood Chain [RH]
+- [x] Robinhood Chain
 - [x] OpenZeppelin
 - [ ] GMX, Dune, ZeroDev, Fhenix, Alchemy, AWS
 
