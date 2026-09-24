@@ -45,5 +45,17 @@
   },
   "roles": {
     "note": "Testnet: roles default to the deployer EOA except TRWI MINTER (RegenPrimarySale only). Same code and role model as the Celo Sepolia v3 deployment."
+  },
+  "e2eLiveApp": {
+    "date": "2026-09-24",
+    "app": "https://robinhood.regenbazaar.com",
+    "listingTokenId": "1",
+    "attestationUID": "0x0c184ad047a0ed8dbab2159c631abb3ddc7302a3daf53c6ff878484a957dd5b9",
+    "currency": "Paxos USDG",
+    "approveTx": "0x89f868af297bab180c02e617cb33537a4f05fbeae34cea5e4961d5901cfd06f0",
+    "redeemTx": "0xea4a18d20c2fc3c4ed2a46ef7681129a99b905118745ff2de9ad95609ca2ba77",
+    "split": "1.245 USDG paid: 1.213875 to NGO beneficiary 0x7380a42137d16a0e7684578d8b3d32e1fbd021b5, 0.031125 platform fee (2.5%)",
+    "gas": "518212 gas, 0.00000518 ETH",
+    "indexed": "indexer_rh_v1.sale"
   }
 }
