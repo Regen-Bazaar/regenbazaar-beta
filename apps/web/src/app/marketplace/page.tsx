@@ -4,6 +4,7 @@ import { impactSubmissions, listings } from "@rb/db/schema";
 import { getDb } from "../../lib/db";
 import { BuyButton } from "../../components/BuyButton";
 import { NETWORK } from "../../lib/networks";
+import { formatUnits } from "viem";
 
 export const dynamic = "force-dynamic";
 
@@ -30,10 +31,15 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
 
   // Active primary listings (v2): submissionId -> listingId. A listed item is buyable via voucher redeem.
   const listingRows = await db
-    .select({ submissionId: listings.submissionId, id: listings.id })
+    .select({
+      submissionId: listings.submissionId,
+      id: listings.id,
+      pricePerEdition: listings.pricePerEdition,
+      maxEditions: listings.maxEditions,
+    })
     .from(listings)
     .where(and(eq(listings.active, true), eq(listings.chainId, NETWORK.chain.id)));
-  const listingBySubmission = new Map(listingRows.map((r) => [r.submissionId, r.id]));
+  const listingBySubmission = new Map(listingRows.map((r) => [r.submissionId, r]));
 
   // Filter facets derived from the full set (so chips reflect what's actually available).
   const domains = [...new Set(all.map((r) => r.domain).filter(Boolean) as string[])].sort();
@@ -68,7 +74,10 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
       <h1 className="text-3xl font-bold">Marketplace</h1>
       <p className="mt-2 text-paper/70">
         Fund verified real-world impact. Each edition is a fractional share of the claim. Paid in{" "}
-        {NETWORK.saleCurrency.symbol} on {NETWORK.chain.name}.
+        {NETWORK.saleCurrency.symbol} on {NETWORK.chain.name}.{" "}
+        <Link href="/guide" className="text-gold underline">
+          New here? How to fund →
+        </Link>
       </p>
 
       {/* filter bar */}
@@ -132,7 +141,8 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {rows.map((l) => {
             const tags = l.frameworkTags as Tags;
-            const tokenized = l.status === "tokenized";
+            const listing = listingBySubmission.get(l.id);
+            const tokenized = !!listing; // listed (EAS-attested) on THIS network
             return (
               <div key={l.id} className="flex flex-col rounded-xl border border-gold/15 bg-ink-soft/40 p-5">
                 <div className="mb-3 h-28 rounded-lg bg-gradient-to-br from-green/40 to-ink" />
@@ -153,20 +163,29 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
                     <div className="text-xs text-paper/45">Impact Value</div>
                     <div className="font-semibold text-gold">{Number(l.ivValue ?? 0).toLocaleString()}</div>
                   </div>
+                  {listing && (
+                    <div>
+                      <div className="text-xs text-paper/45">Price per edition</div>
+                      <div className="font-semibold">
+                        {formatUnits(BigInt(listing.pricePerEdition), NETWORK.saleCurrency.decimals)}{" "}
+                        {NETWORK.saleCurrency.symbol}
+                      </div>
+                    </div>
+                  )}
                   <span
                     className={`rounded-full px-2.5 py-1 text-xs ${tokenized ? "bg-green-soft/50 text-paper" : "bg-gold/20 text-gold"}`}
                   >
                     {tokenized ? "on-chain" : "verified"}
                   </span>
                 </div>
-                {listingBySubmission.has(l.id) ? (
-                  <BuyButton listingId={listingBySubmission.get(l.id)!} />
+                {listing ? (
+                  <BuyButton listingId={listing.id} />
                 ) : (
                   <button
                     disabled
                     className="mt-4 rounded-md border border-gold/40 py-2 text-sm opacity-50"
                   >
-                    {tokenized ? "Listing pending" : "Awaiting verification"}
+                    {l.status === "tokenized" ? `Not yet listed on ${NETWORK.chain.name}` : "Awaiting verification"}
                   </button>
                 )}
               </div>

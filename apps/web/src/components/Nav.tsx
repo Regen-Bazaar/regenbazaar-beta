@@ -63,6 +63,9 @@ export function Nav() {
                 {l.label}
               </Link>
             ))}
+            <Link href="/guide" className="rounded px-3 py-2 text-paper/80 hover:bg-ink hover:text-gold">
+              How to try it
+            </Link>
             <p className="mt-1 border-t border-gold/15 px-3 pt-2 text-xs text-paper/50">Network: {NETWORK.chain.name}</p>
             {OTHER.map((o) => (
               <a key={o.url} href={o.url} className="rounded px-3 py-2 text-xs text-paper/70 hover:bg-ink hover:text-gold">

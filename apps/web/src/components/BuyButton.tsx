@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAccount, useConnect, useChainId, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { injected } from "wagmi/connectors";
+import { hasInjectedWallet, NO_WALLET_HINT } from "../lib/wallet";
 import { parseUnits } from "viem";
 import { PRIMARY_SALE, NATIVE, SALE_CURRENCY, chain, erc20Abi, redeemAbi } from "../lib/chain";
 
@@ -36,6 +37,10 @@ export function BuyButton({ listingId }: { listingId: string }) {
 
   async function buy() {
     if (!isConnected) {
+      if (!hasInjectedWallet()) {
+        setMsg(NO_WALLET_HINT);
+        return;
+      }
       connect({ connector: injected() });
       return;
     }
@@ -104,6 +109,10 @@ export function BuyButton({ listingId }: { listingId: string }) {
   // Testnet stand-in token only: let a demo buyer mint themselves enough to try a purchase.
   async function getTestTokens() {
     if (!isConnected || !address) {
+      if (!hasInjectedWallet()) {
+        setMsg(NO_WALLET_HINT);
+        return;
+      }
       connect({ connector: injected() });
       return;
     }

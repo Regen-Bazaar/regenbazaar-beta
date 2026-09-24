@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { desc } from "drizzle-orm";
-import { impactSubmissions } from "@rb/db/schema";
+import { desc, eq } from "drizzle-orm";
+import { impactSubmissions, organizations } from "@rb/db/schema";
 import { getDb } from "../../lib/db";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +18,13 @@ type Tags = { sdg: string[]; ebf: string[] } | null;
 
 export default async function Dashboard() {
   const db = await getDb();
-  const rows = await db.select().from(impactSubmissions).orderBy(desc(impactSubmissions.createdAt)).limit(100);
+  const joined = await db
+    .select({ s: impactSubmissions, orgName: organizations.name })
+    .from(impactSubmissions)
+    .innerJoin(organizations, eq(impactSubmissions.orgId, organizations.id))
+    .orderBy(desc(impactSubmissions.createdAt))
+    .limit(100);
+  const rows = joined.map((j) => ({ ...j.s, orgName: j.orgName }));
   const totalIV = rows.reduce((s, r) => s + Number(r.ivValue ?? 0), 0);
   const tokenized = rows.filter((r) => r.status === "tokenized").length;
 
@@ -26,8 +32,8 @@ export default async function Dashboard() {
     <main className="mx-auto max-w-6xl px-6 py-12">
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Your impact</h1>
-          <p className="mt-1 text-paper/70">Clean Phangan · NGO dashboard</p>
+          <h1 className="text-3xl font-bold">NGO dashboard</h1>
+          <p className="mt-1 text-paper/70">All submitted impact reports and their status.</p>
         </div>
         <Link href="/tokenize" className="rounded-md bg-gold px-4 py-2.5 text-sm font-semibold text-ink hover:bg-gold-soft">
           + New tokenization
@@ -57,6 +63,7 @@ export default async function Dashboard() {
                 <div className="min-w-0">
                   <div className="truncate font-medium">{s.title}</div>
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-paper/50">
+                    <span className="text-paper/70">{s.orgName}</span>
                     {s.domain && <span className="capitalize">{s.domain.replace(/_/g, " ")}</span>}
                     {tags?.sdg.slice(0, 4).map((t) => (
                       <span key={t} className="rounded-full bg-green/25 px-2 py-0.5 text-paper/80">{t}</span>

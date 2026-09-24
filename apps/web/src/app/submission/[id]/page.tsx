@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { desc, eq } from "drizzle-orm";
-import { impactSubmissions, verifications } from "@rb/db/schema";
+import { and, desc, eq } from "drizzle-orm";
+import { impactSubmissions, listings, verifications } from "@rb/db/schema";
+import { NETWORK } from "../../../lib/networks";
 import { getDb } from "../../../lib/db";
 
 export const dynamic = "force-dynamic";
@@ -46,6 +47,13 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
     .where(eq(verifications.submissionId, id))
     .orderBy(desc(verifications.createdAt))
     .limit(1);
+
+  const [listing] = await db
+    .select()
+    .from(listings)
+    .where(and(eq(listings.submissionId, id), eq(listings.chainId, NETWORK.chain.id)))
+    .limit(1);
+  const explorer = NETWORK.chain.blockExplorers?.default.url ?? "";
 
   const iv = s.ivResult as IVResult;
   const tags = (s.frameworkTags as { sdg: string[]; ebf: string[] } | null) ?? { sdg: [], ebf: [] };
@@ -135,21 +143,39 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
           </div>
 
           <div className="mt-6 border-t border-gold/15 pt-5">
-            {s.status === "verified" ? (
-              <>
-                <button
-                  disabled
-                  className="w-full rounded-md bg-gold px-4 py-2.5 text-sm font-semibold text-ink opacity-60"
-                >
-                  Tokenize as tRWI
-                </button>
-                <p className="mt-2 text-[11px] text-paper/45">
-                  Verified & ready. On-chain mint (EAS attestation → fractional tRWI) activates once contracts are
-                  deployed to Celo Sepolia.
+            {listing ? (
+              <div className="space-y-2 text-xs">
+                <p className="text-sm text-green-soft">Attested and listed on {NETWORK.chain.name} ✓</p>
+                <p className="text-paper/60">
+                  tRWI #{String(listing.tokenId)} ·{" "}
+                  <a
+                    href={`${explorer}/token/${NETWORK.trwi}/instance/${String(listing.tokenId)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-gold"
+                  >
+                    token on explorer
+                  </a>{" "}
+                  (appears after the first purchase)
                 </p>
-              </>
-            ) : s.status === "tokenized" ? (
-              <p className="text-sm text-green-soft">Tokenized on-chain ✓</p>
+                <p className="break-all text-paper/60">
+                  EAS attestation UID {listing.easUid} ·{" "}
+                  <a
+                    href={`${explorer}/address/${NETWORK.eas}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-gold"
+                  >
+                    EAS contract
+                  </a>
+                </p>
+                <p className="break-all text-paper/60">Metadata {listing.metadataUri}</p>
+                <Link href="/marketplace" className="mt-2 inline-block rounded-md bg-gold px-4 py-2 text-sm font-semibold text-ink hover:bg-gold-soft">
+                  Fund this impact
+                </Link>
+              </div>
+            ) : s.status === "verified" || s.status === "tokenized" ? (
+              <p className="text-sm text-paper/60">Verified. Not listed on {NETWORK.chain.name} yet.</p>
             ) : (
               <p className="text-sm text-paper/50">
                 {s.status === "rejected" ? "Rejected by validator." : "Awaiting validator verification."}

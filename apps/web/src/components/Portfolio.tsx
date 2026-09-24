@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useAccount, useConnect, useChainId, useReadContracts, useSwitchChain, useWriteContract, usePublicClient } from "wagmi";
 import { injected } from "wagmi/connectors";
+import { hasInjectedWallet, NO_WALLET_HINT } from "../lib/wallet";
 import { TRWI, chain, trwiAbi } from "../lib/chain";
 
 export type PortfolioItem = {
@@ -42,12 +43,15 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
 
   if (!isConnected) {
     return (
-      <button
-        onClick={() => connect({ connector: injected() })}
-        className="mt-8 rounded-md bg-gold px-4 py-2.5 text-sm font-semibold text-ink hover:bg-gold-soft"
-      >
-        Connect wallet to see your tRWI
-      </button>
+      <div className="mt-8">
+        <button
+          onClick={() => (hasInjectedWallet() ? connect({ connector: injected() }) : setMsg(NO_WALLET_HINT))}
+          className="rounded-md bg-gold px-4 py-2.5 text-sm font-semibold text-ink hover:bg-gold-soft"
+        >
+          Connect wallet to see your tRWI
+        </button>
+        {msg && <p className="mt-2 text-xs text-paper/60">{msg}</p>}
+      </div>
     );
   }
 
