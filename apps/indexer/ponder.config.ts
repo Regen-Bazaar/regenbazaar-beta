@@ -1,4 +1,4 @@
-// Ponder config — one network per deployment (default Arbitrum Sepolia; Celo Sepolia via env).
+// Ponder config — one network per deployment (default Arbitrum Sepolia; Robinhood / Celo via env).
 // Chain id, RPC, addresses and start blocks all come from env; nothing chain-specific is hardcoded here.
 import { createConfig } from "ponder";
 import { http } from "viem";
@@ -7,6 +7,7 @@ import { TRWIAbi, PrimarySaleAbi, TRWIStakingAbi } from "./src/abis";
 const DEFAULT_RPC: Record<number, string> = {
   421614: "https://sepolia-rollup.arbitrum.io/rpc",
   11142220: "https://forno.celo-sepolia.celo-testnet.org",
+  46630: "https://rpc.testnet.chain.robinhood.com",
 };
 const chainId = Number(process.env.PONDER_CHAIN_ID ?? 421614);
 const rpc = process.env.PONDER_RPC_URL || DEFAULT_RPC[chainId];

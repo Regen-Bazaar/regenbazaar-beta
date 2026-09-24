@@ -19,6 +19,7 @@ bracket_spacing = true
 [rpc_endpoints]
 celo_sepolia = "${CELO_SEPOLIA_RPC_URL}"
 arbitrum_sepolia = "${ARBITRUM_SEPOLIA_RPC_URL}"
+robinhood_testnet = "https://rpc.testnet.chain.robinhood.com"
 
 [etherscan]
 celo_sepolia = { key = "${CELOSCAN_API_KEY}", url = "https://api-sepolia.celoscan.io/api", chain = 11142220 }
