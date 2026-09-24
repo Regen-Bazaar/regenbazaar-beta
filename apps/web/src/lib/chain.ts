@@ -5,6 +5,7 @@ export { NATIVE } from "./networks";
 export const chain = NETWORK.chain;
 export const RPC = NETWORK.chain.rpcUrls.default.http[0];
 export const PRIMARY_SALE = NETWORK.primarySale;
+export const SALE_CURRENCY = NETWORK.saleCurrency;
 
 // RegenPrimarySale.redeem ABI (Voucher tuple must match the contract field order).
 export const redeemAbi = [
@@ -46,6 +47,13 @@ export const erc20Abi = [
     stateMutability: "view",
     inputs: [{ name: "owner", type: "address" }, { name: "spender", type: "address" }],
     outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "mint",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "to", type: "address" }, { name: "amount", type: "uint256" }],
+    outputs: [],
   },
   {
     type: "function",

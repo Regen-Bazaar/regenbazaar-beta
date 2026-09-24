@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useAccount, useConnect, useChainId, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { injected } from "wagmi/connectors";
-import { PRIMARY_SALE, NATIVE, chain, erc20Abi, redeemAbi } from "../lib/chain";
+import { parseUnits } from "viem";
+import { PRIMARY_SALE, NATIVE, SALE_CURRENCY, chain, erc20Abi, redeemAbi } from "../lib/chain";
 
 type VoucherJson = {
   tokenId: string;
@@ -100,6 +101,30 @@ export function BuyButton({ listingId }: { listingId: string }) {
     }
   }
 
+  // Testnet stand-in token only: let a demo buyer mint themselves enough to try a purchase.
+  async function getTestTokens() {
+    if (!isConnected || !address) {
+      connect({ connector: injected() });
+      return;
+    }
+    setMsg("");
+    try {
+      if (chainId !== chain.id) await switchChainAsync({ chainId: chain.id });
+      const hash = await writeContractAsync({
+        address: SALE_CURRENCY.address,
+        abi: erc20Abi,
+        functionName: "mint",
+        args: [address, parseUnits("100", SALE_CURRENCY.decimals)],
+        chainId: chain.id,
+      });
+      setMsg(`Minting 100 ${SALE_CURRENCY.symbol}…`);
+      await publicClient?.waitForTransactionReceipt({ hash });
+      setMsg(`100 ${SALE_CURRENCY.symbol} received`);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "mint failed");
+    }
+  }
+
   if (state === "done") {
     return (
       <a
@@ -121,6 +146,11 @@ export function BuyButton({ listingId }: { listingId: string }) {
       >
         {state === "busy" ? "Confirm in wallet…" : isConnected ? "Fund this impact" : "Connect to fund"}
       </button>
+      {SALE_CURRENCY.testMint && (
+        <button onClick={getTestTokens} className="mt-1 w-full text-xs text-paper/60 underline hover:text-gold">
+          Get 100 test {SALE_CURRENCY.symbol} (testnet stand-in, not Paxos)
+        </button>
+      )}
       {msg && <p className={`mt-1 text-xs ${state === "error" ? "text-red-300" : "text-paper/60"}`}>{msg}</p>}
     </div>
   );

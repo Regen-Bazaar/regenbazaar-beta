@@ -12,6 +12,7 @@ export interface SaleCurrency {
   address: Hex; // NATIVE or an ERC-20 allowlisted on RegenPrimarySale
   symbol: string;
   decimals: number;
+  testMint?: boolean; // testnet stand-in token with a public mint() (demo buyers can fund themselves)
 }
 
 export interface Network {
@@ -59,8 +60,14 @@ function arbitrumSepolia(): Network {
     eas: "0x95cD0E3bDbC670e057416D65C89B584a9a24d95d",
     schemaUID: "0xa702ff6a03caf077d7c3d9631cca826721f83f0b62c7d9c73640bf2bb749d983",
     primarySale: "0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030",
-    // Paxos Global Dollar (USDG) testnet token — docs.paxos.com/guides/stablecoin/usdg/testnet
-    saleCurrency: { address: "0xFFC95faa3d63Cde504a05B567C600B78C0b41892", symbol: "USDG", decimals: 6 },
+    // NEXT_PUBLIC_SALE_CURRENCY=tUSDG switches to the stand-in while the Paxos testnet faucet is not
+    // dispensing; both tokens are allowlisted on RegenPrimarySale.
+    saleCurrency:
+      process.env.NEXT_PUBLIC_SALE_CURRENCY === "tUSDG"
+        ? // TestUSDG (packages/contracts/src/testnet): same interface as USDG, NOT issued by Paxos.
+          { address: "0x738B0C655E050320764EA1A7191BEA226B053410", symbol: "tUSDG", decimals: 6, testMint: true }
+        : // Paxos Global Dollar (USDG) testnet token — docs.paxos.com/guides/stablecoin/usdg/testnet
+          { address: "0xFFC95faa3d63Cde504a05B567C600B78C0b41892", symbol: "USDG", decimals: 6 },
   };
 }
 

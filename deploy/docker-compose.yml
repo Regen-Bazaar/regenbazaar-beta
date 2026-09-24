@@ -33,6 +33,7 @@ services:
       target: build
       args:
         NEXT_PUBLIC_NETWORK: ${NETWORK:-arbitrum-sepolia}
+        NEXT_PUBLIC_SALE_CURRENCY: ${SALE_CURRENCY:-}
     image: regenbazaar_build:latest
     container_name: regenbazaar_migrate
     environment:
@@ -66,6 +67,7 @@ services:
       target: runtime
       args:
         NEXT_PUBLIC_NETWORK: ${NETWORK:-arbitrum-sepolia}
+        NEXT_PUBLIC_SALE_CURRENCY: ${SALE_CURRENCY:-}
     image: regenbazaar_web:latest
     container_name: regenbazaar_web
     environment:
@@ -107,6 +109,7 @@ services:
       target: build
       args:
         NEXT_PUBLIC_NETWORK: ${NETWORK:-arbitrum-sepolia}
+        NEXT_PUBLIC_SALE_CURRENCY: ${SALE_CURRENCY:-}
     image: regenbazaar_build:latest
     container_name: regenbazaar_indexer
     command: ["pnpm", "--filter", "indexer", "start"]
