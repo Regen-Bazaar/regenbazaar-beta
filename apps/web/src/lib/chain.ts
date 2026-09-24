@@ -13,7 +13,7 @@ export const celoSepolia = defineChain({
 });
 
 export const PRIMARY_SALE = (process.env.NEXT_PUBLIC_PRIMARY_SALE ??
-  "0x49A5a77e3DBd76411737820fd968142b6154be26") as `0x${string}`;
+  "0x2b4A3aE4E69771cdf2Fd4e2075A7B3Ab2e0498B2") as `0x${string}`;
 
 export const NATIVE = "0x0000000000000000000000000000000000000000" as const;
 
@@ -38,6 +38,7 @@ export const redeemAbi = [
           { name: "easUID", type: "bytes32" },
           { name: "metadataURI", type: "string" },
           { name: "royaltyBps", type: "uint96" },
+          { name: "feeBps", type: "uint96" },
           { name: "nonce", type: "uint256" },
           { name: "deadline", type: "uint256" },
         ],

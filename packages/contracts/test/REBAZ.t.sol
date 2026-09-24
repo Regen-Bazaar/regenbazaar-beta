@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Test} from "forge-std/Test.sol";
-import {REBAZ} from "../src/REBAZ.sol";
-import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
+import { Test } from "forge-std/Test.sol";
+import { REBAZ } from "../src/REBAZ.sol";
+import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract REBAZTest is Test {
     REBAZ internal token;
@@ -12,9 +12,10 @@ contract REBAZTest is Test {
     address internal staking = makeAddr("staking");
     address internal alice = makeAddr("alice");
     bytes32 internal MINTER;
+    uint256 internal constant CAP = 1_000_000_000_000 ether; // 1e12, above uint96-max fuzz amounts
 
     function setUp() public {
-        token = new REBAZ(admin, treasury, 1_000_000 ether);
+        token = new REBAZ(admin, treasury, 1_000_000 ether, CAP);
         MINTER = token.MINTER_ROLE();
         vm.prank(admin);
         token.grantRole(MINTER, staking);
@@ -39,7 +40,9 @@ contract REBAZTest is Test {
 
     function test_NonMinterCannotMint() public {
         vm.expectRevert(
-            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, alice, token.MINTER_ROLE())
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, alice, token.MINTER_ROLE()
+            )
         );
         vm.prank(alice);
         token.mint(alice, 1 ether);
@@ -62,5 +65,17 @@ contract REBAZTest is Test {
         vm.prank(staking);
         token.mint(alice, amount);
         assertEq(token.balanceOf(alice), amount);
+    }
+
+    function test_REBAZ_MintPastCap_Reverts() public {
+        REBAZ small = new REBAZ(admin, treasury, 0, 1000 ether);
+        vm.prank(admin);
+        small.grantRole(MINTER, staking); // MINTER_ROLE is a constant; cached to avoid consuming the prank
+        vm.startPrank(staking);
+        small.mint(alice, 1000 ether); // exactly at cap
+        assertEq(small.totalSupply(), 1000 ether);
+        vm.expectRevert(); // ERC20ExceededCap
+        small.mint(alice, 1);
+        vm.stopPrank();
     }
 }

@@ -69,6 +69,28 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
 - **Ponder reads `.env.local`** (not `.env`); contract addresses + start blocks must be set there (or in the
   process env) or it syncs from block 0.
 
+## Hardening pass (mainnet-readiness) — status (see `docs/AUDIT.md`)
+- **DONE: v3 deployed + verified.** Audited contracts deployed to Celo Sepolia (addresses in
+  `deployments/celo-sepolia.json`, startBlock 27285071), live-verified on-chain (deployer NOT a TRWI minter,
+  REBAZ cap=1e27, e2e attest→feeBps-voucher→redeem→mint smoke), and source-verified on Blockscout. Off-chain
+  signer + frontend EIP-712 updated with `feeBps` and pointed at v3. Branch merged to local `main`.
+- **NOT DONE — production cutover (gated).** `app.regenbazaar.com` on the HelpRent VPS still serves the
+  **v2** contracts. Switching requires: rsync the repo, set the web + indexer env to the v3 addresses +
+  startBlock 27285071, `docker compose --env-file .env up -d --build`, verify HelpRent untouched. This needs
+  explicit approval to SSH into the shared production box (62.72.44.6).
+- **NOT DONE — push to remote.** `main` is merged locally only; not pushed to `origin`
+  (`Regen-Bazaar/regenbazaar-beta`) per the never-push-to-main policy. Push the branch + open a PR instead.
+- **Emissions still mint-on-claim (now capped).** REBAZ has a hard cap, but staking still mints rewards on
+  demand; once the cap is hit, normal `claim`/`unstake` revert (principal still exits via `emergencyUnstake`).
+  A funded-reserve emission model is the intended longer-term replacement.
+- **Multisig + timelock — needs a Safe address (not provisionable in code).** The deploy script supports
+  role separation + an admin→multisig handoff via env (`ADMIN_MULTISIG`, `RENOUNCE_DEPLOYER_ADMIN`, etc.),
+  but a Gnosis Safe and an OZ `TimelockController` must be created and their addresses supplied before mainnet.
+- **Branch coverage gaps.** Line coverage on changed contracts is ~80–87% and the security-critical paths
+  (pause/exit, royalty cap, RoyaltyTooHigh, currency-allowlist toggle, emergency exit, non-retroactive rate)
+  have direct tests (61 total). Remaining gaps are branch-level (some revert/edge branches, the deploy-script
+  multisig-handoff path). Add full branch coverage + a fork test of the real deploy before mainnet.
+
 ## Operational reminders
 - Rotate the GitHub `admin:org` token used during earlier org operations (it appeared in chat).
 - Secrets (DeepSeek, deployer, DB) live only in server env / local `.env` files, never committed.

@@ -1,16 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {ERC1155Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
-import {ERC1155SupplyUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
-import {ERC2981Upgradeable} from "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
-import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import { ERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import {
+    ERC1155SupplyUpgradeable
+} from "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
+import { ERC2981Upgradeable } from "@openzeppelin/contracts-upgradeable/token/common/ERC2981Upgradeable.sol";
+import {
+    AccessControlUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-import {IEAS} from "@ethereum-attestation-service/eas-contracts/IEAS.sol";
-import {Attestation, EMPTY_UID, NO_EXPIRATION_TIME} from "@ethereum-attestation-service/eas-contracts/Common.sol";
+import { IEAS } from "@ethereum-attestation-service/eas-contracts/IEAS.sol";
+import {
+    Attestation,
+    EMPTY_UID,
+    NO_EXPIRATION_TIME
+} from "@ethereum-attestation-service/eas-contracts/Common.sol";
 
 /// @title  tRWI — tokenized real-world impact (ERC-1155, UUPS) — v2 lazy-mint token
 /// @notice Platform-issued, lazily minted. Each `tokenId` is one impact "collection" of `maxEditions` (N)
@@ -28,10 +36,16 @@ contract TRWI is
     ERC1155SupplyUpgradeable,
     ERC2981Upgradeable,
     AccessControlUpgradeable,
+    PausableUpgradeable,
     UUPSUpgradeable
 {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+
+    /// @notice Hard cap on per-collection royalty (10%) — bounds ERC-2981's 100% ceiling so a collection
+    ///         can never be registered with a royalty that would starve secondary-sale beneficiaries.
+    uint96 public constant MAX_ROYALTY_BPS = 1000;
 
     struct Collection {
         address creator; // the NGO (must equal the attestation's `ngo`)
@@ -60,7 +74,12 @@ contract TRWI is
     mapping(bytes32 => uint256) public tokenIdForUID; // easUID => tokenId (0 = unused)
 
     event CollectionRegistered(
-        uint256 indexed tokenId, address indexed creator, uint256 totalIV, uint256 maxEditions, bytes32 indexed easUID, string uri
+        uint256 indexed tokenId,
+        address indexed creator,
+        uint256 totalIV,
+        uint256 maxEditions,
+        bytes32 indexed easUID,
+        string uri
     );
     event ImpactMinted(uint256 indexed tokenId, address indexed to, uint256 amount, bytes32 indexed easUID);
     event ImpactRetired(uint256 indexed tokenId, address indexed holder, uint256 amount, uint256 ivRetired);
@@ -73,6 +92,7 @@ contract TRWI is
     error BadParams();
     error Mismatch();
     error ExceedsMax();
+    error RoyaltyTooHigh();
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -84,6 +104,7 @@ contract TRWI is
         __ERC1155Supply_init();
         __ERC2981_init();
         __AccessControl_init();
+        __Pausable_init();
         __UUPSUpgradeable_init();
         if (admin == address(0) || eas_ == address(0)) revert BadParams();
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
@@ -93,33 +114,50 @@ contract TRWI is
 
     /// @notice Mint `amount` editions of `p.tokenId` to `to` (lazy). Registers the collection on first mint.
     ///         Gated to MINTER_ROLE (the sale contract). Enforces the EAS anchor + the `maxEditions` cap.
-    function mint(MintParams calldata p, address to, uint256 amount) external onlyRole(MINTER_ROLE) {
+    function mint(MintParams calldata p, address to, uint256 amount)
+        external
+        onlyRole(MINTER_ROLE)
+        whenNotPaused
+    {
         if (amount == 0 || to == address(0)) revert BadParams();
         Collection storage c = _collections[p.tokenId];
         if (c.maxEditions == 0) {
             _register(p);
-        } else if (c.creator != p.creator || c.totalIV != p.totalIV || c.maxEditions != p.maxEditions || c.easUID != p.easUID) {
+        } else if (
+            c.creator != p.creator || c.totalIV != p.totalIV || c.maxEditions != p.maxEditions
+                || c.easUID != p.easUID
+        ) {
             revert Mismatch();
         }
         if (c.minted + amount > c.maxEditions) revert ExceedsMax();
-        c.minted += amount;
+        unchecked {
+            c.minted += amount; // bounded by maxEditions per the check above
+        }
         _mint(to, p.tokenId, amount, "");
         emit ImpactMinted(p.tokenId, to, amount, c.easUID);
     }
 
     function _register(MintParams calldata p) internal {
-        if (p.tokenId == 0 || p.creator == address(0) || p.totalIV == 0 || p.maxEditions == 0) revert BadParams();
+        if (p.tokenId == 0 || p.creator == address(0) || p.totalIV == 0 || p.maxEditions == 0) {
+            revert BadParams();
+        }
+        if (p.royaltyBps > MAX_ROYALTY_BPS) revert RoyaltyTooHigh();
         if (tokenIdForUID[p.easUID] != 0) revert UID_AlreadyUsed();
 
         Attestation memory att = eas.getAttestation(p.easUID);
         if (att.uid == EMPTY_UID) revert UID_Unknown();
         if (att.schema != impactClaimSchema) revert UID_WrongSchema();
         if (att.revocationTime != 0) revert UID_Revoked();
-        if (att.expirationTime != NO_EXPIRATION_TIME && att.expirationTime <= block.timestamp) revert UID_Expired();
+        if (att.expirationTime != NO_EXPIRATION_TIME && att.expirationTime <= block.timestamp) {
+            revert UID_Expired();
+        }
 
         // Anchor the collection to the immutable attestation — params must agree with the verified impact.
         (address ngo, uint256 iv, string memory metaURI) = abi.decode(att.data, (address, uint256, string));
-        if (p.creator != ngo || p.totalIV != iv || keccak256(bytes(p.metadataURI)) != keccak256(bytes(metaURI))) {
+        if (
+            p.creator != ngo || p.totalIV != iv
+                || keccak256(bytes(p.metadataURI)) != keccak256(bytes(metaURI))
+        ) {
             revert Mismatch();
         }
 
@@ -162,10 +200,16 @@ contract TRWI is
         return bytes(u).length != 0 ? u : super.uri(tokenId);
     }
 
-    /// @notice Update metadata URI. NOTE: admin-mutable post-mint — verify at acquisition, not lazily.
-    function setURI(uint256 tokenId, string calldata newURI) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _uris[tokenId] = newURI;
-        emit URI(newURI, tokenId);
+    // NOTE: metadata URI is immutable post-registration — it is anchored to the EAS attestation at
+    // _register and cannot be mutated afterwards (a metadata change requires a new attestation + tokenId).
+
+    /// @notice Halt new minting (existing holders can still transfer/retire). Guardian/PAUSER_ROLE.
+    function pause() external onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+
+    function unpause() external onlyRole(PAUSER_ROLE) {
+        _unpause();
     }
 
     // ---- required overrides ----
@@ -186,7 +230,7 @@ contract TRWI is
         return super.supportsInterface(iid);
     }
 
-    function _authorizeUpgrade(address) internal override onlyRole(UPGRADER_ROLE) {}
+    function _authorizeUpgrade(address) internal override onlyRole(UPGRADER_ROLE) { }
 
     uint256[50] private __gap;
 }

@@ -28,6 +28,7 @@ const voucher: ImpactVoucher = {
   easUID: uid,
   metadataURI,
   royaltyBps: 500n,
+  feeBps: 250n,
   nonce: 0n,
   deadline: BigInt(Math.floor(Date.now() / 1000) + 3600),
 };
@@ -45,6 +46,7 @@ const voucherComponents = [
   { name: "easUID", type: "bytes32" },
   { name: "metadataURI", type: "string" },
   { name: "royaltyBps", type: "uint96" },
+  { name: "feeBps", type: "uint96" },
   { name: "nonce", type: "uint256" },
   { name: "deadline", type: "uint256" },
 ] as const;

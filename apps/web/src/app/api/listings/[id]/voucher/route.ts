@@ -6,9 +6,10 @@ import { onchainEnabled, signVoucher, type ImpactVoucher } from "../../../../../
 
 export const runtime = "nodejs";
 
-const ROYALTY_BPS = 500; // secondary-sale royalty to the NGO creator
+const ROYALTY_BPS = 500; // secondary-sale royalty to the NGO creator (<= TRWI MAX_ROYALTY_BPS = 1000)
+const FEE_BPS = 250; // platform fee for the primary sale, now part of the SIGNED voucher (<= MAX_FEE_BPS = 1000)
 const DEADLINE_SECS = 3600;
-const PRIMARY_SALE = process.env.PRIMARY_SALE_ADDRESS ?? "0x49A5a77e3DBd76411737820fd968142b6154be26";
+const PRIMARY_SALE = process.env.PRIMARY_SALE_ADDRESS ?? "0x2b4A3aE4E69771cdf2Fd4e2075A7B3Ab2e0498B2";
 
 // GET /api/listings/<id>/voucher — return a freshly platform-signed EIP-712 voucher for a primary listing.
 // The buyer submits {voucher, signature} to RegenPrimarySale.redeem() to pay + lazily mint editions.
@@ -31,6 +32,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     easUID: l.easUid as `0x${string}`,
     metadataURI: l.metadataUri,
     royaltyBps: BigInt(ROYALTY_BPS),
+    feeBps: BigInt(FEE_BPS),
     nonce: BigInt(l.nonce),
     deadline,
   };
@@ -52,6 +54,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       easUID: voucher.easUID,
       metadataURI: voucher.metadataURI,
       royaltyBps: voucher.royaltyBps.toString(),
+      feeBps: voucher.feeBps.toString(),
       nonce: voucher.nonce.toString(),
       deadline: voucher.deadline.toString(),
     },

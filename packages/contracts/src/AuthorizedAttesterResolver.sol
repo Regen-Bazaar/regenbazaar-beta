@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {SchemaResolver} from "@ethereum-attestation-service/eas-contracts/resolver/SchemaResolver.sol";
-import {IEAS} from "@ethereum-attestation-service/eas-contracts/IEAS.sol";
-import {Attestation} from "@ethereum-attestation-service/eas-contracts/Common.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import { SchemaResolver } from "@ethereum-attestation-service/eas-contracts/resolver/SchemaResolver.sol";
+import { IEAS } from "@ethereum-attestation-service/eas-contracts/IEAS.sol";
+import { Attestation } from "@ethereum-attestation-service/eas-contracts/Common.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 
 /// @title  AuthorizedAttesterResolver
 /// @notice EAS schema resolver that only lets addresses holding ATTESTER_ROLE create ImpactClaim
@@ -19,7 +19,10 @@ contract AuthorizedAttesterResolver is SchemaResolver, AccessControl {
     }
 
     /// @dev Only authorized attesters may attest under this schema.
-    function onAttest(Attestation calldata attestation, uint256 /*value*/ )
+    function onAttest(
+        Attestation calldata attestation,
+        uint256 /*value*/
+    )
         internal
         view
         override
