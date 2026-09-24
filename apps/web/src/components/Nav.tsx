@@ -23,10 +23,10 @@ export function Nav() {
         </Link>
 
         <div className="flex items-center gap-4">
-          <details className="relative hidden md:block">
+          <details className="relative hidden xl:block">
             <summary
               title="Active network"
-              className="cursor-pointer list-none rounded-full border border-gold/30 px-2.5 py-1 text-xs text-paper/70"
+              className="cursor-pointer list-none whitespace-nowrap rounded-full border border-gold/30 px-2.5 py-1 text-xs text-paper/70"
             >
               {NETWORK.chain.name} · {NETWORK.saleCurrency.symbol}
             </summary>
@@ -42,7 +42,7 @@ export function Nav() {
             )}
           </details>
           {/* desktop */}
-          <nav className="hidden gap-7 text-sm sm:flex">
+          <nav className="hidden gap-6 whitespace-nowrap text-sm lg:flex">
             {LINKS.map((l) => (
               <Link key={l.href} href={l.href} className="text-paper/75 transition-colors hover:text-gold">
                 {l.label}
@@ -53,7 +53,7 @@ export function Nav() {
           <ConnectButton />
 
           {/* mobile (no-JS disclosure) */}
-          <details className="relative sm:hidden">
+          <details className="relative lg:hidden">
           <summary className="cursor-pointer list-none rounded-md border border-gold/30 px-3 py-1.5 text-sm text-paper/80">
             Menu
           </summary>
