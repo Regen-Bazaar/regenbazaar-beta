@@ -1,5 +1,7 @@
-// DeepSeek LLM extractor — implements LLMExtractor via the OpenAI-compatible DeepSeek API
-// (base URL https://api.deepseek.com, model deepseek-chat) with function-calling for structured output.
+// LLM extractor — implements LLMExtractor via any OpenAI-compatible API with function-calling for structured
+// output. Default DeepSeek direct (https://api.deepseek.com, deepseek-chat); production uses OpenRouter
+// (DEEPSEEK_BASE_URL=https://openrouter.ai/api/v1, DEEPSEEK_MODEL=deepseek/deepseek-v4-flash-0731), chosen by
+// packages/pipeline/eval/extract-eval.ts as the cheapest model with no hallucinations / injection compliance.
 // SERVER-ONLY (uses DEEPSEEK_API_KEY). The LLM only PARSES the report into actions; the deterministic
 // engine scores. Output is still validated by sanitizeActions in the pipeline. Prompt-injection defense:
 // the report is wrapped as data and the system prompt tells the model to ignore instructions inside it.
@@ -67,7 +69,8 @@ export function createDeepSeekExtractor(opts: DeepSeekExtractorOptions = {}): LL
         temperature: 0,
         messages: [
           { role: "system", content: SYSTEM },
-          { role: "user", content: `<ngo_report>\n${text}\n</ngo_report>` },
+          // Neutralise any closing tag inside the report so it cannot break out of the data wrapper.
+          { role: "user", content: `<ngo_report>\n${text.replace(/<\/?ngo_report/gi, "")}\n</ngo_report>` },
         ],
         tools: [TOOL],
         tool_choice: { type: "function", function: { name: "extract_impact_actions" } },
