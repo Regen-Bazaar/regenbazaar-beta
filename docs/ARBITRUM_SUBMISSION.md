@@ -106,7 +106,7 @@ Same deployer and nonce sequence as Arbitrum Sepolia, so the core addresses are 
 | EAS / SchemaRegistry / AuthorizedAttesterResolver | `0x95cD…d95d` / `0xa5dB…40b4` / `0xA4B1…abB1` (as on Arbitrum Sepolia) |
 | Paxos USDG (payment) | `0x7E955252E15c84f5768B83c41a71F9eba181802F` |
 
-**Arbitrum Sepolia (421614)** · explorer https://arbitrum-sepolia.blockscout.com
+**Arbitrum Sepolia (421614)** · verified on Arbiscan (https://sepolia.arbiscan.io/address/0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030#code) and Blockscout (https://arbitrum-sepolia.blockscout.com)
 
 | Contract | Address |
 |---|---|

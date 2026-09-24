@@ -96,7 +96,7 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   little ETH for gas. Approve is for the exact amount (one approval per purchase).
 - **Public RPC** (`sepolia-rollup.arbitrum.io`) is rate-limited; set `RPC_URL` in `deploy/.env` to a provider.
 - **Two contracts are partial matches on Blockscout** (SchemaRegistry, ERC1967Proxy: metadata hash differs);
-  sources are published and readable. Not verified on Arbiscan (needs an Etherscan API key).
+  sources are published and readable. All Arbitrum Sepolia contracts are also verified on Arbiscan.
 - **Live at https://app.regenbazaar.com** (VPS 169.58.27.199, nginx `regenbazaar.conf`, Let's Encrypt via webroot,
   renew hook reloads nginx). Cloudflare record `app` is **DNS-only (not proxied)**: proxying would break the
   HTTP-01 webroot renewal unless the challenge path is also served on 443 or the cert moves to dns-cloudflare.

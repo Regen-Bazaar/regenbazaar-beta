@@ -8,7 +8,7 @@
   "schemaUID": "0xa702ff6a03caf077d7c3d9631cca826721f83f0b62c7d9c73640bf2bb749d983",
   "impactClaimSchema": "address ngo,uint256 impactValue,string metadataURI",
   "explorer": "https://arbitrum-sepolia.blockscout.com",
-  "verified": "blockscout: all 9 source-verified (SchemaRegistry + ERC1967Proxy partial match, rest full match)",
+  "verified": "blockscout: all 9 source-verified (SchemaRegistry + ERC1967Proxy partial match); arbiscan (sepolia.arbiscan.io): all 9 + tUSDG verified 2026-09-24",
   "contracts": {
     "SchemaRegistry": "0xa5dB5eC4d2F1435f7cb3504414981347E28340b4",
     "EAS": "0x95cD0E3bDbC670e057416D65C89B584a9a24d95d",
