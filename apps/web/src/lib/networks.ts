@@ -56,9 +56,9 @@ function arbitrumSepolia(): Network {
       blockExplorers: { default: { name: "Blockscout", url: "https://arbitrum-sepolia.blockscout.com" } },
       testnet: true,
     }),
-    eas: NATIVE,
-    schemaUID: "0x0000000000000000000000000000000000000000000000000000000000000000",
-    primarySale: NATIVE,
+    eas: "0x95cD0E3bDbC670e057416D65C89B584a9a24d95d",
+    schemaUID: "0xa702ff6a03caf077d7c3d9631cca826721f83f0b62c7d9c73640bf2bb749d983",
+    primarySale: "0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030",
     // Paxos Global Dollar (USDG) testnet token — docs.paxos.com/guides/stablecoin/usdg/testnet
     saleCurrency: { address: "0xFFC95faa3d63Cde504a05B567C600B78C0b41892", symbol: "USDG", decimals: 6 },
   };
