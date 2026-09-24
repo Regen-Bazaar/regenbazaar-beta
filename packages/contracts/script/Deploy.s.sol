@@ -82,6 +82,7 @@ contract Deploy is Script {
         d.marketplace = address(new RegenMarketplace(deployer, d.trwi, r.feeRecipient, feeBps));
         d.primarySale = address(new RegenPrimarySale(deployer, d.trwi, r.feeRecipient));
 
+        _allowCurrency(d);
         _wireRoles(d, r, deployer);
 
         vm.stopBroadcast();
@@ -115,6 +116,12 @@ contract Deploy is Script {
             _grantAdmin(d, r.adminMultisig);
             if (vm.envOr("RENOUNCE_DEPLOYER_ADMIN", false)) _renounceAdmin(d, deployer);
         }
+    }
+
+    /// @dev Optional ERC-20 payment currency for primary sales (e.g. USDG). Runs before any admin handoff.
+    function _allowCurrency(Deployed memory d) internal {
+        address currency = vm.envOr("ALLOWED_CURRENCY", address(0));
+        if (currency != address(0)) RegenPrimarySale(d.primarySale).setCurrencyAllowed(currency, true);
     }
 
     function _grantAdmin(Deployed memory d, address to) internal {
