@@ -49,11 +49,11 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
       <div className="mt-8">
         <button
           onClick={() => (hasInjectedWallet() ? connect({ connector: injected() }) : setMsg(NO_WALLET_HINT))}
-          className="rounded-md bg-gold px-4 py-2.5 text-sm font-semibold text-ink hover:bg-gold-soft"
+          className="btn btn-primary btn-sm"
         >
           Connect wallet to see your tRWI
         </button>
-        {msg && <p className="mt-2 text-xs text-paper/60">{msg}</p>}
+        {msg && <p className="mt-2 text-xs text-subtle">{msg}</p>}
       </div>
     );
   }
@@ -96,37 +96,37 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
       </div>
 
       {isLoading ? (
-        <p className="mt-8 text-paper/60">Reading your balances…</p>
+        <p className="mt-8 text-subtle">Reading your balances…</p>
       ) : held.length === 0 ? (
-        <p className="mt-8 text-paper/60">
+        <p className="mt-8 text-subtle">
           No tRWI on {chain.name} for {address?.slice(0, 6)}…{address?.slice(-4)} yet.{" "}
-          <Link href="/marketplace" className="text-gold underline">
+          <Link href="/marketplace" className="text-accent underline">
             Fund an impact
           </Link>
         </p>
       ) : (
         <ul className="mt-8 space-y-3">
           {held.map((i) => (
-            <li key={i.tokenId} className="rounded-xl border border-gold/15 bg-ink-soft/30 p-4">
+            <li key={i.tokenId} className="rounded-xl border border-line bg-surface p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element -- our own generated SVG */}
-                <img src={`/api/submissions/${i.submissionId}/image`} alt="" className="h-20 w-20 rounded-md border border-gold/15" />
+                <img src={`/api/submissions/${i.submissionId}/image`} alt="" className="h-20 w-20 rounded-md border border-line" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs uppercase tracking-wide text-paper/45">{i.domain?.replace(/_/g, " ")}</p>
-                  <Link href={`/submission/${i.submissionId}`} className="text-lg font-semibold hover:text-gold">
+                  <p className="text-xs uppercase tracking-wide text-subtle">{i.domain?.replace(/_/g, " ")}</p>
+                  <Link href={`/submission/${i.submissionId}`} className="text-lg font-semibold hover:text-accent">
                     {i.title}
                   </Link>
-                  <p className="mt-1 text-sm text-paper/70">
+                  <p className="mt-1 text-sm text-muted">
                     {i.balance.toString()} of {i.maxEditions} editions · Impact Value{" "}
                     {ivOf(i).toLocaleString(undefined, { maximumFractionDigits: 2 })}
                   </p>
-                  <p className="mt-1 break-all text-xs text-paper/45">
+                  <p className="mt-1 break-all text-xs text-subtle">
                     tRWI #{i.tokenId} · EAS attestation {i.easUid.slice(0, 10)}…{i.easUid.slice(-6)} ·{" "}
                     <a
                       href={`${EXPLORER}/token/${TRWI}/instance/${i.tokenId}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="underline hover:text-gold"
+                      className="underline hover:text-accent"
                     >
                       view on explorer
                     </a>
@@ -135,7 +135,7 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
                 <button
                   onClick={() => retire(i.tokenId, 1n)}
                   disabled={busy === i.tokenId}
-                  className="rounded-md border border-gold/40 px-3 py-1.5 text-xs hover:border-gold hover:text-gold disabled:opacity-50"
+                  className="rounded-md border border-line-strong px-3 py-1.5 text-xs hover:border-accent hover:text-accent disabled:opacity-50"
                   title="Burn one edition to permanently claim its share of the impact"
                 >
                   {busy === i.tokenId ? "Confirm in wallet…" : "Retire 1 edition"}
@@ -145,15 +145,15 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
           ))}
         </ul>
       )}
-      {msg && <p className="mt-4 break-all text-xs text-paper/60">{msg}</p>}
+      {msg && <p className="mt-4 break-all text-xs text-subtle">{msg}</p>}
     </div>
   );
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-gold/15 bg-ink-soft/30 p-4">
-      <p className="text-xs uppercase tracking-wide text-paper/45">{label}</p>
+    <div className="rounded-xl border border-line bg-surface p-4">
+      <p className="text-xs uppercase tracking-wide text-subtle">{label}</p>
       <p className="mt-1 text-2xl font-bold">{value}</p>
     </div>
   );

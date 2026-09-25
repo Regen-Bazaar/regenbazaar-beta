@@ -145,9 +145,9 @@ export function BuyButton({ listingId }: { listingId: string }) {
         href={`${chain.blockExplorers?.default.url}/tx/${tx}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-4 block rounded-md border border-green/50 py-2 text-center text-sm text-green-soft"
+        className="btn btn-sm mt-4 w-full border-ok/40 bg-ok-tint text-ok"
       >
-        Funded ✓ — view tx
+        Funded ✓ · view tx
       </a>
     );
   }
@@ -156,16 +156,16 @@ export function BuyButton({ listingId }: { listingId: string }) {
       <button
         onClick={buy}
         disabled={state === "busy"}
-        className="w-full rounded-md bg-gold py-2 text-sm font-semibold text-ink transition-colors hover:bg-gold-soft disabled:opacity-50"
+        className="btn btn-primary w-full"
       >
         {state === "busy" ? "Confirm in wallet…" : isConnected ? "Fund this impact" : "Connect to fund"}
       </button>
       {SALE_CURRENCY.testMint && (
-        <button onClick={getTestTokens} className="mt-1 w-full text-xs text-paper/60 underline hover:text-gold">
+        <button onClick={getTestTokens} className="mt-2 w-full text-xs text-subtle underline underline-offset-4 hover:text-accent">
           Get 100 test {SALE_CURRENCY.symbol} (testnet stand-in, not Paxos)
         </button>
       )}
-      {msg && <p className={`mt-1 text-xs ${state === "error" ? "text-red-300" : "text-paper/60"}`}>{msg}</p>}
+      {msg && <p className={`mt-2 break-words text-xs ${state === "error" ? "text-danger" : "text-subtle"}`}>{msg}</p>}
     </div>
   );
 }

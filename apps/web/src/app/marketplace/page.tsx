@@ -78,8 +78,9 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
   const Chip = ({ label, on, href }: { label: string; on: boolean; href: string }) => (
     <Link
       href={href}
-      className={`rounded-full px-2.5 py-1 text-xs transition-colors ${
-        on ? "bg-gold text-ink" : "border border-gold/25 text-paper/70 hover:border-gold hover:text-gold"
+      aria-current={on ? "true" : undefined}
+      className={`rounded-full border px-3 py-1 text-sm transition-colors ${
+        on ? "border-fg bg-fg text-bg" : "border-line-strong text-muted hover:border-accent hover:text-accent"
       }`}
     >
       {label}
@@ -87,132 +88,143 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
   );
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-12">
-      <h1 className="text-3xl font-bold">Marketplace</h1>
-      <p className="mt-2 text-paper/70">
+    <main className="page-wrap py-10 md:py-14">
+      <h1 className="text-[clamp(2.5rem,4vw,3.5rem)]">Marketplace</h1>
+      <p className="mt-3 max-w-[70ch] text-lg text-muted">
         Fund verified real-world impact. Each edition is a fractional share of the claim. Paid in{" "}
         {NETWORK.saleCurrency.symbol} on {NETWORK.chain.name}.{" "}
-        <Link href="/guide" className="text-gold underline">
+        <Link href="/guide" className="link">
           New here? How to fund →
         </Link>
       </p>
 
-      {/* filter bar */}
-      <div className="mt-6 space-y-3 rounded-xl border border-gold/15 bg-ink-soft/30 p-4">
-        <form method="get" className="flex gap-2">
-          <input
-            name="q"
-            defaultValue={sp.q ?? ""}
-            placeholder="Search title…"
-            aria-label="Search impact by title"
-            className="flex-1 rounded-md border border-gold/20 bg-ink-soft px-3 py-2 text-sm outline-none focus:border-gold"
-          />
-          {sp.domain && <input type="hidden" name="domain" value={sp.domain} />}
-          {sp.sdg && <input type="hidden" name="sdg" value={sp.sdg} />}
-          {sp.ebf && <input type="hidden" name="ebf" value={sp.ebf} />}
-          <button className="rounded-md border border-gold/40 px-4 text-sm hover:border-gold hover:text-gold">
-            Search
-          </button>
-        </form>
-        {domains.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="mr-1 text-xs uppercase tracking-wide text-paper/45">Domain</span>
-            {domains.map((d) => (
-              <Chip key={d} label={d.replace(/_/g, " ")} on={sp.domain === d} href={hrefWith(sp, { domain: sp.domain === d ? "" : d })} />
-            ))}
+      <div className="mt-10 grid items-start gap-10 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)]">
+        {/* filter rail */}
+        <aside className="lg:sticky lg:top-24" aria-label="Filters">
+          <form method="get" className="flex gap-2">
+            <input
+              name="q"
+              defaultValue={sp.q ?? ""}
+              placeholder="Search title…"
+              aria-label="Search impact by title"
+              className="field min-w-0 flex-1"
+            />
+            {sp.domain && <input type="hidden" name="domain" value={sp.domain} />}
+            {sp.sdg && <input type="hidden" name="sdg" value={sp.sdg} />}
+            {sp.ebf && <input type="hidden" name="ebf" value={sp.ebf} />}
+            <button className="btn btn-secondary btn-sm">Search</button>
+          </form>
+          {domains.length > 0 && (
+            <div className="mt-6">
+              <h2 className="label-mono mb-2.5">Domain</h2>
+              <div className="flex flex-wrap gap-2">
+                {domains.map((d) => (
+                  <Chip key={d} label={d.replace(/_/g, " ")} on={sp.domain === d} href={hrefWith(sp, { domain: sp.domain === d ? "" : d })} />
+                ))}
+              </div>
+            </div>
+          )}
+          {sdgs.length > 0 && (
+            <div className="mt-6">
+              <h2 className="label-mono mb-2.5">SDG</h2>
+              <div className="flex flex-wrap gap-2">
+                {sdgs.map((t) => (
+                  <Chip key={t} label={t} on={sp.sdg === t} href={hrefWith(sp, { sdg: sp.sdg === t ? "" : t })} />
+                ))}
+              </div>
+            </div>
+          )}
+          {ebfs.length > 0 && (
+            <div className="mt-6">
+              <h2 className="label-mono mb-2.5">EBF</h2>
+              <div className="flex flex-wrap gap-2">
+                {ebfs.map((t) => (
+                  <Chip key={t} label={t} on={sp.ebf === t} href={hrefWith(sp, { ebf: sp.ebf === t ? "" : t })} />
+                ))}
+              </div>
+            </div>
+          )}
+        </aside>
+
+        <section aria-label="Results">
+          <div className="mb-5 flex items-baseline justify-between gap-4 text-muted">
+            <span>
+              {rows.length} {rows.length === 1 ? "report" : "reports"}
+            </span>
+            {active && (
+              <Link href="/marketplace" className="link">
+                Clear filters
+              </Link>
+            )}
           </div>
-        )}
-        {sdgs.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="mr-1 text-xs uppercase tracking-wide text-paper/45">SDG</span>
-            {sdgs.map((t) => (
-              <Chip key={t} label={t} on={sp.sdg === t} href={hrefWith(sp, { sdg: sp.sdg === t ? "" : t })} />
-            ))}
-          </div>
-        )}
-        {ebfs.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="mr-1 text-xs uppercase tracking-wide text-paper/45">EBF</span>
-            {ebfs.map((t) => (
-              <Chip key={t} label={t} on={sp.ebf === t} href={hrefWith(sp, { ebf: sp.ebf === t ? "" : t })} />
-            ))}
-          </div>
-        )}
-        {active && (
-          <Link href="/marketplace" className="inline-block text-xs text-gold underline">
-            Clear filters
-          </Link>
-        )}
-      </div>
 
       {rows.length === 0 ? (
-        <div className="mt-10 rounded-xl border border-gold/15 bg-ink-soft/40 p-10 text-center text-paper/60">
+        <div className="card p-10 text-center text-muted">
           {active ? (
-            <>No impact matches these filters. <Link href="/marketplace" className="text-gold underline">Clear</Link>.</>
+            <>No impact matches these filters. <Link href="/marketplace" className="link">Clear</Link>.</>
           ) : (
             <>No verified impact yet. Approve submissions in the{" "}
-              <Link href="/verify" className="text-gold underline">verification queue</Link>.</>
+              <Link href="/verify" className="link">verification queue</Link>.</>
           )}
         </div>
       ) : (
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,290px),1fr))] gap-6">
           {rows.map((l) => {
             const tags = l.frameworkTags as Tags;
             const listing = listingBySubmission.get(l.id);
             const tokenized = !!listing; // listed (EAS-attested) on THIS network
             return (
-              <div key={l.id} className="flex flex-col rounded-xl border border-gold/15 bg-ink-soft/40 p-5">
-                <Link href={`/submission/${l.id}`} className="mb-3 block overflow-hidden rounded-lg border border-gold/10">
+              <article key={l.id} className="card flex flex-col overflow-hidden transition-colors hover:!border-line-strong">
+                <Link href={`/submission/${l.id}`} className="block">
                   {/* eslint-disable-next-line @next/next/no-img-element -- our own generated SVG */}
-                  <img src={`/api/submissions/${l.id}/image`} alt={`tRWI card: ${l.title}`} className="aspect-square w-full" loading="lazy" />
+                  <img src={`/api/submissions/${l.id}/image`} alt={`tRWI card: ${l.title}`} className="block aspect-square w-full" loading="lazy" />
                 </Link>
-                <Link href={`/submission/${l.id}`} className="font-medium leading-snug hover:text-gold">
-                  {l.title}
-                </Link>
-                <div className="mt-0.5 text-xs text-paper/50">by {l.orgName}</div>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {tags?.sdg.slice(0, 3).map((t) => (
-                    <span key={t} className="rounded-full bg-green/25 px-2 py-0.5 text-xs text-paper/80">{t}</span>
-                  ))}
-                  {tags?.ebf.slice(0, 2).map((t) => (
-                    <span key={t} className="rounded-full border border-gold/40 px-2 py-0.5 text-xs text-gold">EBF {t}</span>
-                  ))}
-                </div>
-                <div className="mt-auto flex items-end justify-between pt-4">
-                  <div>
-                    <div className="text-xs text-paper/45">Impact Value</div>
-                    <div className="font-semibold text-gold">{Number(l.ivValue ?? 0).toLocaleString()}</div>
+                <div className="flex flex-1 flex-col p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="label-mono">{(l.domain ?? "impact").replace(/_/g, " ")}</span>
+                    <span className={`badge ${tokenized ? "badge-ok" : "badge-gold"}`}>{tokenized ? "on-chain" : "verified"}</span>
                   </div>
-                  {listing && (
+                  <Link href={`/submission/${l.id}`} className="mt-3 text-[1.3125rem] font-semibold leading-snug hover:text-accent">
+                    {l.title}
+                  </Link>
+                  <div className="mt-1 text-muted">by {l.orgName}</div>
+                  <div className="mb-5 mt-4 flex flex-wrap gap-1.5">
+                    {tags?.sdg.slice(0, 3).map((t) => (
+                      <span key={t} className="tag">{t}</span>
+                    ))}
+                    {tags?.ebf.slice(0, 2).map((t) => (
+                      <span key={t} className="tag tag-ebf">EBF {t}</span>
+                    ))}
+                  </div>
+                  <div className="mt-auto grid grid-cols-2 gap-3 border-t border-line pt-4">
                     <div>
-                      <div className="text-xs text-paper/45">Price per edition</div>
-                      <div className="font-semibold">
-                        {Number(formatUnits(BigInt(listing.pricePerEdition), NETWORK.saleCurrency.decimals)).toLocaleString("en-US", { maximumFractionDigits: 6 })}{" "}
-                        {NETWORK.saleCurrency.symbol}
+                      <div className="label-mono">Impact Value</div>
+                      <div className="text-xl font-semibold text-accent">{Number(l.ivValue ?? 0).toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <div className="label-mono">Per edition</div>
+                      <div className="text-xl font-semibold">
+                        {listing
+                          ? `${Number(formatUnits(BigInt(listing.pricePerEdition), NETWORK.saleCurrency.decimals)).toLocaleString("en-US", { maximumFractionDigits: 6 })} ${NETWORK.saleCurrency.symbol}`
+                          : "not listed"}
                       </div>
                     </div>
+                  </div>
+                  {listing ? (
+                    <BuyButton listingId={listing.id} />
+                  ) : (
+                    <button disabled className="btn btn-sm mt-4 w-full whitespace-normal">
+                      {l.status === "tokenized" ? `Not yet listed on ${NETWORK.chain.name}` : "Awaiting verification"}
+                    </button>
                   )}
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-xs ${tokenized ? "bg-green-soft/50 text-paper" : "bg-gold/20 text-gold"}`}
-                  >
-                    {tokenized ? "on-chain" : "verified"}
-                  </span>
                 </div>
-                {listing ? (
-                  <BuyButton listingId={listing.id} />
-                ) : (
-                  <button
-                    disabled
-                    className="mt-4 rounded-md border border-gold/40 py-2 text-sm opacity-50"
-                  >
-                    {l.status === "tokenized" ? `Not yet listed on ${NETWORK.chain.name}` : "Awaiting verification"}
-                  </button>
-                )}
-              </div>
+              </article>
             );
           })}
         </div>
       )}
+        </section>
+      </div>
     </main>
   );
 }

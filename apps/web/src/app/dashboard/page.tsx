@@ -6,12 +6,12 @@ import { getDb } from "../../lib/db";
 export const dynamic = "force-dynamic";
 
 const STATUS_STYLES: Record<string, string> = {
-  draft: "bg-paper/10 text-paper/60",
-  scored: "bg-paper/10 text-paper/60",
-  pending_verification: "bg-gold/20 text-gold",
-  verified: "bg-green/40 text-paper",
-  tokenized: "bg-green-soft/50 text-paper",
-  rejected: "bg-red-500/20 text-red-300",
+  draft: "badge-muted",
+  scored: "badge-muted",
+  pending_verification: "badge-gold",
+  verified: "badge-ok",
+  tokenized: "badge-ok",
+  rejected: "badge-danger",
 };
 
 type Tags = { sdg: string[]; ebf: string[] } | null;
@@ -30,13 +30,13 @@ export default async function Dashboard() {
   const tokenized = rows.filter((r) => r.status === "tokenized").length;
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-12">
+    <main className="page-wrap py-12">
       <div className="flex items-end justify-between">
         <div>
           <h1 className="text-3xl font-bold">NGO dashboard</h1>
-          <p className="mt-1 text-paper/70">Approved impact reports. New submissions appear here after review.</p>
+          <p className="mt-1 text-muted">Approved impact reports. New submissions appear here after review.</p>
         </div>
-        <Link href="/tokenize" className="rounded-md bg-gold px-4 py-2.5 text-sm font-semibold text-ink hover:bg-gold-soft">
+        <Link href="/tokenize" className="btn btn-primary btn-sm">
           + New tokenization
         </Link>
       </div>
@@ -48,33 +48,33 @@ export default async function Dashboard() {
       </div>
 
       {rows.length === 0 ? (
-        <div className="mt-10 rounded-xl border border-gold/15 bg-ink-soft/40 p-10 text-center text-paper/60">
-          No submissions yet. <Link href="/tokenize" className="text-gold underline">Tokenize your first impact</Link>.
+        <div className="mt-10 rounded-xl border border-line bg-surface p-10 text-center text-subtle">
+          No submissions yet. <Link href="/tokenize" className="text-accent underline">Tokenize your first impact</Link>.
         </div>
       ) : (
-        <div className="mt-10 overflow-hidden rounded-xl border border-gold/15">
+        <div className="mt-10 overflow-hidden rounded-xl border border-line">
           {rows.map((s, i) => {
             const tags = s.frameworkTags as Tags;
             return (
               <Link
                 key={s.id}
                 href={`/submission/${s.id}`}
-                className={`flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-ink-soft/40 ${i ? "border-t border-gold/10" : ""}`}
+                className={`flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-raised ${i ? "border-t border-line" : ""}`}
               >
                 <div className="min-w-0">
                   <div className="truncate font-medium">{s.title}</div>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-paper/50">
-                    <span className="text-paper/70">{s.orgName}</span>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-subtle">
+                    <span className="text-muted">{s.orgName}</span>
                     {s.domain && <span className="capitalize">{s.domain.replace(/_/g, " ")}</span>}
                     {tags?.sdg.slice(0, 4).map((t) => (
-                      <span key={t} className="rounded-full bg-green/25 px-2 py-0.5 text-paper/80">{t}</span>
+                      <span key={t} className="tag">{t}</span>
                     ))}
                   </div>
                 </div>
                 <div className="flex items-center gap-5">
                   <div className="text-right">
-                    <div className="text-xs text-paper/45">Impact Value</div>
-                    <div className="font-semibold text-gold">{Number(s.ivValue ?? 0).toLocaleString()}</div>
+                    <div className="text-xs text-subtle">Impact Value</div>
+                    <div className="font-semibold text-accent">{Number(s.ivValue ?? 0).toLocaleString()}</div>
                   </div>
                   <span className={`rounded-full px-3 py-1 text-xs ${STATUS_STYLES[s.status] ?? ""}`}>
                     {s.status.replace(/_/g, " ")}
@@ -91,9 +91,9 @@ export default async function Dashboard() {
 
 function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className="rounded-lg border border-gold/15 bg-ink-soft/40 p-5">
-      <div className="text-xs uppercase tracking-wide text-paper/55">{label}</div>
-      <div className={`mt-1 text-2xl font-bold ${accent ? "text-gold" : ""}`}>{value}</div>
+    <div className="rounded-lg border border-line bg-surface p-5">
+      <div className="text-xs uppercase tracking-wide text-subtle">{label}</div>
+      <div className={`mt-1 text-2xl font-bold ${accent ? "text-accent" : ""}`}>{value}</div>
     </div>
   );
 }

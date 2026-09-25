@@ -11,7 +11,7 @@ const REGIONS = ["temperate", "urban", "southeast_asia", "amazon", "congo_basin"
 const DENSITY: PopulationDensity[] = ["low", "medium", "high", "very_high"];
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <label className="mb-1.5 block text-xs uppercase tracking-wide text-paper/55">{children}</label>;
+  return <label className="mb-2 block text-sm font-semibold text-muted">{children}</label>;
 }
 
 function Select({
@@ -27,10 +27,10 @@ function Select({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-md border border-gold/20 bg-ink-soft px-3 py-2 text-sm text-paper outline-none focus:border-gold"
+      className="field"
     >
       {options.map((o) => (
-        <option key={o} value={o} className="bg-ink-soft">
+        <option key={o} value={o} className="bg-surface">
           {o.replace(/_/g, " ")}
         </option>
       ))}
@@ -115,21 +115,21 @@ export default function Tokenize() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-12">
-      <h1 className="text-3xl font-bold">Tokenize impact</h1>
-      <p className="mt-2 text-paper/70">
+    <main className="page-wrap py-10 md:py-14">
+      <h1 className="text-[clamp(2.5rem,4vw,3.5rem)]">Tokenize impact</h1>
+      <p className="mt-3 max-w-[70ch] text-lg text-muted">
         Describe the real-world impact you delivered. The Impact Value updates live as you go.
       </p>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
+      <div className="mt-10 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px] xl:gap-16">
         {/* form */}
-        <div className="space-y-6">
+        <div className="max-w-[820px] space-y-8">
           <div>
             <Label>Title</Label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-md border border-gold/20 bg-ink-soft px-3 py-2 text-sm outline-none focus:border-gold"
+              className="field"
             />
           </div>
           <div>
@@ -138,15 +138,16 @@ export default function Tokenize() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
-              className="w-full rounded-md border border-gold/20 bg-ink-soft px-3 py-2 text-sm outline-none focus:border-gold"
+              className="field"
             />
-            <p className="mt-1 text-xs text-paper/45">
+            <p className="mt-2 text-sm text-subtle">
               Write it as you would to a funder: what, how many, where. The live preview uses quick keyword
               matching; on submit our AI extractor re-reads the report, so the final Impact Value can differ slightly.
             </p>
           </div>
-          <div className="rounded-lg border border-gold/15 bg-ink-soft/30 p-4">
-            <div className="mb-3 text-sm text-gold">Your organisation</div>
+          <fieldset className="card p-5 md:p-6">
+            <legend className="sr-only">Your organisation</legend>
+            <h2 className="mb-4 text-2xl">Your organisation</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label>Organisation name</Label>
@@ -154,7 +155,7 @@ export default function Tokenize() {
                   value={orgName}
                   onChange={(e) => setOrgName(e.target.value)}
                   placeholder="e.g. Green Coast Community"
-                  className="w-full rounded-md border border-gold/20 bg-ink-soft px-3 py-2 text-sm outline-none focus:border-gold"
+                  className="field"
                 />
               </div>
               <div>
@@ -163,20 +164,20 @@ export default function Tokenize() {
                   value={payoutWallet}
                   onChange={(e) => setPayoutWallet(e.target.value)}
                   placeholder="0x…"
-                  className="w-full rounded-md border border-gold/20 bg-ink-soft px-3 py-2 font-mono text-xs outline-none focus:border-gold"
+                  className="w-full field font-mono"
                 />
                 {address && payoutWallet !== address && (
-                  <button type="button" onClick={() => setPayoutWallet(address)} className="mt-1 text-xs text-gold underline">
+                  <button type="button" onClick={() => setPayoutWallet(address)} className="link mt-2 text-sm">
                     Use my connected wallet
                   </button>
                 )}
               </div>
             </div>
-            <p className="mt-2 text-xs text-paper/45">
+            <p className="mt-3 text-sm text-subtle">
               Every sale pays this wallet directly, in the same transaction. Use a regular wallet (e.g. MetaMask), not a
               multisig. Leave both empty to submit as the demo organisation (sample data).
             </p>
-          </div>
+          </fieldset>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label>Domain</Label>
@@ -190,14 +191,14 @@ export default function Tokenize() {
               <Label>Population density</Label>
               <Select value={density} onChange={(v) => setDensity(v as PopulationDensity)} options={DENSITY} />
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>From</Label>
                 <input
                   type="date"
                   value={periodStart}
                   onChange={(e) => setPeriodStart(e.target.value)}
-                  className="w-full rounded-md border border-gold/20 bg-ink-soft px-3 py-2 text-sm outline-none focus:border-gold"
+                  className="field"
                 />
               </div>
               <div>
@@ -206,15 +207,15 @@ export default function Tokenize() {
                   type="date"
                   value={periodEnd}
                   onChange={(e) => setPeriodEnd(e.target.value)}
-                  className="w-full rounded-md border border-gold/20 bg-ink-soft px-3 py-2 text-sm outline-none focus:border-gold"
+                  className="field"
                 />
               </div>
             </div>
           </div>
 
           <div>
-            <div className="mb-1 text-sm text-gold">How hard was it? (complexity)</div>
-            <p className="mb-3 text-xs text-paper/45">Harder conditions raise the Impact Value slightly (ACDM factor).</p>
+            <h2 className="text-2xl">How hard was it? (complexity)</h2>
+            <p className="mb-4 mt-1 text-sm text-subtle">Harder conditions raise the Impact Value slightly (ACDM factor).</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label>Technical expertise</Label>
@@ -240,40 +241,40 @@ export default function Tokenize() {
           </div>
 
           <div>
-            <Label>Media (optional) — photo/video URLs, one per line</Label>
+            <Label>Media (optional): photo/video URLs, one per line</Label>
             <textarea
               value={mediaText}
               onChange={(e) => setMediaText(e.target.value)}
               rows={2}
               placeholder="https://…/photo1.jpg"
-              className="w-full rounded-md border border-gold/20 bg-ink-soft px-3 py-2 text-sm outline-none focus:border-gold"
+              className="field"
             />
             {mediaUris.length > 0 && (
-              <p className="mt-1 text-xs text-paper/45">{mediaUris.length} link(s) attached</p>
+              <p className="mt-2 text-sm text-subtle">{mediaUris.length} link(s) attached</p>
             )}
           </div>
 
           <div className="space-y-3">
-            <p className="text-xs text-paper/55">
+            <p className="text-sm text-subtle">
               This report will be listed on <b>{NETWORK.chain.name}</b> only (switch networks in the header before
               submitting). One report is never listed on several networks.
             </p>
             <button
               onClick={submit}
               disabled={submitting}
-              className="rounded-md bg-gold px-5 py-3 font-semibold text-ink transition-colors hover:bg-gold-soft disabled:opacity-50"
+              className="btn btn-primary"
             >
               {submitting ? "Submitting…" : "Submit for verification"}
             </button>
             {result && (
-              <div className="rounded-md border border-green/40 bg-green/15 px-4 py-3 text-sm">
+              <div className="rounded-xl border border-ok/40 bg-ok-tint px-4 py-3">
                 Submitted ✓ Status <b>{result.status.replace(/_/g, " ")}</b>, Impact Value{" "}
-                <b className="text-gold">{result.impactValue.toLocaleString()}</b>. Next: the Regen Bazaar team reviews it. Once approved, it is attested on-chain and appears in the{" "}
-                <a href="/marketplace" className="underline">Marketplace</a> on {NETWORK.chain.name} only.
+                <b className="text-accent">{result.impactValue.toLocaleString()}</b>. Next: the Regen Bazaar team reviews it. Once approved, it is attested on-chain and appears in the{" "}
+                <a href="/marketplace" className="link">Marketplace</a> on {NETWORK.chain.name} only.
               </div>
             )}
             {error && (
-              <div className="rounded-md border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+              <div className="rounded-xl border border-danger/40 bg-danger-tint px-4 py-3 text-danger">
                 Error: {error}
               </div>
             )}
@@ -281,54 +282,54 @@ export default function Tokenize() {
         </div>
 
         {/* live IV preview */}
-        <aside className="h-fit lg:sticky lg:top-6">
-          <div className="rounded-xl border border-gold/25 bg-ink-soft/60 p-6">
-            <div className="text-xs uppercase tracking-wide text-paper/55">Impact Value (live preview)</div>
-            <div className="mt-1 text-5xl font-bold text-gold">{iv.impactValue.toLocaleString()}</div>
-            <div className="mt-1 text-[11px] text-paper/45">
+        <aside className="lg:sticky lg:top-24">
+          <div className="card p-6">
+            <div className="label-mono">Impact Value (live preview)</div>
+            <div className="mt-1 font-display text-6xl text-accent">{iv.impactValue.toLocaleString()}</div>
+            <div className="mt-2 text-sm text-subtle">
               platform-assessed (beta) · not third-party certified ·{" "}
-              <a href="/methodology" className="underline hover:text-gold">{iv.tablesVersion}</a>
+              <a href="/methodology" className="underline underline-offset-4 hover:text-accent">{iv.tablesVersion}</a>
             </div>
 
-            <div className="mt-4 rounded-lg border border-gold/20 bg-ink/50 p-3">
-              <div className="text-xs uppercase tracking-wide text-paper/55">Suggested price (formula)</div>
-              <div className="mt-1 text-2xl font-semibold text-paper">
+            <div className="mt-5 rounded-xl bg-raised p-4">
+              <div className="label-mono">Suggested price (formula)</div>
+              <div className="mt-1 text-2xl font-semibold text-fg">
                 {price.totalPrice.toLocaleString()} {NETWORK.saleCurrency.symbol}{" "}
-                <span className="text-sm text-paper/50">total</span>
+                <span className="text-sm text-subtle">total</span>
               </div>
-              <div className="mt-0.5 text-[11px] text-paper/45">
+              <div className="mt-1 text-sm text-subtle">
                 ≈ {price.pricePerEdition.toLocaleString()} {NETWORK.saleCurrency.symbol} per edition × 100 editions · IV ×{" "}
                 {price.rate} · {price.modelVersion}
               </div>
             </div>
 
             <div className="mt-5">
-              <div className="mb-2 text-xs uppercase tracking-wide text-paper/55">Frameworks</div>
+              <div className="label-mono mb-2">Frameworks</div>
               <div className="flex flex-wrap gap-1.5">
                 {iv.frameworkTags.sdg.map((s) => (
-                  <span key={s} className="rounded-full bg-green/30 px-2.5 py-1 text-xs text-paper">{s}</span>
+                  <span key={s} className="tag">{s}</span>
                 ))}
                 {iv.frameworkTags.ebf.map((e) => (
-                  <span key={e} className="rounded-full border border-gold/40 px-2.5 py-1 text-xs text-gold">EBF: {e}</span>
+                  <span key={e} className="tag tag-ebf">EBF: {e}</span>
                 ))}
-                {iv.breakdown.length === 0 && <span className="text-xs text-paper/40">No recognised actions yet.</span>}
+                {iv.breakdown.length === 0 && <span className="text-sm text-subtle">No recognised actions yet.</span>}
               </div>
             </div>
 
             <div className="mt-5">
-              <div className="mb-1 text-xs uppercase tracking-wide text-paper/55">Breakdown</div>
-              <p className="mb-2 text-[11px] text-paper/40">
+              <div className="label-mono mb-1">Breakdown</div>
+              <p className="mb-3 text-sm text-subtle">
                 AW action weight · SM scope · TBV time · ESM environmental sensitivity · PIM population · ACDM complexity.{" "}
-                <a href="/methodology" className="underline hover:text-gold">Methodology</a>
+                <a href="/methodology" className="underline underline-offset-4 hover:text-accent">Methodology</a>
               </p>
               <div className="space-y-2">
                 {iv.breakdown.map((b) => (
-                  <div key={b.actionType} className="rounded-md bg-ink/60 px-3 py-2 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-paper/85">{b.actionType.replace(/_/g, " ")}</span>
-                      <span className="text-gold">{b.raw.toLocaleString()}</span>
+                  <div key={b.actionType} className="rounded-xl bg-raised px-4 py-3">
+                    <div className="flex justify-between gap-4">
+                      <span className="font-semibold capitalize">{b.actionType.replace(/_/g, " ")}</span>
+                      <span className="font-semibold text-accent">{b.raw.toLocaleString()}</span>
                     </div>
-                    <div className="mt-1 text-paper/45">
+                    <div className="mt-1 font-mono text-sm text-subtle">
                       {b.quantity} × AW {b.aw} · SM {b.sm} · TBV {b.tbv.toFixed(2)} · ESM {b.esm} · PIM {b.pim} · ACDM {b.acdm.toFixed(2)}
                     </div>
                   </div>

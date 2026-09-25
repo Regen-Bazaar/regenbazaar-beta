@@ -26,45 +26,45 @@ export default async function Leaderboard() {
     .orderBy(desc(sql`sum(${impactSubmissions.ivValue})`))
     .limit(50);
 
-  const rank = (i: number) => (i === 0 ? "text-gold" : i === 1 ? "text-paper" : i === 2 ? "text-green-soft" : "text-paper/50");
+  const rank = (i: number) => (i === 0 ? "text-accent" : i === 1 ? "text-fg" : i === 2 ? "text-ok" : "text-subtle");
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
       <h1 className="text-3xl font-bold">Impact leaderboard</h1>
-      <p className="mt-2 text-paper/70">
+      <p className="mt-2 text-muted">
         Organizations ranked by total verified impact value. Only verified and on-chain claims count.
       </p>
 
       {rows.length === 0 ? (
-        <div className="mt-10 rounded-xl border border-gold/15 bg-ink-soft/40 p-10 text-center text-paper/60">
+        <div className="mt-10 rounded-xl border border-line bg-surface p-10 text-center text-subtle">
           No verified impact yet. Approve submissions in the{" "}
-          <Link href="/verify" className="text-gold underline">verification queue</Link>.
+          <Link href="/verify" className="text-accent underline">verification queue</Link>.
         </div>
       ) : (
         <ol className="mt-8 space-y-2">
           {rows.map((r, i) => (
             <li
               key={r.orgId}
-              className="flex items-center gap-4 rounded-xl border border-gold/15 bg-ink-soft/40 px-5 py-4"
+              className="flex items-center gap-4 rounded-xl border border-line bg-surface px-5 py-4"
             >
               <div className={`w-8 shrink-0 text-center text-xl font-bold ${rank(i)}`}>{i + 1}</div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="truncate font-medium">{r.name}</span>
                   {r.verified && (
-                    <span className="shrink-0 rounded-full bg-green/25 px-2 py-0.5 text-[10px] uppercase tracking-wide text-paper/80">
+                    <span className="shrink-0 rounded-full bg-ok-tint px-2 py-0.5 text-xs uppercase tracking-wide text-muted">
                       verified org
                     </span>
                   )}
                 </div>
-                <div className="text-xs text-paper/50">
+                <div className="text-xs text-subtle">
                   {[r.region, r.country].filter(Boolean).join(", ") || "Location not set"} ·{" "}
                   {Number(r.claims)} verified {Number(r.claims) === 1 ? "claim" : "claims"}
                 </div>
               </div>
               <div className="shrink-0 text-right">
-                <div className="text-xs text-paper/45">Total Impact Value</div>
-                <div className="font-semibold text-gold">{Number(r.totalIv).toLocaleString()}</div>
+                <div className="text-xs text-subtle">Total Impact Value</div>
+                <div className="font-semibold text-accent">{Number(r.totalIv).toLocaleString()}</div>
               </div>
             </li>
           ))}

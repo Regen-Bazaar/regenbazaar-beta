@@ -27,9 +27,9 @@ const DOMAIN_LABEL: Record<ImpactDomain, string> = {
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="border-t border-gold/15 pt-8">
-      <h2 className="text-xl font-bold text-gold">{title}</h2>
-      <div className="mt-3 space-y-3 text-sm leading-relaxed text-paper/80">{children}</div>
+    <section id={id} className="border-t border-line pt-8">
+      <h2 className="text-xl font-bold text-accent">{title}</h2>
+      <div className="mt-3 space-y-3 text-sm leading-relaxed text-muted">{children}</div>
     </section>
   );
 }
@@ -45,27 +45,27 @@ export default function Methodology() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
-      <div className="mb-6 rounded-lg border border-gold/40 bg-gold/10 p-4 text-sm text-paper/85">
-        <b className="text-gold">Status: {TABLES_VERSION}, beta.</b> Impact Value is a <b>relative score</b> for
+      <div className="mb-6 rounded-lg border border-line-strong bg-accent-tint p-4 text-sm text-muted">
+        <b className="text-accent">Status: {TABLES_VERSION}, beta.</b> Impact Value is a <b>relative score</b> for
         comparing reports, not a carbon, monetary or certified measure. The formula, versioning and per-factor
         breakdown are final in design; the <b>weights and multipliers are seed values</b> set by the platform and are
         not yet calibrated against external standards. Calibration with domain experts, and mapping selected
         actions to physical units (for example tCO₂e), is the next milestone (see the{" "}
-        <a href="/roadmap" className="text-gold underline">roadmap</a>). Prices derived from IV are equally provisional.
+        <a href="/roadmap" className="text-accent underline">roadmap</a>). Prices derived from IV are equally provisional.
       </div>
       <h1 className="text-3xl font-bold">Impact Value methodology</h1>
-      <p className="mt-2 text-paper/70">
+      <p className="mt-2 text-muted">
         How we turn an NGO&apos;s report into a single, comparable Impact Value (IV). The method is
         deterministic, auditable, and versioned — the same input and table version always produce the
         same score.
       </p>
-      <div className="mt-4 inline-block rounded-md border border-gold/30 bg-ink-soft/50 px-3 py-2 text-xs text-paper/70">
-        Active table version: <span className="text-gold">{TABLES_VERSION}</span>
+      <div className="mt-4 inline-block rounded-md border border-line bg-surface px-3 py-2 text-xs text-muted">
+        Active table version: <span className="text-accent">{TABLES_VERSION}</span>
       </div>
 
-      <div className="mt-6 rounded-lg border border-gold/25 bg-ink-soft/50 p-5 text-center">
-        <div className="text-xs uppercase tracking-wide text-paper/55">Per action</div>
-        <div className="mt-2 font-mono text-lg text-paper">
+      <div className="mt-6 rounded-lg border border-line bg-surface p-5 text-center">
+        <div className="text-xs uppercase tracking-wide text-subtle">Per action</div>
+        <div className="mt-2 font-mono text-lg text-fg">
           IV = Σ ( AW × SM × TBV × ESM × PIM × ACDM )
         </div>
       </div>
@@ -89,18 +89,18 @@ export default function Methodology() {
           </p>
           {Object.entries(byDomain).map(([domain, rows]) => (
             <div key={domain} className="mt-4">
-              <div className="mb-1 text-xs uppercase tracking-wide text-gold/80">
+              <div className="mb-1 text-xs uppercase tracking-wide text-accent">
                 {DOMAIN_LABEL[domain as ImpactDomain] ?? domain}
               </div>
-              <div className="overflow-hidden rounded-md border border-gold/15">
+              <div className="overflow-hidden rounded-md border border-line">
                 <table className="w-full text-xs">
                   <tbody>
                     {rows.map(([key, w]) => (
-                      <tr key={key} className="border-b border-gold/10 last:border-0">
-                        <td className="px-3 py-1.5 text-paper/85">{key.replace(/_/g, " ")}</td>
-                        <td className="px-3 py-1.5 text-paper/50">per {w.unit}</td>
-                        <td className="px-3 py-1.5 text-right font-mono text-gold">{w.aw}</td>
-                        <td className="px-3 py-1.5 text-right text-paper/45">
+                      <tr key={key} className="border-b border-line last:border-0">
+                        <td className="px-3 py-1.5 text-muted">{key.replace(/_/g, " ")}</td>
+                        <td className="px-3 py-1.5 text-subtle">per {w.unit}</td>
+                        <td className="px-3 py-1.5 text-right font-mono text-accent">{w.aw}</td>
+                        <td className="px-3 py-1.5 text-right text-subtle">
                           {[...w.sdg, ...(w.ebf?.map((e) => `EBF:${e}`) ?? [])].join(" · ")}
                         </td>
                       </tr>
@@ -117,7 +117,7 @@ export default function Methodology() {
           <ul className="ml-4 list-disc space-y-1">
             {SCOPE_TIERS.map((t) => (
               <li key={t.min}>
-                quantity ≥ {t.min.toLocaleString()} → <span className="text-gold">×{t.multiplier}</span>
+                quantity ≥ {t.min.toLocaleString()} → <span className="text-accent">×{t.multiplier}</span>
               </li>
             ))}
           </ul>
@@ -126,7 +126,7 @@ export default function Methodology() {
         <Section id="tbv" title="TBV — Time-Based Value">
           <p>
             Longer, sustained programmes count for more: <span className="font-mono">1 + 0.1 × years</span>,
-            capped at <span className="text-gold">×2.0</span>. With no reporting period given, TBV = 1.0.
+            capped at <span className="text-accent">×2.0</span>. With no reporting period given, TBV = 1.0.
           </p>
         </Section>
 
@@ -138,8 +138,8 @@ export default function Methodology() {
           </p>
           <div className="flex flex-wrap gap-2">
             {Object.entries(ESM_BY_REGION).map(([region, m]) => (
-              <span key={region} className="rounded-full border border-gold/25 px-2.5 py-1 text-xs">
-                {region.replace(/_/g, " ")} <span className="text-gold">×{m}</span>
+              <span key={region} className="rounded-full border border-line px-2.5 py-1 text-xs">
+                {region.replace(/_/g, " ")} <span className="text-accent">×{m}</span>
               </span>
             ))}
           </div>
@@ -150,7 +150,7 @@ export default function Methodology() {
           <ul className="ml-4 list-disc space-y-1">
             {Object.entries(PIM_BY_DENSITY).map(([d, m]) => (
               <li key={d}>
-                {d.replace(/_/g, " ")} → <span className="text-gold">×{m}</span>
+                {d.replace(/_/g, " ")} → <span className="text-accent">×{m}</span>
               </li>
             ))}
           </ul>
@@ -164,11 +164,11 @@ export default function Methodology() {
           <div className="space-y-3">
             {Object.entries(ACDM_SCALES).map(([q, scale]) => (
               <div key={q} className="text-xs">
-                <div className="text-paper/85">{q.replace(/([A-Z])/g, " $1").toLowerCase()}</div>
-                <div className="mt-1 flex flex-wrap gap-2 text-paper/55">
+                <div className="text-muted">{q.replace(/([A-Z])/g, " $1").toLowerCase()}</div>
+                <div className="mt-1 flex flex-wrap gap-2 text-subtle">
                   {Object.entries(scale).map(([level, m]) => (
-                    <span key={level} className="rounded border border-gold/15 px-2 py-0.5">
-                      {level} <span className="text-gold">×{m}</span>
+                    <span key={level} className="rounded border border-line px-2 py-0.5">
+                      {level} <span className="text-accent">×{m}</span>
                     </span>
                   ))}
                 </div>

@@ -31,7 +31,7 @@ export default async function Guide() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
       <h1 className="text-3xl font-bold">How to try Regen Bazaar</h1>
-      <p className="mt-2 text-paper/70">
+      <p className="mt-2 text-muted">
         This is a beta on <b>{chain}</b>, a test network. Everything here uses test tokens with no monetary value.
         {others.length > 0 && (
           <>
@@ -39,7 +39,7 @@ export default async function Guide() {
             {others.map((o, i) => (
               <span key={o.key}>
                 {i > 0 && ", "}
-                <a href={`/guide?network=${o.key}`} className="text-gold underline">{o.chain.name}</a>
+                <a href={`/guide?network=${o.key}`} className="text-accent underline">{o.chain.name}</a>
               </span>
             ))}
             .
@@ -50,15 +50,15 @@ export default async function Guide() {
       <Section title="Just looking? (no wallet needed)">
         <ul className="list-disc space-y-1 pl-5">
           <li>
-            Browse the <Link href="/marketplace" className="text-gold underline">Marketplace</Link> and open any
+            Browse the <Link href="/marketplace" className="text-accent underline">Marketplace</Link> and open any
             project to see its Impact Value breakdown and its on-chain attestation.
           </li>
           <li>
-            Read how Impact Value is calculated on <Link href="/methodology" className="text-gold underline">Methodology</Link>.
+            Read how Impact Value is calculated on <Link href="/methodology" className="text-accent underline">Methodology</Link>.
           </li>
           <li>
             Check the verified smart contracts on the{" "}
-            <a href={`${explorer}/address/${NETWORK.primarySale}`} target="_blank" rel="noopener noreferrer" className="text-gold underline">
+            <a href={`${explorer}/address/${NETWORK.primarySale}`} target="_blank" rel="noopener noreferrer" className="text-accent underline">
               block explorer
             </a>
             .
@@ -70,7 +70,7 @@ export default async function Guide() {
         <ol className="list-decimal space-y-3 pl-5">
           <li>
             <b>Get a wallet.</b> On a computer, install the{" "}
-            <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" className="text-gold underline">MetaMask</a>{" "}
+            <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" className="text-accent underline">MetaMask</a>{" "}
             extension. On a phone, install the MetaMask app and open this site inside the app&apos;s browser.
           </li>
           <li>
@@ -78,11 +78,11 @@ export default async function Guide() {
             <ul className="mt-1 list-disc pl-5">
               {faucets.map((f) => (
                 <li key={f.url}>
-                  <a href={f.url} target="_blank" rel="noopener noreferrer" className="text-gold underline">{f.name}</a>
+                  <a href={f.url} target="_blank" rel="noopener noreferrer" className="text-accent underline">{f.name}</a>
                 </li>
               ))}
             </ul>
-            <span className="text-paper/55">
+            <span className="text-subtle">
               {native
                 ? `On this network ${gas} pays both the fee and the purchase itself, so there is no separate token to get.`
                 : `One claim is enough for many purchases: each costs a tiny fraction of a cent in test ${gas}.`}
@@ -99,21 +99,21 @@ export default async function Guide() {
             ) : (
               <>
                 Open the{" "}
-                <a href="https://faucet.paxos.com/" target="_blank" rel="noopener noreferrer" className="text-gold underline">Paxos faucet</a>,
+                <a href="https://faucet.paxos.com/" target="_blank" rel="noopener noreferrer" className="text-accent underline">Paxos faucet</a>,
                 choose <b>{chain}</b> and <b>USDG</b>, and paste your wallet address.
               </>
             )}
           </li>
           )}
           <li>
-            <b>Fund.</b> In the <Link href="/marketplace" className="text-gold underline">Marketplace</Link>, click{" "}
+            <b>Fund.</b> In the <Link href="/marketplace" className="text-accent underline">Marketplace</Link>, click{" "}
             <i>Fund this impact</i>.{" "}
             {native
               ? "Your wallet asks once, to confirm the purchase."
               : `Your wallet asks twice: first to allow ${cur.symbol} to be spent (approve), then to confirm the purchase.`} If the network is missing in your wallet, it will offer to add it.
           </li>
           <li>
-            <b>See what you funded</b> on <Link href="/portfolio" className="text-gold underline">My impact</Link>. You can
+            <b>See what you funded</b> on <Link href="/portfolio" className="text-accent underline">My impact</Link>. You can
             retire an edition to permanently claim its share of the impact.
           </li>
         </ol>
@@ -122,7 +122,7 @@ export default async function Guide() {
       <Section title="Tokenize your impact (NGOs)">
         <ol className="list-decimal space-y-3 pl-5">
           <li>
-            Open <Link href="/tokenize" className="text-gold underline">Tokenize impact</Link> and describe what you did in
+            Open <Link href="/tokenize" className="text-accent underline">Tokenize impact</Link> and describe what you did in
             plain words, with numbers: for example{" "}
             <i>&quot;planted 300 mangroves, collected 120 kg of waste, 25 volunteers&quot;</i>. The Impact Value
             preview updates as you type.
@@ -138,7 +138,7 @@ export default async function Guide() {
           <li>
             The Regen Bazaar team reviews it. Once approved, it is recorded on-chain (an EAS attestation, with the report
             stored on IPFS), gets its own generated tRWI artwork, and appears in the{" "}
-            <Link href="/marketplace" className="text-gold underline">Marketplace</Link> with a price based on its Impact
+            <Link href="/marketplace" className="text-accent underline">Marketplace</Link> with a price based on its Impact
             Value. It is listed on <b>{chain}</b>, the network selected when you submit, and only there, so the same
             impact is never sold twice.
           </li>
@@ -155,7 +155,7 @@ export default async function Guide() {
           </li>
           <li>
             <b>Impact Value</b>: a score from a published formula. It is a relative score for comparing reports, not a
-            carbon or money amount. See <Link href="/methodology" className="text-gold underline">Methodology</Link>.
+            carbon or money amount. See <Link href="/methodology" className="text-accent underline">Methodology</Link>.
           </li>
           <li>
             <b>Retire</b>: permanently claim the impact of an edition you own. The edition is burned and cannot be
@@ -181,7 +181,7 @@ export default async function Guide() {
           <li>Reports submitted as the demo organisation, or marked &quot;(test data)&quot;, are sample data.</li>
           <li>Found a problem or something unclear? Tell us in our community chat.</li>
           <li>
-            Where this is going: see the <Link href="/roadmap" className="text-gold underline">roadmap</Link>.
+            Where this is going: see the <Link href="/roadmap" className="text-accent underline">roadmap</Link>.
           </li>
         </ul>
       </Section>
@@ -191,8 +191,8 @@ export default async function Guide() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="mt-8 rounded-xl border border-gold/15 bg-ink-soft/30 p-5 text-sm leading-relaxed text-paper/85">
-      <h2 className="mb-3 text-lg font-semibold text-paper">{title}</h2>
+    <section className="mt-8 rounded-xl border border-line bg-surface p-5 text-sm leading-relaxed text-muted">
+      <h2 className="mb-3 text-lg font-semibold text-fg">{title}</h2>
       {children}
     </section>
   );
