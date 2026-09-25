@@ -183,3 +183,21 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   a Celo indexer would only mirror events nobody reads. Not run, to spare memory on the shared host.
 - **Fragile:** the network comes from the `rb_network` cookie at submit time; an NGO that forgets to switch
   first lists on the default network. The tokenize page and the validator queue both show the network.
+
+## 2026-09-25 — UI redesign: light/dark theme, readable type, full-width layout
+- **What:** Colours are now theme tokens (`bg`, `surface`, `raised`, `fg`, `muted`, `subtle`, `accent`, `ok`,
+  `danger`, `line`) defined as CSS variables in `apps/web/src/app/globals.css`, with a dark and a light set.
+  Semi-transparent text (`text-paper/45` etc.) is gone. Shared classes `btn`, `card`, `field`, `badge`, `tag`,
+  `label-mono`, `page-wrap` (max 1520px). Type scale starts at 14px (mono labels), body 18px.
+- **Theme:** a small inline script in `layout.tsx` sets `data-theme` before paint from `localStorage["rb-theme"]`,
+  else the system setting; `ThemeToggle` flips and saves it. No flash on load.
+- **Why:** reviewers (buildathon judges, NGOs) found the app generic, narrow and hard to read; measured contrast
+  of grey text was 3.5 to 4.4:1. Now every text colour is at least 5.3:1 (measured on all 11 pages, both themes,
+  at 390px).
+- **Header:** 5 links + "More" (Leaderboard, Methodology, Roadmap); 8 links did not fit next to network, theme
+  and wallet at 1440px.
+- **Home:** hero artwork is the top 3 tRWI cards listed on the current network (fallback: verified reports
+  submitted on it), which adds one DB read to `/`.
+- **Fragile:** Tailwind v4 puts utilities above components, so a `bg-*` utility on a `.btn` overrides the
+  disabled style; add `disabled:opacity-50` where that matters. Brand colours `gold`, `ink`, `paper`, `green`
+  stay fixed across themes (gold buttons, ink text on gold); use `text-accent` (not `text-gold`) for gold text.
