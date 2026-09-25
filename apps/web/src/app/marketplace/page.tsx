@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { and, desc, eq, inArray } from "drizzle-orm";
-import { impactSubmissions, listings } from "@rb/db/schema";
+import { impactSubmissions, listings, organizations } from "@rb/db/schema";
 import { getDb } from "../../lib/db";
 import { BuyButton } from "../../components/BuyButton";
 import { NETWORK } from "../../lib/networks";
@@ -22,12 +22,15 @@ function hrefWith(current: Search, patch: Partial<Search>): string {
 export default async function Marketplace({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
   const db = await getDb();
-  const all = await db
-    .select()
-    .from(impactSubmissions)
-    .where(inArray(impactSubmissions.status, ["verified", "tokenized"]))
-    .orderBy(desc(impactSubmissions.ivValue))
-    .limit(120);
+  const all = (
+    await db
+      .select({ s: impactSubmissions, orgName: organizations.name })
+      .from(impactSubmissions)
+      .innerJoin(organizations, eq(impactSubmissions.orgId, organizations.id))
+      .where(inArray(impactSubmissions.status, ["verified", "tokenized"]))
+      .orderBy(desc(impactSubmissions.ivValue))
+      .limit(120)
+  ).map((r) => ({ ...r.s, orgName: r.orgName }));
 
   // Active primary listings (v2): submissionId -> listingId. A listed item is buyable via voucher redeem.
   const listingRows = await db
@@ -145,11 +148,15 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
             const tokenized = !!listing; // listed (EAS-attested) on THIS network
             return (
               <div key={l.id} className="flex flex-col rounded-xl border border-gold/15 bg-ink-soft/40 p-5">
-                <div className="mb-3 h-28 rounded-lg bg-gradient-to-br from-green/40 to-ink" />
-                <div className="text-xs capitalize text-paper/50">{(l.domain ?? "").replace(/_/g, " ")}</div>
-                <Link href={`/submission/${l.id}`} className="mt-1 font-medium leading-snug hover:text-gold">
+                <div className="mb-3 flex h-24 items-end rounded-lg bg-gradient-to-br from-green/40 to-ink p-3">
+                  <span className="text-xs uppercase tracking-[0.2em] text-paper/70">
+                    {(l.domain ?? "impact").replace(/_/g, " ")}
+                  </span>
+                </div>
+                <Link href={`/submission/${l.id}`} className="font-medium leading-snug hover:text-gold">
                   {l.title}
                 </Link>
+                <div className="mt-0.5 text-xs text-paper/50">by {l.orgName}</div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {tags?.sdg.slice(0, 3).map((t) => (
                     <span key={t} className="rounded-full bg-green/25 px-2 py-0.5 text-xs text-paper/80">{t}</span>
@@ -158,7 +165,7 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
                     <span key={t} className="rounded-full border border-gold/40 px-2 py-0.5 text-xs text-gold">EBF {t}</span>
                   ))}
                 </div>
-                <div className="mt-4 flex items-end justify-between">
+                <div className="mt-auto flex items-end justify-between pt-4">
                   <div>
                     <div className="text-xs text-paper/45">Impact Value</div>
                     <div className="font-semibold text-gold">{Number(l.ivValue ?? 0).toLocaleString()}</div>

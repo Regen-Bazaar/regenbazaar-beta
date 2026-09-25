@@ -140,7 +140,7 @@ export default function Tokenize() {
               className="w-full rounded-md border border-gold/20 bg-ink-soft px-3 py-2 text-sm outline-none focus:border-gold"
             />
             <p className="mt-1 text-xs text-paper/45">
-              Write it as you would to a funder: what, how many, where. The preview on the right uses quick keyword
+              Write it as you would to a funder: what, how many, where. The live preview uses quick keyword
               matching; on submit our AI extractor re-reads the report, so the final Impact Value can differ slightly.
             </p>
           </div>
