@@ -130,6 +130,7 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   match the client). React recovers by client-rendering the page, so visitors see the same content.
 - Side effect fixed: the re-render dropped `data-theme` from `<html>`; `ThemeToggle` now re-applies the saved or
   system theme on mount.
-- Root cause not found: server and client text are identical, so the mismatch is structural or timing related.
-  Likely candidates are the wagmi hooks in the six `BuyButton`s. Reproduce with a production build and the
-  non-minified React error, not in `next dev`.
+- Update after PR #34: the theme script moved from a hand-written `<head>` to the start of `<body>`. Measured
+  in headless Chrome: 3 errors in 13 loads before, 1 in 45 loads after. So the `<head>` script was the main
+  trigger but not the only one. Server and client body markup are identical apart from the theme icon, which
+  points at `<head>`/document-level elements. Next step: reproduce with a non-minified production build.
