@@ -26,45 +26,49 @@ export default async function Leaderboard() {
     .orderBy(desc(sql`sum(${impactSubmissions.ivValue})`))
     .limit(50);
 
-  const rank = (i: number) => (i === 0 ? "text-gold" : i === 1 ? "text-paper" : i === 2 ? "text-green-soft" : "text-paper/50");
+  const rank = (i: number) => (i === 0 ? "text-accent" : i === 1 ? "text-fg" : i === 2 ? "text-ok" : "text-subtle");
+  const top = Math.max(Number(rows[0]?.totalIv ?? 0), 1);
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
-      <h1 className="text-3xl font-bold">Impact leaderboard</h1>
-      <p className="mt-2 text-paper/70">
+    <main className="page-wrap py-10 md:py-14">
+      <h1 className="text-[clamp(2.5rem,4vw,3.5rem)]">Impact leaderboard</h1>
+      <p className="mt-3 max-w-[70ch] text-lg text-muted">
         Organizations ranked by total verified impact value. Only verified and on-chain claims count.
       </p>
 
       {rows.length === 0 ? (
-        <div className="mt-10 rounded-xl border border-gold/15 bg-ink-soft/40 p-10 text-center text-paper/60">
+        <div className="card mt-10 p-10 text-center text-muted">
           No verified impact yet. Approve submissions in the{" "}
-          <Link href="/verify" className="text-gold underline">verification queue</Link>.
+          <Link href="/verify" className="link">verification queue</Link>.
         </div>
       ) : (
-        <ol className="mt-8 space-y-2">
+        <ol className="mt-10 max-w-[1100px] space-y-3">
           {rows.map((r, i) => (
             <li
               key={r.orgId}
-              className="flex items-center gap-4 rounded-xl border border-gold/15 bg-ink-soft/40 px-5 py-4"
+              className="card flex items-center gap-4 px-5 py-5 sm:gap-6 sm:px-6"
             >
-              <div className={`w-8 shrink-0 text-center text-xl font-bold ${rank(i)}`}>{i + 1}</div>
+              <div className={`w-10 shrink-0 text-center font-display text-4xl leading-none ${rank(i)}`}>{i + 1}</div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="truncate font-medium">{r.name}</span>
+                  <span className="truncate text-lg font-semibold">{r.name}</span>
                   {r.verified && (
-                    <span className="shrink-0 rounded-full bg-green/25 px-2 py-0.5 text-[10px] uppercase tracking-wide text-paper/80">
+                    <span className="badge badge-ok shrink-0">
                       verified org
                     </span>
                   )}
                 </div>
-                <div className="text-xs text-paper/50">
+                <div className="mt-0.5 text-sm text-subtle">
                   {[r.region, r.country].filter(Boolean).join(", ") || "Location not set"} ·{" "}
                   {Number(r.claims)} verified {Number(r.claims) === 1 ? "claim" : "claims"}
                 </div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-raised" aria-hidden="true">
+                  <div className="h-full rounded-full bg-gold" style={{ width: `${Math.max(2, (Number(r.totalIv) / top) * 100)}%` }} />
+                </div>
               </div>
               <div className="shrink-0 text-right">
-                <div className="text-xs text-paper/45">Total Impact Value</div>
-                <div className="font-semibold text-gold">{Number(r.totalIv).toLocaleString()}</div>
+                <div className="label-mono">Total Impact Value</div>
+                <div className="text-2xl font-semibold text-accent">{Number(r.totalIv).toLocaleString()}</div>
               </div>
             </li>
           ))}

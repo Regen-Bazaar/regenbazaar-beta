@@ -1,26 +1,285 @@
 @import "tailwindcss";
 
+/* Tailwind v4 dark variant driven by the resolved theme (data-theme set before paint in layout.tsx). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/*
+ * Theme palette. Every text colour is checked against bg/surface/raised for WCAG AA (4.5:1):
+ * dark  fg 16.9 · muted 11.8 · subtle 8.0 · accent 9.8 · ok 8.9 · danger 6.6
+ * light fg 15.3 · muted 9.0 · subtle 5.9 · accent 6.0 (on gold tint) · ok 6.4 · danger 6.9
+ */
+:root {
+  --rb-bg: #1b0f08;
+  --rb-surface: #25150d;
+  --rb-raised: #301d12;
+  --rb-line: rgb(216 184 90 / 0.18);
+  --rb-line-strong: rgb(216 184 90 / 0.45);
+  --rb-fg: #f7f3e4;
+  --rb-muted: #d9ccb0;
+  --rb-subtle: #b8a888;
+  --rb-accent: #d8b85a;
+  --rb-accent-tint: rgb(216 184 90 / 0.16);
+  --rb-ok: #8fbf7f;
+  --rb-ok-tint: rgb(90 138 82 / 0.28);
+  --rb-danger: #e38b80;
+  --rb-danger-tint: rgb(200 70 60 / 0.15);
+  --rb-glow-1: rgb(63 108 59 / 0.45);
+  --rb-glow-2: rgb(189 158 72 / 0.22);
+  --rb-art-shadow: 0 20px 40px -18px rgb(0 0 0 / 0.8);
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --rb-bg: #f5efdc;
+  --rb-surface: #fffbef;
+  --rb-raised: #ede4c9;
+  --rb-line: rgb(37 21 13 / 0.14);
+  --rb-line-strong: rgb(37 21 13 / 0.38);
+  --rb-fg: #25150d;
+  --rb-muted: #4f3d2c;
+  --rb-subtle: #6b5842;
+  --rb-accent: #654d10;
+  --rb-accent-tint: rgb(189 158 72 / 0.2);
+  --rb-ok: #2f5a2b;
+  --rb-ok-tint: rgb(63 108 59 / 0.14);
+  --rb-danger: #9c2f24;
+  --rb-danger-tint: rgb(200 70 60 / 0.12);
+  --rb-glow-1: rgb(63 108 59 / 0.16);
+  --rb-glow-2: rgb(189 158 72 / 0.22);
+  --rb-art-shadow: 0 22px 40px -20px rgb(37 21 13 / 0.55);
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--rb-bg);
+  --color-surface: var(--rb-surface);
+  --color-raised: var(--rb-raised);
+  --color-line: var(--rb-line);
+  --color-line-strong: var(--rb-line-strong);
+  --color-fg: var(--rb-fg);
+  --color-muted: var(--rb-muted);
+  --color-subtle: var(--rb-subtle);
+  --color-accent: var(--rb-accent);
+  --color-accent-tint: var(--rb-accent-tint);
+  --color-ok: var(--rb-ok);
+  --color-ok-tint: var(--rb-ok-tint);
+  --color-danger: var(--rb-danger);
+  --color-danger-tint: var(--rb-danger-tint);
+}
+
 @theme {
+  /* Fixed brand colours (same in both themes): gold fills, ink text on gold. */
   --color-ink: #25150d;
   --color-ink-soft: #1b0f08;
-  --color-gold: #bd9e48;
-  --color-gold-soft: #d8b85a;
-  --color-green: #3f6c3b;
-  --color-green-soft: #5a8a52;
+  --color-gold: #d8b85a;
+  --color-gold-soft: #e2c56d;
   --color-paper: #f7f3e4;
+  --color-green: #3f6c3b;
+  --color-green-soft: #4a7a45;
   --font-serif: var(--font-eb), "EB Garamond", ui-serif, Georgia, serif;
   --font-display: var(--font-acma), var(--font-eb), "EB Garamond", serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* EB Garamond sets small: the scale starts at 15px and body is 18px. */
+  --text-xs: 0.9375rem;
+  --text-xs--line-height: 1.45;
+  --text-sm: 1rem;
+  --text-sm--line-height: 1.5;
+  --text-base: 1.125rem;
+  --text-base--line-height: 1.6;
+  --text-lg: 1.3125rem;
+  --text-lg--line-height: 1.55;
+  --text-xl: 1.5rem;
+  --text-xl--line-height: 1.35;
 }
 
-html,
-body {
-  background-color: var(--color-ink);
-  color: var(--color-paper);
-  font-family: var(--font-serif);
+@layer base {
+  html,
+  body {
+    background-color: var(--rb-bg);
+    color: var(--rb-fg);
+    font-family: var(--font-serif);
+  }
+  body {
+    font-size: 1.125rem;
+    line-height: 1.6;
+  }
+  @media (max-width: 640px) {
+    body {
+      font-size: 1.0625rem;
+    }
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+
+  ::placeholder {
+    color: var(--rb-subtle);
+    opacity: 1;
+  }
+  :focus-visible {
+    outline: 2px solid var(--rb-accent);
+    outline-offset: 2px;
+  }
 }
 
-h1,
-h2,
-h3 {
-  font-family: var(--font-display);
+@utility page-wrap {
+  width: 100%;
+  max-width: 1520px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4vw, 56px);
+}
+
+@utility label-mono {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rb-subtle);
+}
+
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    padding: 0.75rem 1.5rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .btn-sm {
+    padding: 0.55rem 1.1rem;
+    font-size: 1rem;
+  }
+  .btn-primary {
+    background: var(--color-gold);
+    color: var(--color-ink);
+  }
+  .btn-primary:hover {
+    background: var(--color-gold-soft);
+  }
+  .btn-secondary {
+    border-color: var(--rb-line-strong);
+    color: var(--rb-fg);
+  }
+  .btn-secondary:hover {
+    border-color: var(--rb-accent);
+    color: var(--rb-accent);
+  }
+  .btn:disabled {
+    cursor: not-allowed;
+    background: transparent;
+    border-color: var(--rb-line-strong);
+    color: var(--rb-subtle);
+  }
+  .link {
+    color: var(--rb-accent);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .card {
+    border: 1px solid var(--rb-line);
+    background: var(--rb-surface);
+    border-radius: 1rem;
+  }
+  .field {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid var(--rb-line-strong);
+    background: var(--rb-surface);
+    color: var(--rb-fg);
+    padding: 0.6rem 0.9rem;
+    font-size: 1.0625rem;
+    outline: none;
+  }
+  .field:focus {
+    border-color: var(--rb-accent);
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 999px;
+    padding: 0.15rem 0.75rem;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+  .badge-ok {
+    background: var(--rb-ok-tint);
+    color: var(--rb-ok);
+  }
+  .badge-ok::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .badge-gold {
+    background: var(--rb-accent-tint);
+    color: var(--rb-accent);
+  }
+  .badge-muted {
+    border: 1px dashed var(--rb-line-strong);
+    color: var(--rb-muted);
+  }
+  .badge-danger {
+    background: var(--rb-danger-tint);
+    color: var(--rb-danger);
+  }
+  .tag {
+    display: inline-flex;
+    border-radius: 6px;
+    padding: 0.1rem 0.55rem;
+    font-size: 0.9375rem;
+    background: var(--rb-raised);
+    color: var(--rb-muted);
+  }
+  .tag-ebf {
+    background: transparent;
+    border: 1px solid var(--rb-line-strong);
+    color: var(--rb-accent);
+  }
+  .art {
+    border-radius: 0.875rem;
+    border: 1px solid var(--rb-line);
+    box-shadow: var(--rb-art-shadow);
+  }
+  /* Textured hero backdrop: brand glows plus fine grain, echoing the landing imagery. */
+  .hero-bg {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .hero-bg::before,
+  .hero-bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+  .hero-bg::before {
+    background:
+      radial-gradient(60% 80% at 85% 30%, var(--rb-glow-1), transparent 70%),
+      radial-gradient(50% 60% at 60% 100%, var(--rb-glow-2), transparent 70%);
+  }
+  .hero-bg::after {
+    opacity: 0.16;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
 }

@@ -56,16 +56,16 @@ export default function Verify() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
-      <h1 className="text-3xl font-bold">Verification queue</h1>
-      <p className="mt-2 text-paper/70">
+    <main className="page-wrap py-10 md:py-14">
+      <h1 className="text-[clamp(2.5rem,4vw,3.5rem)]">Verification queue</h1>
+      <p className="mt-3 max-w-[70ch] text-lg text-muted">
         Validator review by the Regen Bazaar team. Approving attests the claim on-chain and lists it in the
         Marketplace of the one network it was submitted on. Submitted a report? It will appear in the Marketplace once reviewed.
       </p>
 
       {denied && (
         <form
-          className="mt-6 flex gap-2"
+          className="mt-8 flex max-w-[560px] gap-2"
           onSubmit={(e) => {
             e.preventDefault();
             const t = (new FormData(e.currentTarget).get("token") as string) ?? "";
@@ -79,52 +79,52 @@ export default function Verify() {
             name="token"
             type="password"
             placeholder="Validator access code"
-            className="flex-1 rounded-md border border-gold/20 bg-ink-soft px-3 py-2 text-sm outline-none focus:border-gold"
+            className="field min-w-0 flex-1"
           />
-          <button className="rounded-md border border-gold/40 px-4 text-sm hover:border-gold hover:text-gold">Unlock</button>
+          <button className="btn btn-secondary btn-sm">Unlock</button>
         </form>
       )}
-      {error && <p className="mt-4 text-sm text-red-300">{error}</p>}
+      {error && <p className="mt-4 text-danger">{error}</p>}
 
       {denied ? null : loading ? (
-        <p className="mt-10 text-paper/50">Loading…</p>
+        <p className="mt-10 text-muted">Loading…</p>
       ) : subs.length === 0 ? (
-        <p className="mt-10 text-paper/50">Nothing pending. Submit one from the tokenize wizard.</p>
+        <p className="card mt-10 p-8 text-muted">Nothing pending. Submit one from the tokenize wizard.</p>
       ) : (
-        <div className="mt-8 space-y-4">
+        <div className="mt-10 grid gap-5 2xl:grid-cols-2">
           {subs.map((s) => (
-            <div key={s.id} className="rounded-xl border border-gold/15 bg-ink-soft/40 p-5">
+            <div key={s.id} className="card p-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <div className="font-medium">{s.title}</div>
-                  <div className="mt-0.5 text-xs text-gold">
+                  <div className="text-xl font-semibold leading-snug">{s.title}</div>
+                  <div className="mt-1 text-sm text-accent">
                     Lists on {(s.chainId == null ? getNetwork(DEFAULT_NETWORK_KEY) : networkByChainId(s.chainId))?.chain.name ?? `chain ${s.chainId}`}
                   </div>
-                  <div className="mt-1 text-sm text-paper/60">{s.description}</div>
-                  <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
+                  <div className="mt-2 text-muted">{s.description}</div>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
                     {s.frameworkTags?.sdg.map((t) => (
-                      <span key={t} className="rounded-full bg-green/25 px-2 py-0.5 text-paper/80">{t}</span>
+                      <span key={t} className="tag">{t}</span>
                     ))}
                     {s.frameworkTags?.ebf.map((t) => (
-                      <span key={t} className="rounded-full border border-gold/40 px-2 py-0.5 text-gold">EBF {t}</span>
+                      <span key={t} className="tag tag-ebf">EBF {t}</span>
                     ))}
                   </div>
-                  <div className="mt-2 text-xs text-paper/45">
+                  <div className="mt-3 font-mono text-sm text-subtle">
                     {(s.extractedActions ?? []).map((a) => `${a.quantity} ${a.unit}`).join(" · ")}
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className="text-xs text-paper/45">Impact Value</div>
-                  <div className="text-xl font-bold text-gold">{Number(s.ivValue ?? 0).toLocaleString()}</div>
+                  <div className="label-mono">Impact Value</div>
+                  <div className="font-display text-3xl text-accent">{Number(s.ivValue ?? 0).toLocaleString()}</div>
                 </div>
               </div>
               {(s.possibleDuplicates ?? []).length > 0 && (
-                <div className="mt-3 rounded-md border border-gold/50 bg-gold/10 p-3 text-xs text-paper/85">
-                  <b className="text-gold">Possible duplicate: check before approving.</b>
+                <div className="mt-4 rounded-xl border border-line-strong bg-accent-tint p-4 text-sm text-muted">
+                  <b className="text-accent">Possible duplicate: check before approving.</b>
                   <ul className="mt-1 space-y-0.5">
                     {s.possibleDuplicates!.map((d) => (
                       <li key={d.id}>
-                        <a href={`/submission/${d.id}`} target="_blank" rel="noopener noreferrer" className="underline">
+                        <a href={`/submission/${d.id}`} target="_blank" rel="noopener noreferrer" className="link">
                           {d.title}
                         </a>{" "}
                         ({d.status.replace(/_/g, " ")}): {d.reason}
@@ -138,20 +138,20 @@ export default function Verify() {
                 onChange={(e) => setNotes((n) => ({ ...n, [s.id]: e.target.value }))}
                 rows={2}
                 placeholder="Optional note / reason (required-by-convention for rejections)"
-                className="mt-4 w-full rounded-md border border-gold/15 bg-ink-soft px-3 py-2 text-sm outline-none focus:border-gold"
+                className="field mt-5"
               />
-              <div className="mt-3 flex gap-3">
+              <div className="mt-4 flex flex-wrap gap-3">
                 <button
                   onClick={() => decide(s.id, "approve")}
                   disabled={busy === s.id}
-                  className="rounded-md bg-green px-4 py-2 text-sm font-semibold text-paper hover:bg-green-soft disabled:opacity-50"
+                  className="btn btn-sm bg-green text-paper hover:bg-green-soft disabled:opacity-50"
                 >
                   Approve & attest
                 </button>
                 <button
                   onClick={() => decide(s.id, "reject")}
                   disabled={busy === s.id}
-                  className="rounded-md border border-red-500/40 px-4 py-2 text-sm text-red-300 hover:border-red-500 disabled:opacity-50"
+                  className="btn btn-sm border-danger/40 text-danger hover:border-danger"
                 >
                   Reject
                 </button>

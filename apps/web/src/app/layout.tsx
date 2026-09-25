@@ -18,6 +18,10 @@ const ppAcma = localFont({
   display: "swap",
 });
 
+const THEME_SCRIPT = `(function(){var t;try{t=localStorage.getItem("rb-theme")}catch(e){}
+if(t!=="light"&&t!=="dark"){t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"}
+document.documentElement.dataset.theme=t})()`;
+
 export const metadata: Metadata = {
   title: "Regen Bazaar",
   description:
@@ -27,7 +31,11 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const network = await currentNetwork();
   return (
-    <html lang="en" className={`${ebGaramond.variable} ${ppAcma.variable}`}>
+    <html lang="en" className={`${ebGaramond.variable} ${ppAcma.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Resolve the theme before first paint: saved choice, else the system setting. Static string, no user data. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="min-h-screen antialiased">
         <Providers networkKey={network.key}>
           <Nav />

@@ -18,13 +18,13 @@ export function NetworkSwitcher({ compact = false }: { compact?: boolean }) {
 
   if (compact) {
     return (
-      <div className="px-3 py-2 text-xs">
-        <p className="mb-1 text-paper/50">Network</p>
+      <div className="px-1 py-2">
+        <p className="label-mono mb-1 px-2">Network</p>
         {enabledNetworks().map((n) => (
           <button
             key={n.key}
             onClick={() => pick(n.key)}
-            className={`block w-full rounded px-2 py-1.5 text-left ${n.key === current.key ? "bg-ink text-gold" : "text-paper/75 hover:text-gold"}`}
+            className={`block w-full rounded-lg px-2 py-1.5 text-left text-sm ${n.key === current.key ? "bg-raised text-accent" : "text-fg hover:bg-raised"}`}
           >
             {n.key === current.key ? "● " : "○ "}
             {n.chain.name} · {n.saleCurrency.symbol}
@@ -38,21 +38,22 @@ export function NetworkSwitcher({ compact = false }: { compact?: boolean }) {
     <details className="relative">
       <summary
         title="Choose network"
-        className="cursor-pointer list-none whitespace-nowrap rounded-full border border-gold/40 px-2.5 py-1 text-xs text-paper/80 hover:border-gold"
+        className="flex cursor-pointer list-none items-center gap-2 whitespace-nowrap rounded-full border border-line-strong bg-surface px-3.5 py-1.5 text-xs text-fg hover:border-accent"
       >
-        {pending ? "Switching…" : `${current.chain.name} · ${current.saleCurrency.symbol}`} ▾
+        <span className="h-2 w-2 rounded-full bg-ok" aria-hidden="true" />
+        {pending ? "Switching…" : current.chain.name} ▾
       </summary>
-      <div className="absolute left-0 z-30 mt-2 w-64 rounded-md border border-gold/20 bg-ink-soft p-2 text-xs shadow-lg">
-        <p className="px-2 pb-1 text-paper/45">Choose network</p>
+      <div className="card absolute right-0 z-50 mt-3 w-72 p-2 shadow-xl">
+        <p className="label-mono px-2 pb-1">Choose network</p>
         {enabledNetworks().map((n) => (
           <button
             key={n.key}
             onClick={() => pick(n.key)}
-            className={`block w-full rounded px-2 py-1.5 text-left hover:bg-ink ${n.key === current.key ? "text-gold" : "text-paper/80"}`}
+            className={`block w-full rounded-lg px-2 py-2 text-left text-sm hover:bg-raised ${n.key === current.key ? "text-accent" : "text-fg"}`}
           >
             {n.key === current.key ? "● " : "○ "}
             {n.chain.name}
-            <span className="block pl-4 text-paper/45">
+            <span className="block pl-4 text-xs text-subtle">
               pay in {n.saleCurrency.symbol}
               {n.saleCurrency.address === NATIVE
                 ? " (native, Celo faucet)"

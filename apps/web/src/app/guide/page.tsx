@@ -18,6 +18,14 @@ const GAS_FAUCETS: Record<string, { name: string; url: string }[]> = {
   ],
 };
 
+const TOC = [
+  { id: "look", label: "Just looking" },
+  { id: "fund", label: "Fund an impact" },
+  { id: "tokenize", label: "Tokenize your impact" },
+  { id: "words", label: "Words you will see" },
+  { id: "real", label: "What is real" },
+];
+
 export default async function Guide() {
   const NETWORK = await currentNetwork();
   const cur = NETWORK.saleCurrency;
@@ -29,9 +37,23 @@ export default async function Guide() {
   const others = enabledNetworks().filter((n) => n.key !== NETWORK.key);
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
-      <h1 className="text-3xl font-bold">How to try Regen Bazaar</h1>
-      <p className="mt-2 text-paper/70">
+    <main className="page-wrap py-10 md:py-14">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-[240px_minmax(0,1fr)] xl:gap-16">
+      <nav aria-label="On this page" className="hidden lg:sticky lg:top-24 lg:block">
+        <p className="label-mono mb-3">On this page</p>
+        <ol className="space-y-2 border-l border-line">
+          {TOC.map((t) => (
+            <li key={t.id}>
+              <a href={`#${t.id}`} className="-ml-px block border-l-2 border-transparent pl-4 text-muted hover:border-accent hover:text-fg">
+                {t.label}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+      <div className="min-w-0 max-w-[76ch]">
+      <h1 className="text-[clamp(2.5rem,4vw,3.5rem)]">How to try Regen Bazaar</h1>
+      <p className="mt-3 text-lg text-muted">
         This is a beta on <b>{chain}</b>, a test network. Everything here uses test tokens with no monetary value.
         {others.length > 0 && (
           <>
@@ -39,7 +61,7 @@ export default async function Guide() {
             {others.map((o, i) => (
               <span key={o.key}>
                 {i > 0 && ", "}
-                <a href={`/guide?network=${o.key}`} className="text-gold underline">{o.chain.name}</a>
+                <a href={`/guide?network=${o.key}`} className="link">{o.chain.name}</a>
               </span>
             ))}
             .
@@ -47,18 +69,18 @@ export default async function Guide() {
         )}
       </p>
 
-      <Section title="Just looking? (no wallet needed)">
-        <ul className="list-disc space-y-1 pl-5">
+      <Section id="look" title="Just looking? (no wallet needed)">
+        <ul className="list-disc space-y-2 pl-5 marker:text-accent">
           <li>
-            Browse the <Link href="/marketplace" className="text-gold underline">Marketplace</Link> and open any
+            Browse the <Link href="/marketplace" className="link">Marketplace</Link> and open any
             project to see its Impact Value breakdown and its on-chain attestation.
           </li>
           <li>
-            Read how Impact Value is calculated on <Link href="/methodology" className="text-gold underline">Methodology</Link>.
+            Read how Impact Value is calculated on <Link href="/methodology" className="link">Methodology</Link>.
           </li>
           <li>
             Check the verified smart contracts on the{" "}
-            <a href={`${explorer}/address/${NETWORK.primarySale}`} target="_blank" rel="noopener noreferrer" className="text-gold underline">
+            <a href={`${explorer}/address/${NETWORK.primarySale}`} target="_blank" rel="noopener noreferrer" className="link">
               block explorer
             </a>
             .
@@ -66,11 +88,11 @@ export default async function Guide() {
         </ul>
       </Section>
 
-      <Section title={`Fund an impact (about 5 minutes)`}>
-        <ol className="list-decimal space-y-3 pl-5">
+      <Section id="fund" title={`Fund an impact (about 5 minutes)`}>
+        <ol className="list-decimal space-y-4 pl-5 marker:font-semibold marker:text-accent">
           <li>
             <b>Get a wallet.</b> On a computer, install the{" "}
-            <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" className="text-gold underline">MetaMask</a>{" "}
+            <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" className="link">MetaMask</a>{" "}
             extension. On a phone, install the MetaMask app and open this site inside the app&apos;s browser.
           </li>
           <li>
@@ -78,11 +100,11 @@ export default async function Guide() {
             <ul className="mt-1 list-disc pl-5">
               {faucets.map((f) => (
                 <li key={f.url}>
-                  <a href={f.url} target="_blank" rel="noopener noreferrer" className="text-gold underline">{f.name}</a>
+                  <a href={f.url} target="_blank" rel="noopener noreferrer" className="link">{f.name}</a>
                 </li>
               ))}
             </ul>
-            <span className="text-paper/55">
+            <span className="mt-1 block text-muted">
               {native
                 ? `On this network ${gas} pays both the fee and the purchase itself, so there is no separate token to get.`
                 : `One claim is enough for many purchases: each costs a tiny fraction of a cent in test ${gas}.`}
@@ -99,30 +121,30 @@ export default async function Guide() {
             ) : (
               <>
                 Open the{" "}
-                <a href="https://faucet.paxos.com/" target="_blank" rel="noopener noreferrer" className="text-gold underline">Paxos faucet</a>,
+                <a href="https://faucet.paxos.com/" target="_blank" rel="noopener noreferrer" className="link">Paxos faucet</a>,
                 choose <b>{chain}</b> and <b>USDG</b>, and paste your wallet address.
               </>
             )}
           </li>
           )}
           <li>
-            <b>Fund.</b> In the <Link href="/marketplace" className="text-gold underline">Marketplace</Link>, click{" "}
+            <b>Fund.</b> In the <Link href="/marketplace" className="link">Marketplace</Link>, click{" "}
             <i>Fund this impact</i>.{" "}
             {native
               ? "Your wallet asks once, to confirm the purchase."
               : `Your wallet asks twice: first to allow ${cur.symbol} to be spent (approve), then to confirm the purchase.`} If the network is missing in your wallet, it will offer to add it.
           </li>
           <li>
-            <b>See what you funded</b> on <Link href="/portfolio" className="text-gold underline">My impact</Link>. You can
+            <b>See what you funded</b> on <Link href="/portfolio" className="link">My impact</Link>. You can
             retire an edition to permanently claim its share of the impact.
           </li>
         </ol>
       </Section>
 
-      <Section title="Tokenize your impact (NGOs)">
-        <ol className="list-decimal space-y-3 pl-5">
+      <Section id="tokenize" title="Tokenize your impact (NGOs)">
+        <ol className="list-decimal space-y-4 pl-5 marker:font-semibold marker:text-accent">
           <li>
-            Open <Link href="/tokenize" className="text-gold underline">Tokenize impact</Link> and describe what you did in
+            Open <Link href="/tokenize" className="link">Tokenize impact</Link> and describe what you did in
             plain words, with numbers: for example{" "}
             <i>&quot;planted 300 mangroves, collected 120 kg of waste, 25 volunteers&quot;</i>. The Impact Value
             preview updates as you type.
@@ -138,15 +160,15 @@ export default async function Guide() {
           <li>
             The Regen Bazaar team reviews it. Once approved, it is recorded on-chain (an EAS attestation, with the report
             stored on IPFS), gets its own generated tRWI artwork, and appears in the{" "}
-            <Link href="/marketplace" className="text-gold underline">Marketplace</Link> with a price based on its Impact
+            <Link href="/marketplace" className="link">Marketplace</Link> with a price based on its Impact
             Value. It is listed on <b>{chain}</b>, the network selected when you submit, and only there, so the same
             impact is never sold twice.
           </li>
         </ol>
       </Section>
 
-      <Section title="Words you will see">
-        <ul className="list-disc space-y-1 pl-5">
+      <Section id="words" title="Words you will see">
+        <ul className="list-disc space-y-2 pl-5 marker:text-accent">
           <li>
             <b>tRWI</b>: tokenized real-world impact, a token that represents a verified piece of work.
           </li>
@@ -155,7 +177,7 @@ export default async function Guide() {
           </li>
           <li>
             <b>Impact Value</b>: a score from a published formula. It is a relative score for comparing reports, not a
-            carbon or money amount. See <Link href="/methodology" className="text-gold underline">Methodology</Link>.
+            carbon or money amount. See <Link href="/methodology" className="link">Methodology</Link>.
           </li>
           <li>
             <b>Retire</b>: permanently claim the impact of an edition you own. The edition is burned and cannot be
@@ -174,25 +196,27 @@ export default async function Guide() {
         </ul>
       </Section>
 
-      <Section title="What is real and what is not">
-        <ul className="list-disc space-y-1 pl-5">
+      <Section id="real" title="What is real and what is not">
+        <ul className="list-disc space-y-2 pl-5 marker:text-accent">
           <li>Test networks and test tokens only. No real money moves.</li>
           <li>Impact Value is platform-assessed with published weights, not third-party certified.</li>
           <li>Reports submitted as the demo organisation, or marked &quot;(test data)&quot;, are sample data.</li>
           <li>Found a problem or something unclear? Tell us in our community chat.</li>
           <li>
-            Where this is going: see the <Link href="/roadmap" className="text-gold underline">roadmap</Link>.
+            Where this is going: see the <Link href="/roadmap" className="link">roadmap</Link>.
           </li>
         </ul>
       </Section>
+      </div>
+      </div>
     </main>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
-    <section className="mt-8 rounded-xl border border-gold/15 bg-ink-soft/30 p-5 text-sm leading-relaxed text-paper/85">
-      <h2 className="mb-3 text-lg font-semibold text-paper">{title}</h2>
+    <section id={id} className="card mt-8 scroll-mt-24 p-6 leading-relaxed md:p-8">
+      <h2 className="mb-4 text-[1.75rem]">{title}</h2>
       {children}
     </section>
   );
