@@ -155,3 +155,15 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   data)"). Arbitrary `orgId` from the client is no longer accepted.
 - **Trade-off:** anyone can create an org for any wallet; payouts only ever go to that wallet, so the harm is
   spam, not theft. Wallet-signature auth (SIWE) is the proper fix.
+
+## 2026-09 — One site, visitor-selected network (replaces one-build-per-network)
+- **What:** app.regenbazaar.com serves Arbitrum Sepolia and Robinhood Chain testnet. The choice lives in the
+  `rb_network` cookie (header switcher, home "Choose your network", or `?network=<key>` via middleware).
+  robinhood.regenbazaar.com is now a 301 into the app with `?network=robinhood-testnet`. One web container.
+- **Safety by construction:** the voucher route signs for the listing's own `chain_id`, never the cookie, so a
+  wrong cookie cannot produce a voucher for the wrong chain. wagmi knows both chains and switches on purchase.
+- **Approve lists on every enabled network**, idempotent per (submission, chain): re-approving never creates a
+  second listing of the same impact. Failures are per network.
+- **Double-counting hints** (`lib/duplicates.ts`): validators see "possible duplicate" when a pending report has
+  identical text, identical actions+quantities from the same org, or an overlapping period with the same kind
+  of action. Hints only; the validator decides.

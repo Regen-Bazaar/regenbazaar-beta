@@ -107,6 +107,15 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   (no outgoing transfers from `0xcc96…70a3` after 2026-09-22). Real USDG is allowlisted; switch = unset
   `SALE_CURRENCY` + rebuild. Listings are priced in the currency active at approve time.
 
+## Beta gaps (2026-09)
+- **Organisation profiles:** an org is only a name + payout wallet created at first submission. No profile
+  page, no editable mission/country/website, no proof that the submitter controls the wallet (needs SIWE).
+  The first name typed for a wallet is kept; later names for the same wallet are ignored silently.
+- **Double counting** is guarded by human review + heuristics, not by cryptographic uniqueness. Cross-registry
+  checks (other platforms, Hypercerts) and evidence requirements (geotagged photos) are not built.
+- **Indexers are per chain** (`indexer_arbsep_v2`, `indexer_rh_v1`); public RPCs occasionally throw transient
+  BlockNotFound errors that Ponder retries.
+
 ## Operational reminders
 - Rotate the GitHub `admin:org` token used during earlier org operations (it appeared in chat).
 - Secrets (DeepSeek, deployer, DB) live only in server env / local `.env` files, never committed.
