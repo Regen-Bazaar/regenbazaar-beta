@@ -45,6 +45,14 @@ export default function Methodology() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
+      <div className="mb-6 rounded-lg border border-gold/40 bg-gold/10 p-4 text-sm text-paper/85">
+        <b className="text-gold">Status: {TABLES_VERSION}, beta.</b> Impact Value is a <b>relative score</b> for
+        comparing reports, not a carbon, monetary or certified measure. The formula, versioning and per-factor
+        breakdown are final in design; the <b>weights and multipliers are seed values</b> set by the platform and are
+        not yet calibrated against external standards. Calibration with domain experts, and mapping selected
+        actions to physical units (for example tCO₂e), is the next milestone. Prices derived from IV are equally
+        provisional.
+      </div>
       <h1 className="text-3xl font-bold">Impact Value methodology</h1>
       <p className="mt-2 text-paper/70">
         How we turn an NGO&apos;s report into a single, comparable Impact Value (IV). The method is

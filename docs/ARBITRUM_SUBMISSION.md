@@ -59,6 +59,19 @@ someone funds it, and the NGO is paid in the same transaction.
   stablecoin settlement.
 - **Status, stated plainly:** beta on testnets; no production users or revenue yet.
 
+## Methodology status (stated plainly)
+- **Done:** a deterministic, versioned formula (`IV = Σ quantity × AW × SM × TBV × ESM × PIM × ACDM`) over 35
+  action types in six domains (environment, animal welfare, education, poverty, social, health), each mapped to
+  SDGs and ecosystem-benefit tags. The LLM only extracts numbers; it never scores. Every score carries its table
+  version and a per-factor breakdown; quantities are clamped against gaming; a human validator approves before
+  anything is listed. Published at `/methodology`.
+- **Not done yet:** the weights and multipliers are v0.1 seed values set by the platform, not calibrated
+  against external standards, and Impact Value is a relative score, not a carbon or monetary unit. Prices
+  derived from it (IV × 0.5 USDG across 100 editions) are provisional too.
+- **Next milestone:** calibrate the weights with domain experts against established impact frameworks, and
+  express selected actions in physical units (for example tCO₂e for restoration), versioned so that past scores
+  stay auditable.
+
 ## Why on-chain, and why Arbitrum
 - **Provenance anyone can check:** each tRWI collection references an EAS attestation; the sale contract
   verifies it before minting.
