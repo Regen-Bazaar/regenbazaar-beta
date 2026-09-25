@@ -189,6 +189,50 @@ during the buildathon, all on branch `feat/arbitrum-buildathon`
 - Calibrate Impact-Value weights with domain experts.
 - Multisig + timelock, external audit, then mainnet (Arbitrum One / Robinhood Chain).
 
+## HackQuest form fields (each max 300 characters, checked)
+
+> Для Paul: поля формы подачи на HackQuest. Сначала создаётся карточка проекта (название, описание и т.д.), потом эта форма.
+
+**What is your contract address?** (42/300)
+
+```
+0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030
+```
+
+**Link to frontend/UI/website** (173/300)
+
+```
+https://app.regenbazaar.com (Arbitrum Sepolia) | https://robinhood.regenbazaar.com (Robinhood Chain testnet, real Paxos USDG) | How to try: https://app.regenbazaar.com/guide
+```
+
+**Core Protocol / Smart Contract Addresses** (291/300)
+
+```
+Same addresses on Arbitrum Sepolia and Robinhood Chain testnet: RegenPrimarySale 0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030 | RegenMarketplace 0x3Cd225C24183a7bcE3EefD3C309b82A27f6Be214 | TRWIStaking 0xB051e3B360A54e6E4808A2A06bEC765D246612B6 | EAS 0x95cD0E3bDbC670e057416D65C89B584a9a24d95d
+```
+
+**Factory/Pool Contracts** (153/300)
+
+```
+N/A. No factory or pool: each tRWI collection is registered by RegenPrimarySale on its first purchase (lazy mint from a platform-signed EIP-712 voucher).
+```
+
+**Token Contract Address** (185/300)
+
+```
+tRWI (ERC-1155, UUPS proxy) 0x6F2C6F81DDd35199d2e015710c61CC6D8B5de9da | REBAZ (ERC-20) 0x5Ea6AE9758472733144Eb24CCE7f310B21367b92 | same on Arbitrum Sepolia and Robinhood Chain testnet
+```
+
+**Which parts of your code were produced during the Buildathon** (261/300)
+
+```
+All on branch feat/arbitrum-buildathon (github.com/Regen-Bazaar/regenbazaar-beta): Arbitrum + Robinhood deploys, multichain app/indexer, USDG checkout, My impact page, LLM extraction via OpenRouter, guide/UX. Pre-existing: scoring engine, contracts, Celo pilot.
+```
+
+**Prize tracks:** Promising Products Track [+ Overall Prize, Grants: решение Paul]
+
+**Sponsor technologies:** Robinhood Chain, OpenZeppelin, Paxos/USDG
+
 ---
 
 ## 2-minute video script
