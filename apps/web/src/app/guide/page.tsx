@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { enabledNetworks } from "../../lib/networks";
+import { NATIVE, enabledNetworks } from "../../lib/networks";
 import { currentNetwork } from "../../lib/network-server";
 
 // Plain-language walkthrough for first-time visitors (judges, testers). Faucet links differ per network.
@@ -12,11 +12,17 @@ const GAS_FAUCETS: Record<string, { name: string; url: string }[]> = {
     { name: "HackQuest faucet (free with a HackQuest profile)", url: "https://www.hackquest.io/faucets" },
     { name: "Alchemy faucet (needs a small mainnet ETH balance)", url: "https://www.alchemy.com/faucets/arbitrum-sepolia" },
   ],
+  "celo-sepolia": [
+    { name: "Official Celo Sepolia faucet", url: "https://faucet.celo.org/celo-sepolia" },
+    { name: "Google Cloud faucet (Celo Sepolia)", url: "https://cloud.google.com/application/web3/faucet/celo/sepolia" },
+  ],
 };
 
 export default async function Guide() {
   const NETWORK = await currentNetwork();
   const cur = NETWORK.saleCurrency;
+  const native = cur.address === NATIVE;
+  const gas = NETWORK.chain.nativeCurrency.symbol;
   const chain = NETWORK.chain.name;
   const explorer = NETWORK.chain.blockExplorers?.default.url ?? "";
   const faucets = GAS_FAUCETS[NETWORK.key] ?? [];
@@ -68,7 +74,7 @@ export default async function Guide() {
             extension. On a phone, install the MetaMask app and open this site inside the app&apos;s browser.
           </li>
           <li>
-            <b>Get a little test ETH for fees</b> on {chain}:
+            <b>Get a little test {gas}{native ? "" : " for fees"}</b> on {chain}:
             <ul className="mt-1 list-disc pl-5">
               {faucets.map((f) => (
                 <li key={f.url}>
@@ -76,8 +82,13 @@ export default async function Guide() {
                 </li>
               ))}
             </ul>
-            <span className="text-paper/55">One claim is enough for many purchases: each costs a tiny fraction of a cent in test ETH.</span>
+            <span className="text-paper/55">
+              {native
+                ? `On this network ${gas} pays both the fee and the purchase itself, so there is no separate token to get.`
+                : `One claim is enough for many purchases: each costs a tiny fraction of a cent in test ${gas}.`}
+            </span>
           </li>
+          {!native && (
           <li>
             <b>Get {cur.symbol}.</b>{" "}
             {cur.testMint ? (
@@ -93,10 +104,13 @@ export default async function Guide() {
               </>
             )}
           </li>
+          )}
           <li>
             <b>Fund.</b> In the <Link href="/marketplace" className="text-gold underline">Marketplace</Link>, click{" "}
-            <i>Fund this impact</i>. Your wallet asks twice: first to allow {cur.symbol} to be spent (approve), then to
-            confirm the purchase. If the network is missing in your wallet, it will offer to add it.
+            <i>Fund this impact</i>.{" "}
+            {native
+              ? "Your wallet asks once, to confirm the purchase."
+              : `Your wallet asks twice: first to allow ${cur.symbol} to be spent (approve), then to confirm the purchase.`} If the network is missing in your wallet, it will offer to add it.
           </li>
           <li>
             <b>See what you funded</b> on <Link href="/portfolio" className="text-gold underline">My impact</Link>. You can
@@ -125,7 +139,8 @@ export default async function Guide() {
             The Regen Bazaar team reviews it. Once approved, it is recorded on-chain (an EAS attestation, with the report
             stored on IPFS), gets its own generated tRWI artwork, and appears in the{" "}
             <Link href="/marketplace" className="text-gold underline">Marketplace</Link> with a price based on its Impact
-            Value.
+            Value. It is listed on <b>{chain}</b>, the network selected when you submit, and only there, so the same
+            impact is never sold twice.
           </li>
         </ol>
       </Section>
@@ -146,10 +161,16 @@ export default async function Guide() {
             <b>Retire</b>: permanently claim the impact of an edition you own. The edition is burned and cannot be
             resold.
           </li>
-          <li>
-            <b>Approve / Confirm</b>: the two wallet pop-ups when funding. The first lets the site use your{" "}
-            {cur.symbol} for this purchase, the second makes the purchase.
-          </li>
+          {native ? (
+            <li>
+              <b>Confirm</b>: the one wallet pop-up when funding; it sends {cur.symbol} and makes the purchase.
+            </li>
+          ) : (
+            <li>
+              <b>Approve / Confirm</b>: the two wallet pop-ups when funding. The first lets the site use your{" "}
+              {cur.symbol} for this purchase, the second makes the purchase.
+            </li>
+          )}
         </ul>
       </Section>
 

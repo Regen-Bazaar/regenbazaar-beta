@@ -167,3 +167,19 @@ Append-only record of significant choices, why we made them, and the trade-offs 
 - **Double-counting hints** (`lib/duplicates.ts`): validators see "possible duplicate" when a pending report has
   identical text, identical actions+quantities from the same org, or an overlapping period with the same kind
   of action. Hints only; the validator decides.
+
+## 2026-09-25 — One report, one network; Celo Sepolia back in the switcher
+- **What:** A submission now stores the network selected when it was submitted (`impact_submissions.chain_id`,
+  migration `0003`). Approve attests and lists it on that one network only; if the report already has a listing
+  on any network, approve returns it and creates nothing. Celo Sepolia (native CELO, v3 contracts from
+  `deployments/celo-sepolia.json`) is in `ENABLED_NETWORKS` again; Arbitrum Sepolia stays the default.
+- **Why:** listing the same impact on several chains lets it be funded (and claimed) twice, which contradicts the
+  platform's no-double-counting rule. This replaces "approve lists on every enabled network" (entry above).
+- **Legacy data:** reports approved before this change keep their existing Arbitrum + Robinhood listings (test
+  data, left as is). No report is copied onto Celo; Celo shows only what is listed there (the June Mangrove
+  report, tokenId 2) plus new test reports submitted while Celo is selected. Rows with no `chain_id` approve
+  onto the default network.
+- **Celo indexer is optional:** the web app reads holdings from chain in the browser and does not query Ponder
+  tables, so `indexer_celo` (compose profile `celo`, 256 MB cap) only mirrors Celo events into Postgres.
+- **Fragile:** the network comes from the `rb_network` cookie at submit time; an NGO that forgets to switch
+  first lists on the default network. The tokenize page and the validator queue both show the network.

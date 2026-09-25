@@ -79,6 +79,8 @@ export const impactSubmissions = pgTable(
     tablesVersion: varchar("tables_version", { length: 40 }),
     frameworkTags: jsonb("framework_tags"), // { sdg, ebf }
     mediaUris: jsonb("media_uris"), // string[]
+    // Network chosen at submission; the report is listed on this chain only (null = legacy, pre-2026-09-25).
+    chainId: integer("chain_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

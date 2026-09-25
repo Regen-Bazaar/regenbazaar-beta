@@ -8,6 +8,7 @@ import { getDb, getDemoOrgId } from "../../../lib/db";
 import { isAdmin } from "../../../lib/admin";
 import { clientIp, rateLimit } from "../../../lib/rate-limit";
 import { findDuplicates } from "../../../lib/duplicates";
+import { currentNetwork } from "../../../lib/network-server";
 
 export const runtime = "nodejs";
 
@@ -111,6 +112,8 @@ export async function POST(req: Request) {
   const db = await getDb();
   const orgId = payoutWallet ? await findOrCreateOrg(db, orgName, getAddress(payoutWallet)) : await getDemoOrgId(db);
   const extractor = process.env.DEEPSEEK_API_KEY ? createDeepSeekExtractor() : undefined;
+  // One report, one network: the report is listed only on the network selected when it was submitted.
+  const chainId = (await currentNetwork()).chain.id;
 
   try {
     const { submission, iv } = await processSubmission(
@@ -122,6 +125,7 @@ export async function POST(req: Request) {
         domain: body.domain as never,
         context: body.context as never,
         mediaUris,
+        chainId,
       },
       { extractor },
     );

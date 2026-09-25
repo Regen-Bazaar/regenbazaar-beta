@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { enabledNetworks } from "../lib/networks";
+import { NATIVE, enabledNetworks } from "../lib/networks";
 import { setNetworkCookie, useNetwork } from "./NetworkProvider";
 
 /** Network choice for the whole site. `compact` = inline list for the mobile menu. */
@@ -54,7 +54,11 @@ export function NetworkSwitcher({ compact = false }: { compact?: boolean }) {
             {n.chain.name}
             <span className="block pl-4 text-paper/45">
               pay in {n.saleCurrency.symbol}
-              {n.saleCurrency.testMint ? " (one-click test tokens)" : " (Paxos test faucet)"}
+              {n.saleCurrency.address === NATIVE
+                ? " (native, Celo faucet)"
+                : n.saleCurrency.testMint
+                  ? " (one-click test tokens)"
+                  : " (Paxos test faucet)"}
             </span>
           </button>
         ))}

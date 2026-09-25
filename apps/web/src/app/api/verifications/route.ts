@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 import { verifications, impactSubmissions, organizations, listings } from "@rb/db/schema";
 import { buildTokenMetadata, renderImpactCard } from "@rb/pipeline";
 import { computePrice, type ExtractedAction, type FrameworkTags } from "@rb/impact-engine";
-import { and, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { parseUnits } from "viem";
 import { getDb } from "../../../lib/db";
 import { pinFile, pinJson } from "../../../lib/ipfs";
 import { onchainEnabled, attestImpact, ivToWei } from "../../../lib/onchain";
-import { enabledNetworks, type Network } from "../../../lib/networks";
+import { DEFAULT_NETWORK_KEY, ENABLED_NETWORKS, getNetwork, networkByChainId, type Network } from "../../../lib/networks";
 import type { DB } from "@rb/db";
 import { isAdmin } from "../../../lib/admin";
 
@@ -20,14 +20,12 @@ type Hex = `0x${string}`;
 // On approve (v2 lazy mint): pin metadata -> EAS attest (platform) -> register an off-chain primary
 // LISTING (no mint; the buyer lazily mints on redeem via a signed voucher). Returns the listing refs.
 async function registerListing(db: DB, net: Network, submissionId: string, reqUrl: string) {
-  // Idempotent per (submission, chain): re-approving never creates a second listing of the same impact.
-  const [existing] = await db
-    .select()
-    .from(listings)
-    .where(and(eq(listings.submissionId, submissionId), eq(listings.chainId, net.chain.id)))
-    .limit(1);
+  // One report, one listing: if this impact is already listed on ANY network, never list it again
+  // (re-approving is idempotent and a report is never mirrored onto a second chain).
+  const [existing] = await db.select().from(listings).where(eq(listings.submissionId, submissionId)).limit(1);
   if (existing) {
-    return { network: net.key, tokenId: String(existing.tokenId), easUid: existing.easUid, existing: true };
+    const where = networkByChainId(existing.chainId)?.key ?? String(existing.chainId);
+    return { network: where, tokenId: String(existing.tokenId), easUid: existing.easUid, existing: true };
   }
   const [s] = await db.select().from(impactSubmissions).where(eq(impactSubmissions.id, submissionId)).limit(1);
   if (!s || !s.ivValue) throw new Error("submission not found or unscored");
@@ -114,6 +112,21 @@ export async function POST(req: Request) {
   }
 
   const db = await getDb();
+  // The ONE network this report is listed on: the one chosen at submission (legacy rows without a network ->
+  // default). Resolved before the decision is recorded so a refused approval leaves no trace.
+  let net: Network | undefined;
+  if (decision === "approve" && onchainEnabled()) {
+    const [sub] = await db
+      .select({ chainId: impactSubmissions.chainId })
+      .from(impactSubmissions)
+      .where(eq(impactSubmissions.id, submissionId))
+      .limit(1);
+    if (!sub) return NextResponse.json({ error: "submission not found" }, { status: 404 });
+    net = sub.chainId == null ? getNetwork(DEFAULT_NETWORK_KEY) : networkByChainId(sub.chainId);
+    if (!net || !ENABLED_NETWORKS.includes(net.key)) {
+      return NextResponse.json({ error: `network ${sub.chainId} is not enabled` }, { status: 422 });
+    }
+  }
   await db.insert(verifications).values({
     submissionId,
     decision,
@@ -128,20 +141,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, status: "pending_verification" });
   }
 
-  // approve: attest + list on every enabled network (each independently; one failing does not block the other)
-  if (onchainEnabled()) {
-    const results = [];
-    for (const net of enabledNetworks()) {
-      try {
-        results.push({ ok: true, ...(await registerListing(db, net, submissionId, req.url)) });
-      } catch (e) {
-        results.push({ ok: false, network: net.key, error: e instanceof Error ? e.message.slice(0, 200) : "listing failed" });
-      }
+  // approve: attest + list on that one network only (never mirrored onto other chains).
+  if (onchainEnabled() && net) {
+    let result;
+    try {
+      result = { ok: true, ...(await registerListing(db, net, submissionId, req.url)) };
+    } catch (e) {
+      result = { ok: false, network: net.key, error: e instanceof Error ? e.message.slice(0, 200) : "listing failed" };
     }
-    const listed = results.some((r) => r.ok);
-    const status = listed ? "tokenized" : "verified";
+    const status = result.ok ? "tokenized" : "verified";
     await db.update(impactSubmissions).set({ status, updatedAt: new Date() }).where(eq(impactSubmissions.id, submissionId));
-    return NextResponse.json({ ok: true, status, listings: results });
+    return NextResponse.json({ ok: true, status, listings: [result] });
   }
   await db.update(impactSubmissions).set({ status: "verified", updatedAt: new Date() }).where(eq(impactSubmissions.id, submissionId));
   return NextResponse.json({ ok: true, status: "verified" });
