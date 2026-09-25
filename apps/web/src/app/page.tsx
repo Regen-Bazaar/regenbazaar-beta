@@ -49,12 +49,14 @@ export default async function Home() {
     })
     .from(impactSubmissions)
     .where(inArray(impactSubmissions.status, ["verified", "tokenized"]));
-  const [listed] = await db.select({ n: sql<number>`count(*)::int` }).from(listings).where(eq(listings.active, true));
+  // Distinct reports, not listing rows: a few early test reports were listed on two networks before the
+  // one-report-one-network rule, and counting rows would show more listings than reports.
+  const [listed] = await db.select({ n: countDistinct(listings.submissionId) }).from(listings).where(eq(listings.active, true));
   const STATS = [
     { v: Number(stats?.reports ?? 0).toLocaleString("en-US"), k: "verified impact reports" },
     { v: Number(stats?.totalIv ?? 0).toLocaleString("en-US", { maximumFractionDigits: 0 }), k: "total Impact Value" },
     { v: Number(stats?.orgs ?? 0).toLocaleString("en-US"), k: "organisations" },
-    { v: Number(listed?.n ?? 0).toLocaleString("en-US"), k: "tRWI listings on-chain" },
+    { v: Number(listed?.n ?? 0).toLocaleString("en-US"), k: "reports listed on-chain" },
     { v: String(enabledNetworks().length), k: "test networks" },
   ];
 
