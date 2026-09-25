@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useAccount, useConnect, useChainId, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { hasInjectedWallet, NO_WALLET_HINT } from "../lib/wallet";
-import { parseUnits } from "viem";
 import { NATIVE, erc20Abi, redeemAbi } from "../lib/chain";
 import { useNetwork } from "./NetworkProvider";
 
@@ -29,7 +28,6 @@ export function BuyButton({ listingId }: { listingId: string }) {
   const net = useNetwork();
   const chain = net.chain;
   const PRIMARY_SALE = net.primarySale;
-  const SALE_CURRENCY = net.saleCurrency;
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient({ chainId: chain.id });
   const { connect } = useConnect();
@@ -111,34 +109,6 @@ export function BuyButton({ listingId }: { listingId: string }) {
     }
   }
 
-  // Testnet stand-in token only: let a demo buyer mint themselves enough to try a purchase.
-  async function getTestTokens() {
-    if (!isConnected || !address) {
-      if (!hasInjectedWallet()) {
-        setMsg(NO_WALLET_HINT);
-        return;
-      }
-      connect({ connector: injected() });
-      return;
-    }
-    setMsg("");
-    try {
-      if (chainId !== chain.id) await switchChainAsync({ chainId: chain.id });
-      const hash = await writeContractAsync({
-        address: SALE_CURRENCY.address,
-        abi: erc20Abi,
-        functionName: "mint",
-        args: [address, parseUnits("100", SALE_CURRENCY.decimals)],
-        chainId: chain.id,
-      });
-      setMsg(`Minting 100 ${SALE_CURRENCY.symbol}…`);
-      await publicClient?.waitForTransactionReceipt({ hash });
-      setMsg(`100 ${SALE_CURRENCY.symbol} received`);
-    } catch (e) {
-      setMsg(e instanceof Error ? e.message : "mint failed");
-    }
-  }
-
   if (state === "done") {
     return (
       <a
@@ -160,11 +130,6 @@ export function BuyButton({ listingId }: { listingId: string }) {
       >
         {state === "busy" ? "Confirm in wallet…" : isConnected ? "Fund this impact" : "Connect to fund"}
       </button>
-      {SALE_CURRENCY.testMint && (
-        <button onClick={getTestTokens} className="mt-2 w-full text-xs text-subtle underline underline-offset-4 hover:text-accent">
-          Get 100 test {SALE_CURRENCY.symbol} (testnet stand-in, not Paxos)
-        </button>
-      )}
       {msg && <p className={`mt-2 break-words text-xs ${state === "error" ? "text-danger" : "text-subtle"}`}>{msg}</p>}
     </div>
   );

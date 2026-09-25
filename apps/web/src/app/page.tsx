@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
+import { and, countDistinct, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { impactSubmissions, listings } from "@rb/db/schema";
 import { getDb } from "../lib/db";
 import { currentNetwork } from "../lib/network-server";
@@ -40,6 +40,24 @@ export default async function Home() {
           .orderBy(desc(impactSubmissions.ivValue))
           .limit(3);
 
+  // Live counts from the database (approved reports on the test networks), shown as they are: no rounding up.
+  const [stats] = await db
+    .select({
+      reports: sql<number>`count(*)::int`,
+      totalIv: sql<string>`coalesce(sum(${impactSubmissions.ivValue}), 0)`,
+      orgs: countDistinct(impactSubmissions.orgId),
+    })
+    .from(impactSubmissions)
+    .where(inArray(impactSubmissions.status, ["verified", "tokenized"]));
+  const [listed] = await db.select({ n: sql<number>`count(*)::int` }).from(listings).where(eq(listings.active, true));
+  const STATS = [
+    { v: Number(stats?.reports ?? 0).toLocaleString("en-US"), k: "verified impact reports" },
+    { v: Number(stats?.totalIv ?? 0).toLocaleString("en-US", { maximumFractionDigits: 0 }), k: "total Impact Value" },
+    { v: Number(stats?.orgs ?? 0).toLocaleString("en-US"), k: "organisations" },
+    { v: Number(listed?.n ?? 0).toLocaleString("en-US"), k: "tRWI listings on-chain" },
+    { v: String(enabledNetworks().length), k: "test networks" },
+  ];
+
   return (
     <main>
       <section className="hero-bg border-b border-line">
@@ -65,9 +83,6 @@ export default async function Home() {
               </Link>
               <Link href="/guide" className="link px-2 py-3">
                 How to try the demo →
-              </Link>
-              <Link href="/roadmap" className="link px-2 py-3">
-                Roadmap →
               </Link>
             </div>
           </div>
@@ -96,7 +111,22 @@ export default async function Home() {
         </div>
       </section>
 
-      <div className="page-wrap pb-24">
+      <section aria-label="Beta in numbers" className="border-b border-line bg-surface">
+        <div className="page-wrap py-8">
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-3 lg:grid-cols-5">
+            {STATS.map((x) => (
+              <div key={x.k}>
+                <dt className="sr-only">{x.k}</dt>
+                <dd className="font-display text-4xl leading-none md:text-5xl">{x.v}</dd>
+                <dd className="mt-2 text-muted">{x.k}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-6 text-sm text-subtle">Live from the beta database. Test networks and sample reports, no real money.</p>
+        </div>
+      </section>
+
+      <div className="page-wrap pb-8">
         <section className="mt-16 md:mt-20">
           <h2 className="label-mono !text-accent">Choose your network</h2>
           <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -132,15 +162,26 @@ export default async function Home() {
 
         <section className="mt-20">
           <h2 className="label-mono !text-accent">How it works</h2>
-          <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <ol className="relative mt-8 grid gap-10 lg:grid-cols-4 lg:gap-8">
+            {/* connecting line behind the step markers */}
+            <span aria-hidden="true" className="absolute left-[27px] top-2 bottom-2 w-px bg-line-strong lg:left-7 lg:right-7 lg:top-[27px] lg:bottom-auto lg:h-px lg:w-auto" />
             {CYCLE.map((c, i) => (
-              <div key={c.k} className="card p-6">
-                <div className="font-display text-5xl leading-none text-accent">{String(i + 1).padStart(2, "0")}</div>
-                <h3 className="mt-4 text-2xl">{c.k}</h3>
-                <p className="mt-2 text-muted">{c.d}</p>
-              </div>
+              <li key={c.k} className="relative flex gap-5 lg:block">
+                <div className="relative z-10 grid h-14 w-14 shrink-0 place-items-center rounded-full border border-accent bg-bg font-display text-2xl text-accent">
+                  {i + 1}
+                </div>
+                <div>
+                  <h3 className="text-2xl lg:mt-5">{c.k}</h3>
+                  <p className="mt-2 max-w-[34ch] text-muted">{c.d}</p>
+                </div>
+              </li>
             ))}
-          </div>
+          </ol>
+          <p className="mt-10">
+            <Link href="/methodology" className="link">How Impact Value is calculated →</Link>
+            <span className="mx-3 text-subtle">·</span>
+            <Link href="/roadmap" className="link">Roadmap →</Link>
+          </p>
         </section>
       </div>
     </main>

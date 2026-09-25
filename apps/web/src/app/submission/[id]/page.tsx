@@ -5,6 +5,9 @@ import { impactSubmissions, listings, verifications } from "@rb/db/schema";
 import { currentNetwork } from "../../../lib/network-server";
 import { networkByChainId } from "../../../lib/networks";
 import { getDb } from "../../../lib/db";
+import { BuyButton } from "../../../components/BuyButton";
+import { CopyValue } from "../../../components/CopyValue";
+import { formatUnits } from "viem";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +38,21 @@ const STATUS_STYLES: Record<string, string> = {
   tokenized: "badge-ok",
   rejected: "badge-danger",
 };
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return { title: "Impact report" };
+  const db = await getDb();
+  const [s] = await db
+    .select({ title: impactSubmissions.title, description: impactSubmissions.description, status: impactSubmissions.status })
+    .from(impactSubmissions)
+    .where(eq(impactSubmissions.id, id))
+    .limit(1);
+  // Pending and rejected reports stay private: no title or text in link previews.
+  if (!s || !["verified", "tokenized"].includes(s.status)) return { title: "Impact report", robots: { index: false } };
+  const description = s.description.length > 180 ? `${s.description.slice(0, 177)}…` : s.description;
+  return { title: s.title, description, openGraph: { title: s.title, description }, twitter: { title: s.title, description } };
+}
 
 export default async function SubmissionDetail({ params }: { params: Promise<{ id: string }> }) {
   const NETWORK = await currentNetwork();
@@ -167,21 +185,47 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
                   </a>{" "}
                   (appears after the first purchase)
                 </p>
-                <p className="break-all text-muted">
-                  EAS attestation UID {listing.easUid} ·{" "}
-                  <a
-                    href={`${explorer}/address/${NETWORK.eas}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline underline-offset-4 hover:text-accent"
-                  >
-                    EAS contract
-                  </a>
-                </p>
-                <p className="break-all text-muted">Metadata {listing.metadataUri}</p>
-                <Link href="/marketplace" className="btn btn-primary !mt-4 w-full">
-                  Fund this impact
-                </Link>
+                <dl className="space-y-2 text-muted">
+                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                    <dt>
+                      EAS attestation{" "}
+                      <a
+                        href={`${explorer}/address/${NETWORK.eas}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline underline-offset-4 hover:text-accent"
+                      >
+                        contract
+                      </a>
+                    </dt>
+                    <dd>
+                      <CopyValue value={listing.easUid} label="EAS attestation UID" />
+                    </dd>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                    <dt>Metadata (IPFS)</dt>
+                    <dd>
+                      <CopyValue value={listing.metadataUri} label="metadata URI" />
+                    </dd>
+                  </div>
+                </dl>
+                {listing.active ? (
+                  <div className="!mt-5 border-t border-line pt-5">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="label-mono">Per edition</span>
+                      <span className="text-xl font-semibold">
+                        {Number(formatUnits(BigInt(listing.pricePerEdition), NETWORK.saleCurrency.decimals)).toLocaleString("en-US", { maximumFractionDigits: 6 })}{" "}
+                        <span className="text-base font-normal text-muted">{NETWORK.saleCurrency.symbol}</span>
+                      </span>
+                    </div>
+                    <BuyButton listingId={listing.id} />
+                    <p className="mt-3 text-sm text-subtle">
+                      Need test tokens or a wallet? See the <Link href="/guide" className="link">guide</Link>.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="!mt-4 text-muted">This listing is not active.</p>
+                )}
               </div>
             ) : otherNet ? (
               <p className="text-muted">

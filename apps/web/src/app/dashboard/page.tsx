@@ -3,6 +3,11 @@ import { desc, eq, inArray } from "drizzle-orm";
 import { impactSubmissions, organizations } from "@rb/db/schema";
 import { getDb } from "../../lib/db";
 
+export const metadata = {
+  title: "NGO dashboard",
+  description: "Approved impact reports on Regen Bazaar, with their Impact Value and on-chain status.",
+};
+
 export const dynamic = "force-dynamic";
 
 const STATUS_STYLES: Record<string, string> = {

@@ -3,9 +3,15 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { impactSubmissions, listings, organizations } from "@rb/db/schema";
 import { getDb } from "../../lib/db";
 import { BuyButton } from "../../components/BuyButton";
+import { TestTokens } from "../../components/TestTokens";
 import { currentNetwork } from "../../lib/network-server";
 import { DEFAULT_NETWORK_KEY, getNetwork } from "../../lib/networks";
 import { formatUnits } from "viem";
+
+export const metadata = {
+  title: "Marketplace",
+  description: "Fund verified real-world impact. Each tRWI edition is a fractional share of an attested impact claim.",
+};
 
 export const dynamic = "force-dynamic";
 
@@ -87,6 +93,42 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
     </Link>
   );
 
+  const filterGroups = (
+    <>
+            {domains.length > 0 && (
+              <div className="mt-6">
+                <h2 className="label-mono mb-2.5">Domain</h2>
+                <div className="flex flex-wrap gap-2">
+                  {domains.map((d) => (
+                    <Chip key={d} label={d.replace(/_/g, " ")} on={sp.domain === d} href={hrefWith(sp, { domain: sp.domain === d ? "" : d })} />
+                  ))}
+                </div>
+              </div>
+            )}
+            {sdgs.length > 0 && (
+              <div className="mt-6">
+                <h2 className="label-mono mb-2.5">SDG</h2>
+                <div className="flex flex-wrap gap-2">
+                  {sdgs.map((t) => (
+                    <Chip key={t} label={t} on={sp.sdg === t} href={hrefWith(sp, { sdg: sp.sdg === t ? "" : t })} />
+                  ))}
+                </div>
+              </div>
+            )}
+            {ebfs.length > 0 && (
+              <div className="mt-6">
+                <h2 className="label-mono mb-2.5">EBF</h2>
+                <div className="flex flex-wrap gap-2">
+                  {ebfs.map((t) => (
+                    <Chip key={t} label={t} on={sp.ebf === t} href={hrefWith(sp, { ebf: sp.ebf === t ? "" : t })} />
+                  ))}
+                </div>
+              </div>
+            )}
+    </>
+  );
+  const activeFilters = [sp.domain, sp.sdg, sp.ebf].filter(Boolean).length;
+
   return (
     <main className="page-wrap py-10 md:py-14">
       <h1 className="text-[clamp(2.5rem,4vw,3.5rem)]">Marketplace</h1>
@@ -114,39 +156,21 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
             {sp.ebf && <input type="hidden" name="ebf" value={sp.ebf} />}
             <button className="btn btn-secondary btn-sm">Search</button>
           </form>
-          {domains.length > 0 && (
-            <div className="mt-6">
-              <h2 className="label-mono mb-2.5">Domain</h2>
-              <div className="flex flex-wrap gap-2">
-                {domains.map((d) => (
-                  <Chip key={d} label={d.replace(/_/g, " ")} on={sp.domain === d} href={hrefWith(sp, { domain: sp.domain === d ? "" : d })} />
-                ))}
-              </div>
-            </div>
-          )}
-          {sdgs.length > 0 && (
-            <div className="mt-6">
-              <h2 className="label-mono mb-2.5">SDG</h2>
-              <div className="flex flex-wrap gap-2">
-                {sdgs.map((t) => (
-                  <Chip key={t} label={t} on={sp.sdg === t} href={hrefWith(sp, { sdg: sp.sdg === t ? "" : t })} />
-                ))}
-              </div>
-            </div>
-          )}
-          {ebfs.length > 0 && (
-            <div className="mt-6">
-              <h2 className="label-mono mb-2.5">EBF</h2>
-              <div className="flex flex-wrap gap-2">
-                {ebfs.map((t) => (
-                  <Chip key={t} label={t} on={sp.ebf === t} href={hrefWith(sp, { ebf: sp.ebf === t ? "" : t })} />
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="hidden lg:block">{filterGroups}</div>
+          <details className="mt-3 lg:hidden" open={activeFilters > 0}>
+            <summary className="btn btn-secondary btn-sm w-full cursor-pointer list-none">
+              Filters{activeFilters > 0 ? ` (${activeFilters} on)` : ""} ▾
+            </summary>
+            <div className="pt-2">{filterGroups}</div>
+          </details>
         </aside>
 
         <section aria-label="Results">
+          {rows.some((r) => listingBySubmission.has(r.id)) && (
+            <div className="mb-6">
+              <TestTokens />
+            </div>
+          )}
           <div className="mb-5 flex items-baseline justify-between gap-4 text-muted">
             <span>
               {rows.length} {rows.length === 1 ? "report" : "reports"}
@@ -175,31 +199,30 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
             const tokenized = !!listing; // listed (EAS-attested) on THIS network
             return (
               <article key={l.id} className="card flex flex-col overflow-hidden transition-colors hover:!border-line-strong">
-                <Link href={`/submission/${l.id}`} className="block">
+                <Link href={`/submission/${l.id}`} className="relative block">
                   {/* eslint-disable-next-line @next/next/no-img-element -- our own generated SVG */}
                   <img src={`/api/submissions/${l.id}/image`} alt={`tRWI card: ${l.title}`} className="block aspect-square w-full" loading="lazy" />
+                  <span className={`badge absolute right-3 top-3 backdrop-blur ${tokenized ? "badge-ok !bg-ink/70 !text-[#8fbf7f]" : "badge-gold !bg-ink/70 !text-gold"}`}>
+                    {tokenized ? "on-chain" : "verified"}
+                  </span>
                 </Link>
                 <div className="flex flex-1 flex-col p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="label-mono">{(l.domain ?? "impact").replace(/_/g, " ")}</span>
-                    <span className={`badge ${tokenized ? "badge-ok" : "badge-gold"}`}>{tokenized ? "on-chain" : "verified"}</span>
-                  </div>
-                  <Link href={`/submission/${l.id}`} className="mt-3 text-[1.3125rem] font-semibold leading-snug hover:text-accent">
+                  <Link href={`/submission/${l.id}`} className="line-clamp-2 text-[1.25rem] font-semibold leading-snug hover:text-accent">
                     {l.title}
                   </Link>
-                  <div className="mt-1 text-muted">by {l.orgName}</div>
-                  <div className="mb-5 mt-4 flex flex-wrap gap-1.5">
+                  <div className="mt-1 truncate text-sm text-muted">by {l.orgName}</div>
+                  <div className="mb-5 mt-3 flex flex-wrap gap-1.5">
                     {tags?.sdg.slice(0, 3).map((t) => (
                       <span key={t} className="tag">{t}</span>
                     ))}
-                    {tags?.ebf.slice(0, 2).map((t) => (
+                    {tags?.ebf.slice(0, 1).map((t) => (
                       <span key={t} className="tag tag-ebf">EBF {t}</span>
                     ))}
                   </div>
                   <div className="mt-auto grid grid-cols-2 gap-3 border-t border-line pt-4">
                     <div>
                       <div className="label-mono">Impact Value</div>
-                      <div className="text-xl font-semibold text-accent">{Number(l.ivValue ?? 0).toLocaleString()}</div>
+                      <div className="text-xl font-semibold text-accent">{Number(l.ivValue ?? 0).toLocaleString("en-US")}</div>
                     </div>
                     <div>
                       <div className="label-mono">Per edition</div>

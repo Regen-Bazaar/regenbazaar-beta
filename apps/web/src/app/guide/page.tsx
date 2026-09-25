@@ -2,6 +2,11 @@ import Link from "next/link";
 import { NATIVE, enabledNetworks } from "../../lib/networks";
 import { currentNetwork } from "../../lib/network-server";
 
+export const metadata = {
+  title: "How to try Regen Bazaar",
+  description: "A plain-language walkthrough: browse, fund an impact with test tokens, or tokenize your own report.",
+};
+
 // Plain-language walkthrough for first-time visitors (judges, testers). Faucet links differ per network.
 const GAS_FAUCETS: Record<string, { name: string; url: string }[]> = {
   "robinhood-testnet": [

@@ -4,6 +4,11 @@ import { getDb } from "../../lib/db";
 import { currentNetwork } from "../../lib/network-server";
 import { Portfolio, type PortfolioItem } from "../../components/Portfolio";
 
+export const metadata = {
+  title: "My impact",
+  description: "The tRWI you hold, read live from the chain. Retire editions to claim the impact they represent.",
+};
+
 export const dynamic = "force-dynamic";
 
 // Buyer view: the connected wallet's tRWI on this network. Holdings are read from chain in the browser;
