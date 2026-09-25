@@ -10,7 +10,8 @@
 <p align="center"><img src="docs/submission-images/2-marketplace.png" width="820" alt="Regen Bazaar marketplace with tRWI cards"></p>
 
 > Public beta on testnets. The same v3 contracts run on **Celo Sepolia** (where Regen Bazaar started),
-> **Arbitrum Sepolia** and **Robinhood Chain testnet**; the site's network switcher currently offers the last two.
+> **Arbitrum Sepolia** and **Robinhood Chain testnet**, and the site's network switcher offers all three. Each impact
+> report is listed on one network only, the one chosen when it was submitted.
 > Impact Value weights are v0.1, platform-assessed, not third-party certified. No real funds.
 
 Marketplace for **tokenized real-world impact (tRWI)**: NGOs across the full impact spectrum
@@ -19,10 +20,11 @@ scores it, a human verifies it, it's tokenized on-chain, then funded by buyers (
 agents). Product backbone: **Work → Tokenize → Evaluate → Fund**. Reuse-first: battle-tested ReFi/OSS
 primitives where possible; custom only where it's the moat: the AI Impact-Value engine.
 
-- **Live:** https://app.regenbazaar.com serves both networks; the visitor picks one (cookie). Contracts in
-  `packages/contracts/deployments/{arbitrum-sepolia,robinhood-testnet}.json`, source-verified on Blockscout.
-  The same v3 contracts also run on **Celo Sepolia** (`deployments/celo-sepolia.json`), the original network,
-  paid in native CELO; not in the switcher yet.
+- **Live:** https://app.regenbazaar.com serves three test networks; the visitor picks one (cookie). Contracts in
+  `packages/contracts/deployments/{arbitrum-sepolia,robinhood-testnet,celo-sepolia}.json`, source-verified on
+  Blockscout. Celo Sepolia, the original network, is paid in native CELO.
+- **One report, one network:** a report is attested and listed only on the network selected when it was
+  submitted, so the same impact is never sold on two chains.
 - **Payment:** Paxos USDG on Robinhood Chain testnet. On Arbitrum Sepolia, Paxos USDG is allowlisted but the
   demo sells in `tUSDG`, a labelled testnet stand-in with the same interface, because the Paxos testnet faucet
   is not dispensing there.
@@ -78,7 +80,9 @@ Example purchase in Paxos USDG on Robinhood Chain testnet (97.5% to the NGO in t
 
 **Celo Sepolia (11142220), the original network:** same v3 contracts at different addresses (`deployments/celo-sepolia.json`), with
 purchases made through the app in June 2026, e.g.
-[`0xce901fd1…`](https://celo-sepolia.blockscout.com/tx/0xce901fd12fceb8f166ddd585f96b5baa1c91e64864608b1c0d5f869bd79b1273).
+[`0xce901fd1…`](https://celo-sepolia.blockscout.com/tx/0xce901fd12fceb8f166ddd585f96b5baa1c91e64864608b1c0d5f869bd79b1273),
+and back in the site's network switcher since September 2026, e.g.
+[`0xaf444006…`](https://celo-sepolia.blockscout.com/tx/0xaf444006452c3b3c3ff8d5981819b7516d54b8024cf7b2b1e87584266d10d28a).
 
 Flow (proven live): approve → EAS-attest + IPFS + register listing (no mint) → buyer redeems a platform-signed
 voucher → lazy mint + fee/NGO split → indexer. Secondary via the escrow marketplace.

@@ -16,7 +16,8 @@ Also on the site: https://app.regenbazaar.com/roadmap
 
 ## Already built
 
-- Live beta on two Arbitrum chains (Arbitrum Sepolia, Robinhood Chain testnet), one site with a network switcher ([proof](https://app.regenbazaar.com))
+- Live beta on three test networks (Arbitrum Sepolia, Robinhood Chain testnet, Celo Sepolia), one site with a network switcher ([proof](https://app.regenbazaar.com))
+- One report, one network: each impact report is listed only on the network it was submitted on, so it is never sold twice
 - Contracts source-verified; 61 Foundry tests; June 2026 security self-audit ([proof](https://sepolia.arbiscan.io/address/0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030#code))
 - Stablecoin checkout in Paxos USDG, with the organisation paid in the same transaction ([proof](https://explorer.testnet.chain.robinhood.com/tx/0xea4a18d20c2fc3c4ed2a46ef7681129a99b905118745ff2de9ad95609ca2ba77))
 - AI extraction of plain-language reports, deterministic published scoring formula (v0.1), on-chain EAS attestations ([proof](https://app.regenbazaar.com/methodology))
@@ -28,7 +29,7 @@ Also on the site: https://app.regenbazaar.com/roadmap
 
 **Goal:** Learn from real people what is confusing before anything touches real money.
 
-- Open testing with the community on both test networks
+- Open testing with the community on all three test networks
 - Fix every step where testers get stuck (wallet setup, faucets, the two wallet confirmations)
 - Publish what we learned and what we changed
 
