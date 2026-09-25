@@ -179,7 +179,7 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   data, left as is). No report is copied onto Celo; Celo shows only what is listed there (the June Mangrove
   report, tokenId 2) plus new test reports submitted while Celo is selected. Rows with no `chain_id` approve
   onto the default network.
-- **Celo indexer is optional:** the web app reads holdings from chain in the browser and does not query Ponder
-  tables, so `indexer_celo` (compose profile `celo`, 256 MB cap) only mirrors Celo events into Postgres.
+- **No Celo indexer:** the web app reads holdings from chain in the browser and does not query Ponder tables, so
+  a Celo indexer would only mirror events nobody reads. Not run, to spare memory on the shared host.
 - **Fragile:** the network comes from the `rb_network` cookie at submit time; an NGO that forgets to switch
   first lists on the default network. The tokenize page and the validator queue both show the network.

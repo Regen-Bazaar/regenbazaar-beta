@@ -171,37 +171,6 @@ services:
           memory: 512M
           cpus: "0.5"
 
-  # ---- Celo Sepolia indexer (enabled with COMPOSE_PROFILES=...,celo). Optional: the web app reads holdings from
-  # chain in the browser, so the site works without it; it only mirrors Celo sales/mints into Postgres.
-  # Real usage is ~130 MB, capped lower than the others to spare the shared host.
-  indexer_celo:
-    profiles: ["celo"]
-    image: regenbazaar_build:latest
-    container_name: regenbazaar_indexer_celo
-    command: ["pnpm", "--filter", "indexer", "start"]
-    environment:
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      DATABASE_SCHEMA: ${CELO_INDEXER_SCHEMA:-indexer_celo_v1}
-      PONDER_CHAIN_ID: "11142220"
-      PONDER_RPC_URL: ${CELO_RPC_URL:-}
-      TRWI_ADDRESS: ${CELO_TRWI_ADDRESS}
-      TRWI_START_BLOCK: ${CELO_START_BLOCK}
-      STAKING_ADDRESS: ${CELO_STAKING_ADDRESS}
-      STAKING_START_BLOCK: ${CELO_START_BLOCK}
-      PRIMARY_SALE_ADDRESS: ${CELO_PRIMARY_SALE_ADDRESS}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
-    networks: [regenbazaar_net]
-    restart: "on-failure:5"
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: "0.5"
-
 networks:
   regenbazaar_net:
     name: regenbazaar_net
