@@ -5,7 +5,8 @@ import { useState } from "react";
 import { useAccount, useConnect, useChainId, useReadContracts, useSwitchChain, useWriteContract, usePublicClient } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { hasInjectedWallet, NO_WALLET_HINT } from "../lib/wallet";
-import { TRWI, chain, trwiAbi } from "../lib/chain";
+import { trwiAbi } from "../lib/chain";
+import { useNetwork } from "./NetworkProvider";
 
 export type PortfolioItem = {
   tokenId: string;
@@ -18,9 +19,11 @@ export type PortfolioItem = {
   totalIV: number;
 };
 
-const EXPLORER = chain.blockExplorers?.default.url ?? "";
-
 export function Portfolio({ items }: { items: PortfolioItem[] }) {
+  const net = useNetwork();
+  const chain = net.chain;
+  const TRWI = net.trwi;
+  const EXPLORER = chain.blockExplorers?.default.url ?? "";
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
   const chainId = useChainId();

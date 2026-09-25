@@ -1,10 +1,13 @@
 import { createConfig, http } from "wagmi";
 import { injected } from "wagmi/connectors";
-import { chain, RPC } from "./chain";
+import type { Chain } from "viem";
+import { enabledNetworks } from "./networks";
+
+const chains = enabledNetworks().map((n) => n.chain) as [Chain, ...Chain[]];
 
 export const wagmiConfig = createConfig({
-  chains: [chain],
+  chains,
   connectors: [injected()],
-  transports: { [chain.id]: http(RPC) },
+  transports: Object.fromEntries(chains.map((c) => [c.id, http(c.rpcUrls.default.http[0])])),
   ssr: true,
 });

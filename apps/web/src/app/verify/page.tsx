@@ -10,6 +10,7 @@ type Submission = {
   ivValue: string | null;
   frameworkTags: { sdg: string[]; ebf: string[] } | null;
   extractedActions: { actionType: string; quantity: number; unit: string }[] | null;
+  possibleDuplicates?: { id: string; title: string; status: string; reason: string }[];
 };
 
 export default function Verify() {
@@ -112,6 +113,21 @@ export default function Verify() {
                   <div className="text-xl font-bold text-gold">{Number(s.ivValue ?? 0).toLocaleString()}</div>
                 </div>
               </div>
+              {(s.possibleDuplicates ?? []).length > 0 && (
+                <div className="mt-3 rounded-md border border-gold/50 bg-gold/10 p-3 text-xs text-paper/85">
+                  <b className="text-gold">Possible duplicate: check before approving.</b>
+                  <ul className="mt-1 space-y-0.5">
+                    {s.possibleDuplicates!.map((d) => (
+                      <li key={d.id}>
+                        <a href={`/submission/${d.id}`} target="_blank" rel="noopener noreferrer" className="underline">
+                          {d.title}
+                        </a>{" "}
+                        ({d.status.replace(/_/g, " ")}): {d.reason}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <textarea
                 value={notes[s.id] ?? ""}
                 onChange={(e) => setNotes((n) => ({ ...n, [s.id]: e.target.value }))}

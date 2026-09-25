@@ -7,6 +7,7 @@ import type { DB } from "@rb/db";
 import { getDb, getDemoOrgId } from "../../../lib/db";
 import { isAdmin } from "../../../lib/admin";
 import { clientIp, rateLimit } from "../../../lib/rate-limit";
+import { findDuplicates } from "../../../lib/duplicates";
 
 export const runtime = "nodejs";
 
@@ -55,7 +56,10 @@ export async function GET(req: Request) {
     )
     .orderBy(desc(impactSubmissions.createdAt))
     .limit(100);
-  return NextResponse.json(rows);
+  if (!admin) return NextResponse.json(rows);
+  // Validators also get double-counting hints against everything already submitted.
+  const all = await db.select().from(impactSubmissions).orderBy(desc(impactSubmissions.createdAt)).limit(2000);
+  return NextResponse.json(rows.map((r) => ({ ...r, possibleDuplicates: findDuplicates(r, all) })));
 }
 
 // POST /api/submissions — extract -> deterministically score -> persist into the verification queue.

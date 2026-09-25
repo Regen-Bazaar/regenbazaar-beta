@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { NETWORK, otherDeployments } from "../../lib/networks";
+import { enabledNetworks } from "../../lib/networks";
+import { currentNetwork } from "../../lib/network-server";
 
 // Plain-language walkthrough for first-time visitors (judges, testers). Faucet links differ per network.
 const GAS_FAUCETS: Record<string, { name: string; url: string }[]> = {
@@ -13,12 +14,13 @@ const GAS_FAUCETS: Record<string, { name: string; url: string }[]> = {
   ],
 };
 
-export default function Guide() {
+export default async function Guide() {
+  const NETWORK = await currentNetwork();
   const cur = NETWORK.saleCurrency;
   const chain = NETWORK.chain.name;
   const explorer = NETWORK.chain.blockExplorers?.default.url ?? "";
   const faucets = GAS_FAUCETS[NETWORK.key] ?? [];
-  const others = otherDeployments(NETWORK.key);
+  const others = enabledNetworks().filter((n) => n.key !== NETWORK.key);
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
@@ -27,11 +29,11 @@ export default function Guide() {
         This is a beta on <b>{chain}</b>, a test network. Everything here uses test tokens with no monetary value.
         {others.length > 0 && (
           <>
-            {" "}Also live on{" "}
+            {" "}Switch networks in the header, or open this guide for{" "}
             {others.map((o, i) => (
-              <span key={o.url}>
+              <span key={o.key}>
                 {i > 0 && ", "}
-                <a href={`${o.url}/guide`} className="text-gold underline">{o.name}</a>
+                <a href={`/guide?network=${o.key}`} className="text-gold underline">{o.chain.name}</a>
               </span>
             ))}
             .

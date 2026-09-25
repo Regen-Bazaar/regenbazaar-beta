@@ -1,12 +1,6 @@
 // Client-safe chain + public contract addresses (NO private keys — usable in the browser).
-import { NETWORK } from "./networks";
-
+// Network-specific addresses come from useNetwork() (client) or currentNetwork() (server).
 export { NATIVE } from "./networks";
-export const chain = NETWORK.chain;
-export const RPC = NETWORK.chain.rpcUrls.default.http[0];
-export const PRIMARY_SALE = NETWORK.primarySale;
-export const SALE_CURRENCY = NETWORK.saleCurrency;
-export const TRWI = NETWORK.trwi;
 
 // RegenPrimarySale.redeem ABI (Voucher tuple must match the contract field order).
 export const redeemAbi = [

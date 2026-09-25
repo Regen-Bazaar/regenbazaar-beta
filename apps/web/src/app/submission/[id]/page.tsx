@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { and, desc, eq } from "drizzle-orm";
 import { impactSubmissions, listings, verifications } from "@rb/db/schema";
-import { NETWORK } from "../../../lib/networks";
+import { currentNetwork } from "../../../lib/network-server";
 import { getDb } from "../../../lib/db";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +36,7 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default async function SubmissionDetail({ params }: { params: Promise<{ id: string }> }) {
+  const NETWORK = await currentNetwork();
   const { id } = await params;
   const db = await getDb();
   const [s] = await db.select().from(impactSubmissions).where(eq(impactSubmissions.id, id)).limit(1);

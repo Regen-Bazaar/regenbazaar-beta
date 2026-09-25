@@ -3,7 +3,7 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { impactSubmissions, listings, organizations } from "@rb/db/schema";
 import { getDb } from "../../lib/db";
 import { BuyButton } from "../../components/BuyButton";
-import { NETWORK } from "../../lib/networks";
+import { currentNetwork } from "../../lib/network-server";
 import { formatUnits } from "viem";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +20,7 @@ function hrefWith(current: Search, patch: Partial<Search>): string {
 }
 
 export default async function Marketplace({ searchParams }: { searchParams: Promise<Search> }) {
+  const NETWORK = await currentNetwork();
   const sp = await searchParams;
   const db = await getDb();
   const all = (

@@ -2,7 +2,8 @@
 //   LID=<listing uuid> PK=<buyer key> NEXT_PUBLIC_NETWORK=arbitrum-sepolia node --import tsx scripts/buy-via-api.ts
 import { createPublicClient, createWalletClient, http, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { NETWORK } from "../src/lib/networks.ts";
+import { getNetwork } from "../src/lib/networks.ts";
+const NETWORK = getNetwork(process.env.NEXT_PUBLIC_NETWORK);
 import { erc20Abi, redeemAbi } from "../src/lib/chain.ts";
 const res = await fetch(`${process.env.APP_URL ?? "https://app.regenbazaar.com"}/api/listings/${process.env.LID}/voucher`);
 const j = await res.json();

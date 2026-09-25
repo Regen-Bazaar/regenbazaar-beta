@@ -1,4 +1,4 @@
-// On-chain wiring for the build's NETWORK (v2 — platform-issued lazy mint via vouchers). SERVER-ONLY.
+// On-chain wiring per network (v2 — platform-issued lazy mint via vouchers). SERVER-ONLY.
 // The platform operator (OPERATOR_PRIVATE_KEY) is both the EAS ATTESTER and the voucher SIGNER. It:
 //  1) creates an EAS ImpactClaim attestation for a verified impact (provenance, source of truth), and
 //  2) signs an EIP-712 ImpactVoucher (commercial terms) that a buyer redeems to lazily mint editions.
@@ -18,14 +18,12 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
-import { NETWORK } from "./networks";
+import type { Network } from "./networks";
 
-// Server RPC may differ from the public one (e.g. a provider URL); addresses always come from NETWORK.
-const RPC = process.env.SERVER_RPC_URL || NETWORK.chain.rpcUrls.default.http[0];
-const EAS_ADDRESS = NETWORK.eas;
-const PRIMARY_SALE_ADDRESS = NETWORK.primarySale;
-const SCHEMA_UID = NETWORK.schemaUID;
-const CHAIN = NETWORK.chain;
+// Optional provider RPC per chain (RPC_URL_<chainId>); otherwise the network's public RPC.
+function rpcFor(net: Network): string {
+  return process.env[`RPC_URL_${net.chain.id}`] || net.chain.rpcUrls.default.http[0];
+}
 
 const easAbi = [
   {
@@ -107,17 +105,22 @@ export function onchainEnabled(): boolean {
   return !!process.env.OPERATOR_PRIVATE_KEY;
 }
 
-function clients() {
+function operatorAccount() {
   const pk = process.env.OPERATOR_PRIVATE_KEY;
   if (!pk) throw new Error("OPERATOR_PRIVATE_KEY not set");
-  const account = privateKeyToAccount((pk.startsWith("0x") ? pk : `0x${pk}`) as Hex);
-  const wallet = createWalletClient({ account, chain: CHAIN, transport: http(RPC) });
-  const pub = createPublicClient({ chain: CHAIN, transport: http(RPC) });
+  return privateKeyToAccount((pk.startsWith("0x") ? pk : `0x${pk}`) as Hex);
+}
+
+function clients(net: Network) {
+  const account = operatorAccount();
+  const transport = http(rpcFor(net));
+  const wallet = createWalletClient({ account, chain: net.chain, transport });
+  const pub = createPublicClient({ chain: net.chain, transport });
   return { account, wallet, pub };
 }
 
 export function operatorAddress(): Hex {
-  return clients().account.address;
+  return operatorAccount().address;
 }
 
 /** Build the on-chain impactValue (IV scaled to 1e18) from the human IV decimal string. */
@@ -126,19 +129,24 @@ export function ivToWei(ivDecimal: string): bigint {
 }
 
 /** Create an EAS ImpactClaim attestation (operator = authorized attester). Returns the UID + tx hash. */
-export async function attestImpact(ngo: Hex, ivDecimal: string, metadataURI: string): Promise<{ uid: Hex; txHash: Hex }> {
-  const { account, wallet, pub } = clients();
+export async function attestImpact(
+  net: Network,
+  ngo: Hex,
+  ivDecimal: string,
+  metadataURI: string,
+): Promise<{ uid: Hex; txHash: Hex }> {
+  const { account, wallet, pub } = clients(net);
   const data = encodeAbiParameters(
     [{ type: "address" }, { type: "uint256" }, { type: "string" }],
     [ngo, ivToWei(ivDecimal), metadataURI],
   );
   const txHash = await wallet.writeContract({
-    address: EAS_ADDRESS,
+    address: net.eas,
     abi: easAbi,
     functionName: "attest",
-    args: [{ schema: SCHEMA_UID, data: { recipient: ngo, expirationTime: 0n, revocable: true, refUID: zeroHash, data, value: 0n } }],
+    args: [{ schema: net.schemaUID, data: { recipient: ngo, expirationTime: 0n, revocable: true, refUID: zeroHash, data, value: 0n } }],
     account,
-    chain: CHAIN,
+    chain: net.chain,
   });
   const receipt = await pub.waitForTransactionReceipt({ hash: txHash });
   const logs = parseEventLogs({ abi: easAbi, eventName: "Attested", logs: receipt.logs });
@@ -148,11 +156,11 @@ export async function attestImpact(ngo: Hex, ivDecimal: string, metadataURI: str
 }
 
 /** Sign an ImpactVoucher (EIP-712) with the operator key. The buyer redeems it at RegenPrimarySale. */
-export async function signVoucher(v: ImpactVoucher): Promise<Hex> {
-  const { account, wallet } = clients();
+export async function signVoucher(net: Network, v: ImpactVoucher): Promise<Hex> {
+  const { account, wallet } = clients(net);
   return wallet.signTypedData({
     account,
-    domain: { name: "RegenPrimarySale", version: "1", chainId: CHAIN.id, verifyingContract: PRIMARY_SALE_ADDRESS },
+    domain: { name: "RegenPrimarySale", version: "1", chainId: net.chain.id, verifyingContract: net.primarySale },
     types: VOUCHER_TYPES,
     primaryType: "Voucher",
     message: v,

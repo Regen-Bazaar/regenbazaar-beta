@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { impactSubmissions, listings } from "@rb/db/schema";
 import { getDb } from "../../lib/db";
-import { NETWORK } from "../../lib/networks";
+import { currentNetwork } from "../../lib/network-server";
 import { Portfolio, type PortfolioItem } from "../../components/Portfolio";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 // Buyer view: the connected wallet's tRWI on this network. Holdings are read from chain in the browser;
 // the server only supplies the catalogue of this network's collections (titles, IV, attestation refs).
 export default async function PortfolioPage() {
+  const NETWORK = await currentNetwork();
   const db = await getDb();
   const rows = await db
     .select({
