@@ -3,6 +3,11 @@ import { sql, eq, inArray, desc } from "drizzle-orm";
 import { organizations, impactSubmissions } from "@rb/db/schema";
 import { getDb } from "../../lib/db";
 
+export const metadata = {
+  title: "Impact leaderboard",
+  description: "Organizations ranked by total verified Impact Value.",
+};
+
 export const dynamic = "force-dynamic";
 
 // NGOs ranked by total verified impact value (the "Fund" stage's trust signal).

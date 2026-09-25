@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { DONE, EXPLORING, HISTORY, PHASES, ROADMAP_INTRO, type Phase } from "../../lib/roadmap";
 
-export const metadata = { title: "Roadmap · Regen Bazaar" };
+export const metadata = {
+  title: "Roadmap",
+  description: "What Regen Bazaar has built, what comes next, and what each phase must prove.",
+};
 
 const STATUS: Record<Phase["status"], { label: string; cls: string }> = {
   done: { label: "Done", cls: "badge-ok" },

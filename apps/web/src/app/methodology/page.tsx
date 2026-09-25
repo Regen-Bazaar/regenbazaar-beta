@@ -11,7 +11,7 @@ import {
 } from "@rb/impact-engine";
 
 export const metadata: Metadata = {
-  title: "Methodology · Regen Bazaar",
+  title: "Impact Value methodology",
   description:
     "How Regen Bazaar computes Impact Value: a transparent, deterministic, versioned formula. The LLM only extracts; it never scores.",
 };
