@@ -15,6 +15,8 @@ $REBAZ token.
 > Flow: tokenize → verify → EAS-attest + IPFS → buyer redeems a platform-signed voucher (ERC-20 approve +
 > redeem) → lazy mint → indexed (Ponder). Audience: non-crypto users (embedded wallets, gasless: later phase).
 
+**Roadmap:** [docs/ROADMAP.md](docs/ROADMAP.md) · https://app.regenbazaar.com/roadmap
+
 ## Layout
 ```
 apps/

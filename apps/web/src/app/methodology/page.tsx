@@ -50,8 +50,8 @@ export default function Methodology() {
         comparing reports, not a carbon, monetary or certified measure. The formula, versioning and per-factor
         breakdown are final in design; the <b>weights and multipliers are seed values</b> set by the platform and are
         not yet calibrated against external standards. Calibration with domain experts, and mapping selected
-        actions to physical units (for example tCO₂e), is the next milestone. Prices derived from IV are equally
-        provisional.
+        actions to physical units (for example tCO₂e), is the next milestone (see the{" "}
+        <a href="/roadmap" className="text-gold underline">roadmap</a>). Prices derived from IV are equally provisional.
       </div>
       <h1 className="text-3xl font-bold">Impact Value methodology</h1>
       <p className="mt-2 text-paper/70">

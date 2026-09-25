@@ -159,6 +159,9 @@ export default async function Guide() {
           <li>Impact Value is platform-assessed with published weights, not third-party certified.</li>
           <li>Reports submitted as the demo organisation, or marked &quot;(test data)&quot;, are sample data.</li>
           <li>Found a problem or something unclear? Tell us in our community chat.</li>
+          <li>
+            Where this is going: see the <Link href="/roadmap" className="text-gold underline">roadmap</Link>.
+          </li>
         </ul>
       </Section>
     </main>

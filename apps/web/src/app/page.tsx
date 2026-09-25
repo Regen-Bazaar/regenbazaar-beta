@@ -31,6 +31,9 @@ export default async function Home() {
         <Link href="/guide" className="px-2 py-3 text-paper/75 underline transition-colors hover:text-gold">
           How to try the demo →
         </Link>
+        <Link href="/roadmap" className="px-2 py-3 text-paper/75 underline transition-colors hover:text-gold">
+          Roadmap →
+        </Link>
       </div>
 
       <section className="mt-14">
