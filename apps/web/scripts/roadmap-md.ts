@@ -1,8 +1,10 @@
 // Renders docs/ROADMAP.md from src/lib/roadmap.ts (the single source).  node --import tsx scripts/roadmap-md.ts
 import { writeFileSync } from "node:fs";
-import { DONE, EXPLORING, PHASES, ROADMAP_INTRO } from "../src/lib/roadmap.ts";
+import { DONE, EXPLORING, HISTORY, PHASES, ROADMAP_INTRO } from "../src/lib/roadmap.ts";
 
-const L: string[] = ["# Regen Bazaar roadmap", "", ROADMAP_INTRO, "", "Also on the site: https://app.regenbazaar.com/roadmap", "", "## Already built", ""];
+const L: string[] = ["# Regen Bazaar roadmap", "", ROADMAP_INTRO, "", "Also on the site: https://app.regenbazaar.com/roadmap", "", "## Journey so far", ""];
+for (const h of HISTORY) L.push(`- **${h.when}:** ${h.text}`);
+L.push("", "## Already built", "");
 for (const d of DONE) L.push(`- ${d.text}${d.proof ? ` ([proof](${d.proof}))` : ""}`);
 PHASES.forEach((p, i) => {
   L.push("", `## Phase ${i + 1}: ${p.title} (${p.status}${p.grant ? ", grant-fundable" : ""})`, "", `**Goal:** ${p.goal}`, "");

@@ -4,6 +4,16 @@ Regen Bazaar turns verified real-world impact into tRWI tokens that anyone can f
 
 Also on the site: https://app.regenbazaar.com/roadmap
 
+## Journey so far
+
+- **Before the platform:** Two single-organisation pilots of the model: Clean Phangan (community beach cleanups, Optimism) and EcoThailand Foundation (mangrove restoration, Celo)
+- **Jan to Feb 2025:** Litepaper and the first MVP monorepo
+- **Mar to May 2025:** Contract prototypes on Starknet (Cairo), Move and Stellar
+- **Apr 2025:** Gitcoin Grants GG23 (OSS dApps and Apps round)
+- **Apr to Jul 2025:** EVM contracts and a Next.js dApp; Celo Proof of Ship, Season 4
+- **Jun 2026:** Rebuilt from scratch: impact-scoring engine, lazy-mint contracts with a security self-audit (v1 to v3), end-to-end purchases on Celo Sepolia
+- **Sep 2026:** Arbitrum Open House buildathon: Arbitrum Sepolia and Robinhood Chain testnet, USDG checkout, public beta
+
 ## Already built
 
 - Live beta on two Arbitrum chains (Arbitrum Sepolia, Robinhood Chain testnet), one site with a network switcher ([proof](https://app.regenbazaar.com))
@@ -13,7 +23,6 @@ Also on the site: https://app.regenbazaar.com/roadmap
 - Generated artwork for every tRWI, pinned to IPFS as the token image
 - Funder page with holdings and retirement; step-by-step guide ([proof](https://app.regenbazaar.com/guide))
 - Public-beta safety: content moderation, rate limits, reviewer-only approvals, duplicate hints for reviewers
-- Two single-organisation pilots before the platform existed (Clean Phangan on Optimism, EcoThailand Foundation on Celo)
 
 ## Phase 1: Public beta and feedback (now)
 
