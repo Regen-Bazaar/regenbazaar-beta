@@ -202,7 +202,7 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
                 <Link href={`/submission/${l.id}`} className="relative block">
                   {/* eslint-disable-next-line @next/next/no-img-element -- our own generated SVG */}
                   <img src={`/api/submissions/${l.id}/image`} alt={`tRWI card: ${l.title}`} className="block aspect-square w-full" loading="lazy" />
-                  <span className={`badge absolute right-3 top-3 backdrop-blur ${tokenized ? "badge-ok !bg-ink/70 !text-[#8fbf7f]" : "badge-gold !bg-ink/70 !text-gold"}`}>
+                  <span className={`badge absolute right-3 top-3 !bg-ink ${tokenized ? "badge-ok !text-[#8fbf7f]" : "badge-gold !text-gold"}`}>
                     {tokenized ? "on-chain" : "verified"}
                   </span>
                 </Link>

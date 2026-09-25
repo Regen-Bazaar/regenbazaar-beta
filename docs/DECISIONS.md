@@ -201,3 +201,15 @@ Append-only record of significant choices, why we made them, and the trade-offs 
 - **Fragile:** Tailwind v4 puts utilities above components, so a `bg-*` utility on a `.btn` overrides the
   disabled style; add `disabled:opacity-50` where that matters. Brand colours `gold`, `ink`, `paper`, `green`
   stay fixed across themes (gold buttons, ink text on gold); use `text-accent` (not `text-gold`) for gold text.
+
+## 2026-09-25 — Demo polish: link previews, footer, lighter cards, live numbers
+- **Link previews:** `favicon.ico` (was 404), `icon.svg`, `apple-icon.png`, title template `%s · Regen Bazaar`,
+  per-page descriptions, and Open Graph / X card images rendered with `next/og` (bundled with Next, no new
+  dependency). Project pages get their own card (Impact Value, title, organisation, SDGs); pending or rejected
+  reports get a generic card and `noindex`, so nothing unapproved leaks into previews. OG fonts are read from
+  `apps/web/public/fonts` (both the `next dev` and the standalone Docker working directories are tried).
+- **Marketplace:** the test-token mint moved unchanged from `BuyButton` into one `TestTokens` banner; status
+  badge sits on the artwork with a solid ink background so its contrast does not depend on the image.
+- **Project page:** funds in place with `BuyButton` instead of linking to the marketplace.
+- **Home numbers:** read live from the DB (approved reports, total IV, organisations, active listings,
+  networks) and labelled as testnet sample data, to avoid reading as traction.
