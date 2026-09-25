@@ -57,7 +57,7 @@ export default function Methodology() {
 
   return (
     <main className="page-wrap py-10 md:py-14">
-      <div className="grid items-start gap-10 lg:grid-cols-[240px_minmax(0,1fr)] xl:gap-16">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-[240px_minmax(0,1fr)] xl:gap-16">
       <nav aria-label="On this page" className="hidden lg:sticky lg:top-24 lg:block">
         <p className="label-mono mb-3">On this page</p>
         <ol className="space-y-2 border-l border-line">
@@ -70,7 +70,7 @@ export default function Methodology() {
           ))}
         </ol>
       </nav>
-      <div className="max-w-[80ch]">
+      <div className="min-w-0 max-w-[80ch]">
       <div className="mb-8 rounded-2xl border border-line-strong bg-accent-tint p-5 text-muted">
         <b className="text-accent">Status: {TABLES_VERSION}, beta.</b> Impact Value is a <b>relative score</b> for
         comparing reports, not a carbon, monetary or certified measure. The formula, versioning and per-factor
@@ -91,7 +91,7 @@ export default function Methodology() {
 
       <div className="card mt-8 p-6 text-center">
         <div className="label-mono">Per action</div>
-        <div className="mt-3 font-mono text-xl text-fg">
+        <div className="mt-3 break-words font-mono text-base text-fg sm:text-xl">
           IV = Σ ( AW × SM × TBV × ESM × PIM × ACDM )
         </div>
       </div>

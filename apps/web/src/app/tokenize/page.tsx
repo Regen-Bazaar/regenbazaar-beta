@@ -121,7 +121,7 @@ export default function Tokenize() {
         Describe the real-world impact you delivered. The Impact Value updates live as you go.
       </p>
 
-      <div className="mt-10 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px] xl:gap-16">
+      <div className="mt-10 grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px] xl:gap-16">
         {/* form */}
         <div className="max-w-[820px] space-y-8">
           <div>

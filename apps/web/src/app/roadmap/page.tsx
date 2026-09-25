@@ -16,7 +16,7 @@ export default function Roadmap() {
       <h1 className="text-[clamp(2.5rem,4vw,3.5rem)]">Roadmap</h1>
       <p className="mt-3 max-w-[70ch] text-lg text-muted">{ROADMAP_INTRO}</p>
 
-      <div className="mt-10 grid items-start gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] xl:gap-16">
+      <div className="mt-10 grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] xl:gap-16">
       <div className="space-y-8 lg:sticky lg:top-24">
       <section>
         <h2 className="text-2xl">Journey so far</h2>

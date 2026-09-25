@@ -81,7 +81,7 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
         </span>
       </div>
 
-      <div className="mt-10 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_460px] xl:gap-16">
+      <div className="mt-10 grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_460px] xl:gap-16">
         <div className="max-w-[72ch]">
           <Section title="Report">
             <p className="text-lg leading-relaxed">{s.description}</p>

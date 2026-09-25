@@ -38,7 +38,7 @@ export default async function Guide() {
 
   return (
     <main className="page-wrap py-10 md:py-14">
-      <div className="grid items-start gap-10 lg:grid-cols-[240px_minmax(0,1fr)] xl:gap-16">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-[240px_minmax(0,1fr)] xl:gap-16">
       <nav aria-label="On this page" className="hidden lg:sticky lg:top-24 lg:block">
         <p className="label-mono mb-3">On this page</p>
         <ol className="space-y-2 border-l border-line">
@@ -51,7 +51,7 @@ export default async function Guide() {
           ))}
         </ol>
       </nav>
-      <div className="max-w-[76ch]">
+      <div className="min-w-0 max-w-[76ch]">
       <h1 className="text-[clamp(2.5rem,4vw,3.5rem)]">How to try Regen Bazaar</h1>
       <p className="mt-3 text-lg text-muted">
         This is a beta on <b>{chain}</b>, a test network. Everything here uses test tokens with no monetary value.

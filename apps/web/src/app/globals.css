@@ -6,7 +6,7 @@
 /*
  * Theme palette. Every text colour is checked against bg/surface/raised for WCAG AA (4.5:1):
  * dark  fg 16.9 · muted 11.8 · subtle 8.0 · accent 9.8 · ok 8.9 · danger 6.6
- * light fg 15.3 · muted 9.0 · subtle 5.9 · accent 5.1 · ok 7.0 · danger 6.9
+ * light fg 15.3 · muted 9.0 · subtle 5.9 · accent 6.0 (on gold tint) · ok 6.4 · danger 6.9
  */
 :root {
   --rb-bg: #1b0f08;
@@ -37,7 +37,7 @@
   --rb-fg: #25150d;
   --rb-muted: #4f3d2c;
   --rb-subtle: #6b5842;
-  --rb-accent: #7d6116;
+  --rb-accent: #654d10;
   --rb-accent-tint: rgb(189 158 72 / 0.2);
   --rb-ok: #2f5a2b;
   --rb-ok-tint: rgb(63 108 59 / 0.14);
@@ -137,7 +137,7 @@
 
 @utility label-mono {
   font-family: var(--font-mono);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   line-height: 1.4;
   letter-spacing: 0.12em;
   text-transform: uppercase;

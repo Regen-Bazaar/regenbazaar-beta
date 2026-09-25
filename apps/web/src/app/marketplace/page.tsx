@@ -98,7 +98,7 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
         </Link>
       </p>
 
-      <div className="mt-10 grid items-start gap-10 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)]">
+      <div className="mt-10 grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)]">
         {/* filter rail */}
         <aside className="lg:sticky lg:top-24" aria-label="Filters">
           <form method="get" className="flex gap-2">
