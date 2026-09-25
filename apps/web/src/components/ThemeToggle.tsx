@@ -9,9 +9,16 @@ export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme | null>(null);
 
   useEffect(() => {
-    setTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
-    // Follow the system setting live until the visitor picks a theme themselves.
     const mq = matchMedia("(prefers-color-scheme: light)");
+    // Re-apply on mount: if React recovers from a hydration error it re-renders <html> and drops data-theme.
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem("rb-theme");
+    } catch {}
+    const initial: Theme = saved === "light" || saved === "dark" ? saved : mq.matches ? "light" : "dark";
+    document.documentElement.dataset.theme = initial;
+    setTheme(initial);
+    // Follow the system setting live until the visitor picks a theme themselves.
     const onChange = () => {
       let saved: string | null = null;
       try {
