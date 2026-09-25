@@ -60,7 +60,7 @@ someone funds it, and the NGO is paid in the same transaction.
 - **Status, stated plainly:** beta on testnets; no production users or revenue yet.
 
 ## Methodology status (stated plainly)
-- **Done:** a deterministic, versioned formula (`IV = Σ quantity × AW × SM × TBV × ESM × PIM × ACDM`) over 35
+- **Done:** a deterministic, versioned formula (`IV = Σ quantity × AW × SM × TBV × ESM × PIM × ACDM`) over 34
   action types in six domains (environment, animal welfare, education, poverty, social, health), each mapped to
   SDGs and ecosystem-benefit tags. The LLM only extracts numbers; it never scores. Every score carries its table
   version and a per-factor breakdown; quantities are clamped against gaming; a human validator approves before
