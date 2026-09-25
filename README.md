@@ -9,8 +9,9 @@
 </p>
 <p align="center"><img src="docs/submission-images/2-marketplace.png" width="820" alt="Regen Bazaar marketplace with tRWI cards"></p>
 
-> Public beta on testnets: **Arbitrum Sepolia** and **Robinhood Chain testnet**, one site, network picked in the
-> header. Impact Value weights are v0.1, platform-assessed, not third-party certified. No real funds.
+> Public beta on testnets. The same v3 contracts run on **Celo Sepolia** (where Regen Bazaar started),
+> **Arbitrum Sepolia** and **Robinhood Chain testnet**; the site's network switcher currently offers the last two.
+> Impact Value weights are v0.1, platform-assessed, not third-party certified. No real funds.
 
 Marketplace for **tokenized real-world impact (tRWI)**: NGOs across the full impact spectrum
 (environment, animal welfare, education, poverty, social, health) report impact, a custom AI engine
@@ -20,8 +21,8 @@ primitives where possible; custom only where it's the moat: the AI Impact-Value 
 
 - **Live:** https://app.regenbazaar.com serves both networks; the visitor picks one (cookie). Contracts in
   `packages/contracts/deployments/{arbitrum-sepolia,robinhood-testnet}.json`, source-verified on Blockscout.
-  The same v3 contracts also run on **Celo Sepolia** (`deployments/celo-sepolia.json`), not offered in the
-  switcher.
+  The same v3 contracts also run on **Celo Sepolia** (`deployments/celo-sepolia.json`), the original network,
+  paid in native CELO; not in the switcher yet.
 - **Payment:** Paxos USDG on Robinhood Chain testnet. On Arbitrum Sepolia, Paxos USDG is allowlisted but the
   demo sells in `tUSDG`, a labelled testnet stand-in with the same interface, because the Paxos testnet faucet
   is not dispensing there.
@@ -75,12 +76,18 @@ addresses are identical on both chains.
 Example purchase in Paxos USDG on Robinhood Chain testnet (97.5% to the NGO in the same transaction):
 [`0xea4a18d2…`](https://explorer.testnet.chain.robinhood.com/tx/0xea4a18d20c2fc3c4ed2a46ef7681129a99b905118745ff2de9ad95609ca2ba77)
 
-**Celo Sepolia (11142220):** same v3 contracts at different addresses (`deployments/celo-sepolia.json`), with
+**Celo Sepolia (11142220), the original network:** same v3 contracts at different addresses (`deployments/celo-sepolia.json`), with
 purchases made through the app in June 2026, e.g.
 [`0xce901fd1…`](https://celo-sepolia.blockscout.com/tx/0xce901fd12fceb8f166ddd585f96b5baa1c91e64864608b1c0d5f869bd79b1273).
 
 Flow (proven live): approve → EAS-attest + IPFS + register listing (no mint) → buyer redeems a platform-signed
 voucher → lazy mint + fee/NGO split → indexer. Secondary via the escrow marketplace.
+
+## History
+Built on Celo first: 2025 litepaper and demo MVP, contract prototypes on Stellar, Starknet and Move, Gitcoin GG23,
+Celo Proof of Ship Season 4 (contracts on Alfajores, Next.js frontend). Rebuilt from scratch in June 2026 on Celo
+Sepolia (v1 → v2 → hardened v3), then extended to Arbitrum Sepolia and Robinhood Chain testnet in September 2026.
+Timeline with links: [github.com/Regen-Bazaar](https://github.com/Regen-Bazaar).
 
 ## Toolchain
 pnpm workspaces · Next.js 15 / React 19 / Tailwind 4 · Foundry (Solidity 0.8.29) · Drizzle · PGlite · Ponder.
