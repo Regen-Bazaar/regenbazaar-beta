@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { listings } from "@rb/db/schema";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { getDb } from "../../../../../lib/db";
 import { onchainEnabled, signVoucher, type ImpactVoucher } from "../../../../../lib/onchain";
-import { NETWORK } from "../../../../../lib/networks";
+import { networkByChainId } from "../../../../../lib/networks";
 
 export const runtime = "nodejs";
 
@@ -17,8 +17,11 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   if (!onchainEnabled()) return NextResponse.json({ error: "onchain not configured" }, { status: 503 });
   const { id } = await ctx.params;
   const db = await getDb();
-  const [l] = await db.select().from(listings).where(and(eq(listings.id, id), eq(listings.chainId, NETWORK.chain.id))).limit(1);
+  const [l] = await db.select().from(listings).where(eq(listings.id, id)).limit(1);
   if (!l || !l.active) return NextResponse.json({ error: "listing not found" }, { status: 404 });
+  // The listing's own chain decides the signing domain, never the visitor's cookie.
+  const net = networkByChainId(l.chainId);
+  if (!net) return NextResponse.json({ error: "listing network not supported" }, { status: 404 });
 
   const deadline = BigInt(Math.floor(Date.now() / 1000) + DEADLINE_SECS);
   const voucher: ImpactVoucher = {
@@ -36,12 +39,12 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     nonce: BigInt(l.nonce),
     deadline,
   };
-  const signature = await signVoucher(voucher);
+  const signature = await signVoucher(net, voucher);
 
   // bigints -> strings for JSON; the client reconstructs them for the redeem call.
   return NextResponse.json({
-    contract: NETWORK.primarySale,
-    chainId: NETWORK.chain.id,
+    contract: net.primarySale,
+    chainId: net.chain.id,
     signature,
     voucher: {
       tokenId: voucher.tokenId.toString(),

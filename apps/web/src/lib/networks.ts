@@ -1,7 +1,6 @@
-// Network registry (client-safe: public addresses only, NO keys). One build targets one network,
-// chosen by NEXT_PUBLIC_NETWORK at build time (inlined into both server and browser bundles).
-// Addresses default to the committed deployments (packages/contracts/deployments/*.json) and can be
-// overridden per env for a redeploy without a code change.
+// Network registry (client-safe: public addresses only, NO keys). One site serves every enabled network; the
+// visitor's choice lives in the `rb_network` cookie (server: lib/network-server.ts, client: NetworkProvider).
+// Addresses are the committed deployments (packages/contracts/deployments/*.json).
 import { defineChain, type Chain } from "viem";
 
 type Hex = `0x${string}`;
@@ -105,24 +104,24 @@ const BUILDERS: Record<NetworkKey, () => Network> = {
   "robinhood-testnet": robinhoodTestnet,
 };
 
-/** Hosted deployments other than this build's, for the header network switcher. */
-export function otherDeployments(current: NetworkKey): { name: string; url: string }[] {
-  return (Object.keys(BUILDERS) as NetworkKey[])
-    .filter((k) => k !== current)
-    .map((k) => BUILDERS[k]())
-    .filter((n) => n.appUrl)
-    .map((n) => ({ name: n.chain.name, url: n.appUrl }));
+/** Networks offered in the site's network switcher (Celo Sepolia stays deployable but is not listed). */
+export const ENABLED_NETWORKS: NetworkKey[] = ["arbitrum-sepolia", "robinhood-testnet"];
+export const DEFAULT_NETWORK_KEY: NetworkKey = "arbitrum-sepolia";
+export const NETWORK_COOKIE = "rb_network";
+
+export function isNetworkKey(v: unknown): v is NetworkKey {
+  return typeof v === "string" && (ENABLED_NETWORKS as string[]).includes(v);
 }
 
-function resolve(): Network {
-  const key = (process.env.NEXT_PUBLIC_NETWORK ?? "arbitrum-sepolia") as NetworkKey;
-  const n = (BUILDERS[key] ?? arbitrumSepolia)();
-  return {
-    ...n,
-    eas: (process.env.NEXT_PUBLIC_EAS_ADDRESS as Hex | undefined) ?? n.eas,
-    schemaUID: (process.env.NEXT_PUBLIC_IMPACT_CLAIM_SCHEMA_UID as Hex | undefined) ?? n.schemaUID,
-    primarySale: (process.env.NEXT_PUBLIC_PRIMARY_SALE as Hex | undefined) ?? n.primarySale,
-  };
+/** Resolve a (possibly untrusted) key to an enabled network; unknown -> default. */
+export function getNetwork(key?: string | null): Network {
+  return BUILDERS[isNetworkKey(key) ? key : DEFAULT_NETWORK_KEY]();
 }
 
-export const NETWORK: Network = resolve();
+export function networkByChainId(chainId: number): Network | undefined {
+  return (Object.keys(BUILDERS) as NetworkKey[]).map((k) => BUILDERS[k]()).find((n) => n.chain.id === chainId);
+}
+
+export function enabledNetworks(): Network[] {
+  return ENABLED_NETWORKS.map((k) => BUILDERS[k]());
+}

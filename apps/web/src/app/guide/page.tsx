@@ -1,24 +1,26 @@
 import Link from "next/link";
-import { NETWORK, otherDeployments } from "../../lib/networks";
+import { enabledNetworks } from "../../lib/networks";
+import { currentNetwork } from "../../lib/network-server";
 
 // Plain-language walkthrough for first-time visitors (judges, testers). Faucet links differ per network.
 const GAS_FAUCETS: Record<string, { name: string; url: string }[]> = {
   "robinhood-testnet": [
-    { name: "Chainlink faucet (Robinhood testnet)", url: "https://faucets.chain.link/robinhood-testnet" },
+    { name: "Official Robinhood Chain faucet", url: "https://faucet.testnet.chain.robinhood.com" },
     { name: "QuickNode faucet (Robinhood testnet)", url: "https://faucet.quicknode.com/robinhood/testnet" },
   ],
   "arbitrum-sepolia": [
-    { name: "Chainlink faucet (Arbitrum Sepolia)", url: "https://faucets.chain.link/arbitrum-sepolia" },
-    { name: "Alchemy faucet (Arbitrum Sepolia)", url: "https://www.alchemy.com/faucets/arbitrum-sepolia" },
+    { name: "HackQuest faucet (free with a HackQuest profile)", url: "https://www.hackquest.io/faucets" },
+    { name: "Alchemy faucet (needs a small mainnet ETH balance)", url: "https://www.alchemy.com/faucets/arbitrum-sepolia" },
   ],
 };
 
-export default function Guide() {
+export default async function Guide() {
+  const NETWORK = await currentNetwork();
   const cur = NETWORK.saleCurrency;
   const chain = NETWORK.chain.name;
   const explorer = NETWORK.chain.blockExplorers?.default.url ?? "";
   const faucets = GAS_FAUCETS[NETWORK.key] ?? [];
-  const others = otherDeployments(NETWORK.key);
+  const others = enabledNetworks().filter((n) => n.key !== NETWORK.key);
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
@@ -27,11 +29,11 @@ export default function Guide() {
         This is a beta on <b>{chain}</b>, a test network. Everything here uses test tokens with no monetary value.
         {others.length > 0 && (
           <>
-            {" "}Also live on{" "}
+            {" "}Switch networks in the header, or open this guide for{" "}
             {others.map((o, i) => (
-              <span key={o.url}>
+              <span key={o.key}>
                 {i > 0 && ", "}
-                <a href={`${o.url}/guide`} className="text-gold underline">{o.name}</a>
+                <a href={`/guide?network=${o.key}`} className="text-gold underline">{o.chain.name}</a>
               </span>
             ))}
             .
@@ -74,7 +76,7 @@ export default function Guide() {
                 </li>
               ))}
             </ul>
-            <span className="text-paper/55">Some faucets ask you to sign in or hold a small mainnet balance.</span>
+            <span className="text-paper/55">One claim is enough for many purchases: each costs a tiny fraction of a cent in test ETH.</span>
           </li>
           <li>
             <b>Get {cur.symbol}.</b>{" "}
@@ -106,28 +108,60 @@ export default function Guide() {
       <Section title="Tokenize your impact (NGOs)">
         <ol className="list-decimal space-y-3 pl-5">
           <li>
-            Open <Link href="/tokenize" className="text-gold underline">Tokenize impact</Link> and describe what you did,
-            with numbers: for example <i>&quot;planted 300 mangroves, collected 120 kg of waste, 25 volunteers&quot;</i>.
+            Open <Link href="/tokenize" className="text-gold underline">Tokenize impact</Link> and describe what you did in
+            plain words, with numbers: for example{" "}
+            <i>&quot;planted 300 mangroves, collected 120 kg of waste, 25 volunteers&quot;</i>. The Impact Value
+            preview updates as you type.
           </li>
           <li>
-            Enter your organisation name and a <b>payout wallet</b>. Every sale pays this wallet directly in {cur.symbol}.
+            Enter your organisation name and a <b>payout wallet</b> (your MetaMask address). Every sale pays this wallet
+            directly in {cur.symbol}. No wallet? Leave both empty and it is submitted as a demo.
           </li>
           <li>
-            Submit. A validator reviews it in <Link href="/verify" className="text-gold underline">Verify</Link>. In this
-            demo anyone can act as the validator; in production this is a trusted reviewer.
+            Press <i>Submit for verification</i>. Reports are checked automatically for inappropriate content, and you
+            can send up to 5 per hour.
           </li>
           <li>
-            On approval the platform stores the report on IPFS and attests it on-chain (EAS). It then appears in the
-            Marketplace with a price derived from its Impact Value.
+            The Regen Bazaar team reviews it. Once approved, it is recorded on-chain (an EAS attestation, with the report
+            stored on IPFS), gets its own generated tRWI artwork, and appears in the{" "}
+            <Link href="/marketplace" className="text-gold underline">Marketplace</Link> with a price based on its Impact
+            Value.
           </li>
         </ol>
+      </Section>
+
+      <Section title="Words you will see">
+        <ul className="list-disc space-y-1 pl-5">
+          <li>
+            <b>tRWI</b>: tokenized real-world impact, a token that represents a verified piece of work.
+          </li>
+          <li>
+            <b>Edition</b>: one share of an impact. Each impact is split into 100 editions, so you can fund a small part.
+          </li>
+          <li>
+            <b>Impact Value</b>: a score from a published formula. It is a relative score for comparing reports, not a
+            carbon or money amount. See <Link href="/methodology" className="text-gold underline">Methodology</Link>.
+          </li>
+          <li>
+            <b>Retire</b>: permanently claim the impact of an edition you own. The edition is burned and cannot be
+            resold.
+          </li>
+          <li>
+            <b>Approve / Confirm</b>: the two wallet pop-ups when funding. The first lets the site use your{" "}
+            {cur.symbol} for this purchase, the second makes the purchase.
+          </li>
+        </ul>
       </Section>
 
       <Section title="What is real and what is not">
         <ul className="list-disc space-y-1 pl-5">
           <li>Test networks and test tokens only. No real money moves.</li>
           <li>Impact Value is platform-assessed with published weights, not third-party certified.</li>
-          <li>Reports submitted as the demo organisation are sample data.</li>
+          <li>Reports submitted as the demo organisation, or marked &quot;(test data)&quot;, are sample data.</li>
+          <li>Found a problem or something unclear? Tell us in our community chat.</li>
+          <li>
+            Where this is going: see the <Link href="/roadmap" className="text-gold underline">roadmap</Link>.
+          </li>
         </ul>
       </Section>
     </main>

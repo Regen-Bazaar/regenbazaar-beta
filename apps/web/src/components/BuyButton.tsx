@@ -5,7 +5,8 @@ import { useAccount, useConnect, useChainId, usePublicClient, useSwitchChain, us
 import { injected } from "wagmi/connectors";
 import { hasInjectedWallet, NO_WALLET_HINT } from "../lib/wallet";
 import { parseUnits } from "viem";
-import { PRIMARY_SALE, NATIVE, SALE_CURRENCY, chain, erc20Abi, redeemAbi } from "../lib/chain";
+import { NATIVE, erc20Abi, redeemAbi } from "../lib/chain";
+import { useNetwork } from "./NetworkProvider";
 
 type VoucherJson = {
   tokenId: string;
@@ -25,6 +26,10 @@ type VoucherJson = {
 
 /** Connect → fetch a platform-signed voucher → (approve ERC-20 if needed) → redeem (pay + lazily mint 1 edition). */
 export function BuyButton({ listingId }: { listingId: string }) {
+  const net = useNetwork();
+  const chain = net.chain;
+  const PRIMARY_SALE = net.primarySale;
+  const SALE_CURRENCY = net.saleCurrency;
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient({ chainId: chain.id });
   const { connect } = useConnect();

@@ -7,8 +7,13 @@ const GATEWAY_URL = process.env.IPFS_GATEWAY_URL ?? "http://127.0.0.1:8080";
 
 /** Add + pin a JSON object; returns `ipfs://<cid>`. Throws on failure (caller falls back / surfaces error). */
 export async function pinJson(data: unknown): Promise<string> {
+  return pinFile(JSON.stringify(data), "metadata.json", "application/json");
+}
+
+/** Add + pin raw content (e.g. the generated SVG card); returns `ipfs://<cid>`. */
+export async function pinFile(content: string, name: string, type: string): Promise<string> {
   const form = new FormData();
-  form.append("file", new Blob([JSON.stringify(data)], { type: "application/json" }), "metadata.json");
+  form.append("file", new Blob([content], { type }), name);
 
   const res = await fetch(`${API_URL.replace(/\/$/, "")}/api/v0/add?pin=true&cid-version=1`, {
     method: "POST",

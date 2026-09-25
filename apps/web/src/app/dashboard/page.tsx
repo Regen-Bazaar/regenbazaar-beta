@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 import { impactSubmissions, organizations } from "@rb/db/schema";
 import { getDb } from "../../lib/db";
 
@@ -22,6 +22,7 @@ export default async function Dashboard() {
     .select({ s: impactSubmissions, orgName: organizations.name })
     .from(impactSubmissions)
     .innerJoin(organizations, eq(impactSubmissions.orgId, organizations.id))
+    .where(inArray(impactSubmissions.status, ["verified", "tokenized"])) // pending/rejected stay private
     .orderBy(desc(impactSubmissions.createdAt))
     .limit(100);
   const rows = joined.map((j) => ({ ...j.s, orgName: j.orgName }));
@@ -33,7 +34,7 @@ export default async function Dashboard() {
       <div className="flex items-end justify-between">
         <div>
           <h1 className="text-3xl font-bold">NGO dashboard</h1>
-          <p className="mt-1 text-paper/70">All submitted impact reports and their status.</p>
+          <p className="mt-1 text-paper/70">Approved impact reports. New submissions appear here after review.</p>
         </div>
         <Link href="/tokenize" className="rounded-md bg-gold px-4 py-2.5 text-sm font-semibold text-ink hover:bg-gold-soft">
           + New tokenization

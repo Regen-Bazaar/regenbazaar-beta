@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import localFont from "next/font/local";
 import { Nav } from "../components/Nav";
 import { Providers } from "../components/Providers";
+import { currentNetwork } from "../lib/network-server";
 import "./globals.css";
 
 // Brand fonts (self-hosted, from the landing site): EB Garamond = body serif, PP Acma = display.
@@ -23,11 +24,12 @@ export const metadata: Metadata = {
     "We turn verified real-world impact into a tradable asset class — for NGOs to tokenize impact and for buyers to fund it.",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const network = await currentNetwork();
   return (
     <html lang="en" className={`${ebGaramond.variable} ${ppAcma.variable}`}>
       <body className="min-h-screen antialiased">
-        <Providers>
+        <Providers networkKey={network.key}>
           <Nav />
           {children}
         </Providers>

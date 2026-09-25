@@ -6,7 +6,8 @@
 import { createPublicClient, createWalletClient, http, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { attestImpact, signVoucher, ivToWei, operatorAddress, type ImpactVoucher } from "../src/lib/onchain.ts";
-import { NETWORK, NATIVE } from "../src/lib/networks.ts";
+import { getNetwork, NATIVE } from "../src/lib/networks.ts";
+const NETWORK = getNetwork(process.env.NEXT_PUBLIC_NETWORK);
 import { erc20Abi } from "../src/lib/chain.ts";
 
 const PRIMARY_SALE = NETWORK.primarySale;
@@ -20,7 +21,7 @@ const op = operatorAddress();
 const iv = "292.5";
 const metadataURI = "ipfs://v2-smoke-placeholder";
 
-const { uid } = await attestImpact(op, iv, metadataURI);
+const { uid } = await attestImpact(NETWORK, op, iv, metadataURI);
 console.log("attested uid:", uid);
 
 const voucher: ImpactVoucher = {
@@ -38,7 +39,7 @@ const voucher: ImpactVoucher = {
   nonce: 0n,
   deadline: BigInt(Math.floor(Date.now() / 1000) + 3600),
 };
-const sig = await signVoucher(voucher);
+const sig = await signVoucher(NETWORK, voucher);
 console.log("voucher signed for tokenId", voucher.tokenId.toString());
 
 const voucherComponents = [

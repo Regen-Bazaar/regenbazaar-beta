@@ -1,0 +1,32 @@
+# robinhood.regenbazaar.com: legacy address, now a redirect into the single app with Robinhood Chain selected.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name robinhood.regenbazaar.com;
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+    location / {
+        return 301 https://app.regenbazaar.com$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name robinhood.regenbazaar.com;
+
+    ssl_certificate /etc/letsencrypt/live/robinhood.regenbazaar.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/robinhood.regenbazaar.com/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    # Keep the path; add network selection (the app's middleware stores it in a cookie and cleans the URL).
+    location = / {
+        return 301 https://app.regenbazaar.com/?network=robinhood-testnet;
+    }
+    location / {
+        return 301 https://app.regenbazaar.com$uri?network=robinhood-testnet;
+    }
+}

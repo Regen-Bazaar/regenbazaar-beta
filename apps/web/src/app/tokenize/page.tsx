@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 import { ruleBasedExtract, computeImpactValue, computePrice } from "@rb/impact-engine";
-import { NETWORK } from "../../lib/networks";
+import { useNetwork } from "../../components/NetworkProvider";
 import type { ComplexityAnswers, PopulationDensity } from "@rb/impact-engine";
 
 const DOMAINS = ["environment", "animal_welfare", "education", "poverty", "social", "health"];
@@ -39,6 +39,7 @@ function Select({
 }
 
 export default function Tokenize() {
+  const NETWORK = useNetwork();
   const [title, setTitle] = useState("Beach reforestation & cleanup — Koh Phangan");
   const [description, setDescription] = useState(
     "1000 trees planted and 5 workshops held. Collected 1500 kg of plastic from the coastline.",
@@ -263,8 +264,8 @@ export default function Tokenize() {
             {result && (
               <div className="rounded-md border border-green/40 bg-green/15 px-4 py-3 text-sm">
                 Submitted ✓ Status <b>{result.status.replace(/_/g, " ")}</b>, Impact Value{" "}
-                <b className="text-gold">{result.impactValue.toLocaleString()}</b>. Next: a validator reviews it in the{" "}
-                <a href="/verify" className="underline">verification queue</a> (in this demo, you can act as the validator).
+                <b className="text-gold">{result.impactValue.toLocaleString()}</b>. Next: the Regen Bazaar team reviews it. Once approved, it is attested on-chain and appears in the{" "}
+                <a href="/marketplace" className="underline">Marketplace</a>.
               </div>
             )}
             {error && (
