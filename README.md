@@ -5,7 +5,7 @@
   <a href="https://app.regenbazaar.com"><b>Try it</b></a> ·
   <a href="docs/ARCHITECTURE.md">How it works</a> ·
   <a href="packages/contracts/deployments">Contracts</a> ·
-  <a href="docs/ROADMAP.md">Roadmap</a>
+  <a href="https://app.regenbazaar.com/roadmap">Roadmap</a>
 </p>
 <p align="center"><img src="docs/submission-images/2-marketplace.png" width="820" alt="Regen Bazaar marketplace with tRWI cards"></p>
 
