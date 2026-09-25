@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
-import { processSubmission, createDeepSeekExtractor } from "@rb/pipeline";
+import { processSubmission, createDeepSeekExtractor, moderate } from "@rb/pipeline";
 import { impactSubmissions, organizations } from "@rb/db/schema";
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq, inArray, sql } from "drizzle-orm";
 import { getAddress, isAddress } from "viem";
 import type { DB } from "@rb/db";
 import { getDb, getDemoOrgId } from "../../../lib/db";
+import { isAdmin } from "../../../lib/admin";
+import { clientIp, rateLimit } from "../../../lib/rate-limit";
 
 export const runtime = "nodejs";
 
 const MAX_TITLE = 200;
 const MAX_DESCRIPTION = 5000;
+const MAX_MEDIA = 5;
+const PUBLIC_STATUSES = ["verified", "tokenized"];
+const PER_IP_PER_HOUR = 5;
+const GLOBAL_PER_HOUR = 60;
 
 // An organisation is identified by its payout wallet (the address paid on every sale). No auth yet: a new
 // wallet creates an unverified org; an existing wallet reuses its org (name is not overwritten).
@@ -29,13 +35,24 @@ async function findOrCreateOrg(db: DB, name: string, wallet: `0x${string}`): Pro
 }
 
 // GET /api/submissions?status=pending_verification — list submissions (newest first).
+// Public callers only see approved reports; the pending queue and other statuses are admin-only.
 export async function GET(req: Request) {
   const db = await getDb();
   const status = new URL(req.url).searchParams.get("status");
+  const admin = isAdmin(req);
+  if (!admin && status && !PUBLIC_STATUSES.includes(status)) {
+    return NextResponse.json({ error: "validator access required" }, { status: 401 });
+  }
   const rows = await db
     .select()
     .from(impactSubmissions)
-    .where(status ? eq(impactSubmissions.status, status as never) : undefined)
+    .where(
+      status
+        ? eq(impactSubmissions.status, status as never)
+        : admin
+          ? undefined
+          : inArray(impactSubmissions.status, PUBLIC_STATUSES as never[]),
+    )
     .orderBy(desc(impactSubmissions.createdAt))
     .limit(100);
   return NextResponse.json(rows);
@@ -43,6 +60,9 @@ export async function GET(req: Request) {
 
 // POST /api/submissions — extract -> deterministically score -> persist into the verification queue.
 export async function POST(req: Request) {
+  if (!rateLimit(`sub:${clientIp(req)}`, PER_IP_PER_HOUR, 3_600_000) || !rateLimit("sub:all", GLOBAL_PER_HOUR, 3_600_000)) {
+    return NextResponse.json({ error: "too many submissions, please try again later" }, { status: 429 });
+  }
   let body: Record<string, unknown>;
   try {
     body = (await req.json()) as Record<string, unknown>;
@@ -68,6 +88,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "organisation name is required with a payout wallet" }, { status: 422 });
   }
 
+  // Evidence links: plain http(s) URLs only (rendered as links, never embedded).
+  const mediaUris = Array.isArray(body.mediaUris)
+    ? (body.mediaUris as unknown[])
+        .filter((u): u is string => typeof u === "string" && /^https?:\/\/\S{3,300}$/i.test(u.trim()))
+        .map((u) => u.trim())
+        .slice(0, MAX_MEDIA)
+    : [];
+
+  const verdict = await moderate([`Organisation: ${orgName}`, `Title: ${title}`, description, ...mediaUris].join("\n"));
+  if (!verdict.allowed) {
+    return NextResponse.json(
+      { error: `submission rejected by content check (${verdict.category}). Please describe real-world impact only.` },
+      { status: 422 },
+    );
+  }
+
   const db = await getDb();
   const orgId = payoutWallet ? await findOrCreateOrg(db, orgName, getAddress(payoutWallet)) : await getDemoOrgId(db);
   const extractor = process.env.DEEPSEEK_API_KEY ? createDeepSeekExtractor() : undefined;
@@ -81,7 +117,7 @@ export async function POST(req: Request) {
         description,
         domain: body.domain as never,
         context: body.context as never,
-        mediaUris: body.mediaUris as never,
+        mediaUris,
       },
       { extractor },
     );

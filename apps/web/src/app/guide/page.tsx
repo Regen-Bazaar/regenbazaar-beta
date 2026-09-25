@@ -106,28 +106,57 @@ export default function Guide() {
       <Section title="Tokenize your impact (NGOs)">
         <ol className="list-decimal space-y-3 pl-5">
           <li>
-            Open <Link href="/tokenize" className="text-gold underline">Tokenize impact</Link> and describe what you did,
-            with numbers: for example <i>&quot;planted 300 mangroves, collected 120 kg of waste, 25 volunteers&quot;</i>.
+            Open <Link href="/tokenize" className="text-gold underline">Tokenize impact</Link> and describe what you did in
+            plain words, with numbers: for example{" "}
+            <i>&quot;planted 300 mangroves, collected 120 kg of waste, 25 volunteers&quot;</i>. The score on the right
+            updates as you type.
           </li>
           <li>
-            Enter your organisation name and a <b>payout wallet</b>. Every sale pays this wallet directly in {cur.symbol}.
+            Enter your organisation name and a <b>payout wallet</b> (your MetaMask address). Every sale pays this wallet
+            directly in {cur.symbol}. No wallet? Leave both empty and it is submitted as a demo.
           </li>
           <li>
-            Submit. A validator reviews it in <Link href="/verify" className="text-gold underline">Verify</Link>. In this
-            demo anyone can act as the validator; in production this is a trusted reviewer.
+            Press <i>Submit for verification</i>. Reports are checked automatically for inappropriate content, and you
+            can send up to 5 per hour.
           </li>
           <li>
-            On approval the platform stores the report on IPFS and attests it on-chain (EAS). It then appears in the
-            Marketplace with a price derived from its Impact Value.
+            The Regen Bazaar team reviews it. Once approved, it is recorded on-chain (an EAS attestation, with the report
+            stored on IPFS), gets its own generated tRWI artwork, and appears in the{" "}
+            <Link href="/marketplace" className="text-gold underline">Marketplace</Link> with a price based on its Impact
+            Value.
           </li>
         </ol>
+      </Section>
+
+      <Section title="Words you will see">
+        <ul className="list-disc space-y-1 pl-5">
+          <li>
+            <b>tRWI</b>: tokenized real-world impact, a token that represents a verified piece of work.
+          </li>
+          <li>
+            <b>Edition</b>: one share of an impact. Each impact is split into 100 editions, so you can fund a small part.
+          </li>
+          <li>
+            <b>Impact Value</b>: a score from a published formula. It is a relative score for comparing reports, not a
+            carbon or money amount. See <Link href="/methodology" className="text-gold underline">Methodology</Link>.
+          </li>
+          <li>
+            <b>Retire</b>: permanently claim the impact of an edition you own. The edition is burned and cannot be
+            resold.
+          </li>
+          <li>
+            <b>Approve / Confirm</b>: the two wallet pop-ups when funding. The first lets the site use your {cur.symbol}
+            for this purchase, the second makes the purchase.
+          </li>
+        </ul>
       </Section>
 
       <Section title="What is real and what is not">
         <ul className="list-disc space-y-1 pl-5">
           <li>Test networks and test tokens only. No real money moves.</li>
           <li>Impact Value is platform-assessed with published weights, not third-party certified.</li>
-          <li>Reports submitted as the demo organisation are sample data.</li>
+          <li>Reports submitted as the demo organisation, or marked &quot;(test data)&quot;, are sample data.</li>
+          <li>Found a problem or something unclear? Tell us in our community chat.</li>
         </ul>
       </Section>
     </main>

@@ -263,8 +263,8 @@ export default function Tokenize() {
             {result && (
               <div className="rounded-md border border-green/40 bg-green/15 px-4 py-3 text-sm">
                 Submitted ✓ Status <b>{result.status.replace(/_/g, " ")}</b>, Impact Value{" "}
-                <b className="text-gold">{result.impactValue.toLocaleString()}</b>. Next: a validator reviews it in the{" "}
-                <a href="/verify" className="underline">verification queue</a> (in this demo, you can act as the validator).
+                <b className="text-gold">{result.impactValue.toLocaleString()}</b>. Next: the Regen Bazaar team reviews it. Once approved, it is attested on-chain and appears in the{" "}
+                <a href="/marketplace" className="underline">Marketplace</a>.
               </div>
             )}
             {error && (

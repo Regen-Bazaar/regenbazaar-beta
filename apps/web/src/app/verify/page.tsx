@@ -17,13 +17,23 @@ export default function Verify() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [token, setToken] = useState("");
+  const [denied, setDenied] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    try {
+      setToken(sessionStorage.getItem("rb_admin_token") ?? "");
+    } catch {}
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/submissions?status=pending_verification");
+    const res = await fetch("/api/submissions?status=pending_verification", { headers: { "x-admin-token": token } });
+    setDenied(res.status === 401);
     setSubs(res.ok ? await res.json() : []);
     setLoading(false);
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     void load();
@@ -31,11 +41,13 @@ export default function Verify() {
 
   async function decide(id: string, decision: "approve" | "reject") {
     setBusy(id);
-    await fetch("/api/verifications", {
+    setError("");
+    const res = await fetch("/api/verifications", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", "x-admin-token": token },
       body: JSON.stringify({ submissionId: id, decision, note: notes[id]?.trim() || undefined }),
     });
+    if (!res.ok) setError((await res.json().catch(() => ({}))).error ?? "failed");
     setBusy(null);
     await load();
   }
@@ -44,10 +56,34 @@ export default function Verify() {
     <main className="mx-auto max-w-4xl px-6 py-12">
       <h1 className="text-3xl font-bold">Verification queue</h1>
       <p className="mt-2 text-paper/70">
-        Validator review. In this demo anyone can act as the validator; in production this is a trusted reviewer. Approving attests the claim on-chain and lists it in the Marketplace.
+        Validator review by the Regen Bazaar team. Approving attests the claim on-chain and lists it in the
+        Marketplace. Submitted a report? It will appear in the Marketplace once reviewed.
       </p>
 
-      {loading ? (
+      {denied && (
+        <form
+          className="mt-6 flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const t = (new FormData(e.currentTarget).get("token") as string) ?? "";
+            try {
+              sessionStorage.setItem("rb_admin_token", t);
+            } catch {}
+            setToken(t);
+          }}
+        >
+          <input
+            name="token"
+            type="password"
+            placeholder="Validator access code"
+            className="flex-1 rounded-md border border-gold/20 bg-ink-soft px-3 py-2 text-sm outline-none focus:border-gold"
+          />
+          <button className="rounded-md border border-gold/40 px-4 text-sm hover:border-gold hover:text-gold">Unlock</button>
+        </form>
+      )}
+      {error && <p className="mt-4 text-sm text-red-300">{error}</p>}
+
+      {denied ? null : loading ? (
         <p className="mt-10 text-paper/50">Loading…</p>
       ) : subs.length === 0 ? (
         <p className="mt-10 text-paper/50">Nothing pending. Submit one from the tokenize wizard.</p>

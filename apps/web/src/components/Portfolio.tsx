@@ -106,7 +106,9 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
           {held.map((i) => (
             <li key={i.tokenId} className="rounded-xl border border-gold/15 bg-ink-soft/30 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
+                {/* eslint-disable-next-line @next/next/no-img-element -- our own generated SVG */}
+                <img src={`/api/submissions/${i.submissionId}/image`} alt="" className="h-20 w-20 rounded-md border border-gold/15" />
+                <div className="min-w-0 flex-1">
                   <p className="text-xs uppercase tracking-wide text-paper/45">{i.domain?.replace(/_/g, " ")}</p>
                   <Link href={`/submission/${i.submissionId}`} className="text-lg font-semibold hover:text-gold">
                     {i.title}

@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import { verifications, impactSubmissions, organizations, listings } from "@rb/db/schema";
-import { buildTokenMetadata } from "@rb/pipeline";
+import { buildTokenMetadata, renderImpactCard } from "@rb/pipeline";
 import { computePrice, type ExtractedAction, type FrameworkTags } from "@rb/impact-engine";
 import { eq, sql } from "drizzle-orm";
 import { parseUnits } from "viem";
 import { getDb } from "../../../lib/db";
-import { pinJson } from "../../../lib/ipfs";
+import { pinFile, pinJson } from "../../../lib/ipfs";
 import { onchainEnabled, attestImpact, ivToWei } from "../../../lib/onchain";
 import { NETWORK } from "../../../lib/networks";
 import type { DB } from "@rb/db";
+import { isAdmin } from "../../../lib/admin";
 
 export const runtime = "nodejs";
 
@@ -26,7 +27,20 @@ async function registerListing(db: DB, submissionId: string, reqUrl: string) {
   const ngo = org.walletAddress as Hex;
 
   const c = (s.context ?? {}) as { regionCode?: string; periodStart?: string; periodEnd?: string };
+  // Generative artwork (deterministic from the impact data), pinned so the token image outlives our site.
+  const card = renderImpactCard({
+    seed: s.id,
+    title: s.title,
+    orgName: org.name,
+    domain: s.domain,
+    impactValue: Number(s.ivValue),
+    sdgs: (s.frameworkTags as FrameworkTags | null)?.sdg ?? [],
+    periodStart: c.periodStart ?? null,
+    periodEnd: c.periodEnd ?? null,
+  });
+  const imageUri = await pinFile(card, "trwi.svg", "image/svg+xml");
   const meta = buildTokenMetadata({
+    imageUri,
     title: s.title,
     domain: s.domain,
     actions: (s.extractedActions ?? []) as ExtractedAction[],
@@ -74,6 +88,7 @@ async function registerListing(db: DB, submissionId: string, reqUrl: string) {
 
 // POST /api/verifications — validator decision. Approve registers the on-chain-ready listing (lazy mint).
 export async function POST(req: Request) {
+  if (!isAdmin(req)) return NextResponse.json({ error: "validator access required" }, { status: 401 });
   let body: Record<string, unknown>;
   try {
     body = (await req.json()) as Record<string, unknown>;

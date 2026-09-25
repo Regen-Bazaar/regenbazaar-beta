@@ -94,18 +94,16 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
           )}
           {Array.isArray(s.mediaUris) && (s.mediaUris as string[]).length > 0 && (
             <Section title="Evidence">
-              <div className="grid grid-cols-3 gap-2">
+              <ul className="space-y-1 text-sm">
                 {(s.mediaUris as string[]).map((u) => (
-                  <a key={u} href={u} target="_blank" rel="noopener noreferrer" className="group block">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={u}
-                      alt="evidence"
-                      className="h-24 w-full rounded-md border border-gold/15 object-cover transition-opacity group-hover:opacity-80"
-                    />
-                  </a>
+                  <li key={u} className="break-all">
+                    <a href={u} target="_blank" rel="noopener noreferrer nofollow ugc" className="text-paper/70 underline hover:text-gold">
+                      {u}
+                    </a>
+                  </li>
                 ))}
-              </div>
+              </ul>
+              <p className="mt-1 text-xs text-paper/40">External links provided by the organisation, not hosted or checked by us.</p>
             </Section>
           )}
           <Section title="Recognised actions">
@@ -127,6 +125,10 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
         </div>
 
         <aside className="h-fit rounded-xl border border-gold/25 bg-ink-soft/50 p-6">
+          {(s.status === "verified" || s.status === "tokenized") && (
+            // eslint-disable-next-line @next/next/no-img-element -- our own generated SVG
+            <img src={`/api/submissions/${s.id}/image`} alt="tRWI card" className="mb-5 aspect-square w-full rounded-lg border border-gold/15" />
+          )}
           <div className="text-xs uppercase tracking-wide text-paper/55">Impact Value</div>
           <div className="mt-1 text-4xl font-bold text-gold">{Number(s.ivValue ?? 0).toLocaleString()}</div>
           <div className="mt-1 text-[11px] text-paper/45">

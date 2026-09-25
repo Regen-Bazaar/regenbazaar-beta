@@ -148,11 +148,10 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
             const tokenized = !!listing; // listed (EAS-attested) on THIS network
             return (
               <div key={l.id} className="flex flex-col rounded-xl border border-gold/15 bg-ink-soft/40 p-5">
-                <div className="mb-3 flex h-24 items-end rounded-lg bg-gradient-to-br from-green/40 to-ink p-3">
-                  <span className="text-xs uppercase tracking-[0.2em] text-paper/70">
-                    {(l.domain ?? "impact").replace(/_/g, " ")}
-                  </span>
-                </div>
+                <Link href={`/submission/${l.id}`} className="mb-3 block overflow-hidden rounded-lg border border-gold/10">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- our own generated SVG */}
+                  <img src={`/api/submissions/${l.id}/image`} alt={`tRWI card: ${l.title}`} className="aspect-square w-full" loading="lazy" />
+                </Link>
                 <Link href={`/submission/${l.id}`} className="font-medium leading-snug hover:text-gold">
                   {l.title}
                 </Link>
