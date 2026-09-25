@@ -1,21 +1,32 @@
-# Regen Bazaar — beta dApp (monorepo)
+<p align="center"><img src="docs/submission-images/logo-512.png" width="80" alt="Regen Bazaar"></p>
+<h1 align="center">Regen Bazaar</h1>
+<p align="center"><b>Fund verified real-world impact on-chain, paid in USDG, with provenance anyone can check.</b></p>
+<p align="center">
+  <a href="https://app.regenbazaar.com"><b>Try it</b></a> ·
+  <a href="docs/ARCHITECTURE.md">How it works</a> ·
+  <a href="packages/contracts/deployments">Contracts</a> ·
+  <a href="docs/ROADMAP.md">Roadmap</a>
+</p>
+<p align="center"><img src="docs/submission-images/2-marketplace.png" width="820" alt="Regen Bazaar marketplace with tRWI cards"></p>
+
+> Public beta on testnets: **Arbitrum Sepolia** and **Robinhood Chain testnet**, one site, network picked in the
+> header. Impact Value weights are v0.1, platform-assessed, not third-party certified. No real funds.
 
 Marketplace for **tokenized real-world impact (tRWI)**: NGOs across the full impact spectrum
 (environment, animal welfare, education, poverty, social, health) report impact, a custom AI engine
 scores it, a human verifies it, it's tokenized on-chain, then funded by buyers (people **and** AI
 agents). Product backbone: **Work → Tokenize → Evaluate → Fund**. Reuse-first: battle-tested ReFi/OSS
-primitives where possible; custom only where it's the moat — the AI Impact-Value engine and the
-$REBAZ token.
+primitives where possible; custom only where it's the moat: the AI Impact-Value engine.
 
-> **Live demo: https://app.regenbazaar.com** on **Arbitrum Sepolia** (chainId 421614), contracts in
-> `packages/contracts/deployments/arbitrum-sepolia.json`, source-verified on Blockscout. The same v3 contracts
-> also run on **Celo Sepolia** (`deployments/celo-sepolia.json`); one build targets one network
-> (`NEXT_PUBLIC_NETWORK`). Payment: Paxos USDG is allowlisted; the demo currently sells in `tUSDG`, a testnet
-> stand-in with the same interface, because the Paxos testnet faucet is not dispensing.
-> Flow: tokenize → verify → EAS-attest + IPFS → buyer redeems a platform-signed voucher (ERC-20 approve +
-> redeem) → lazy mint → indexed (Ponder). Audience: non-crypto users (embedded wallets, gasless: later phase).
-
-**Roadmap:** [docs/ROADMAP.md](docs/ROADMAP.md) · https://app.regenbazaar.com/roadmap
+- **Live:** https://app.regenbazaar.com serves both networks; the visitor picks one (cookie). Contracts in
+  `packages/contracts/deployments/{arbitrum-sepolia,robinhood-testnet}.json`, source-verified on Blockscout.
+  The same v3 contracts also run on **Celo Sepolia** (`deployments/celo-sepolia.json`), not offered in the
+  switcher.
+- **Payment:** Paxos USDG on Robinhood Chain testnet. On Arbitrum Sepolia, Paxos USDG is allowlisted but the
+  demo sells in `tUSDG`, a labelled testnet stand-in with the same interface, because the Paxos testnet faucet
+  is not dispensing there.
+- **Flow:** tokenize → verify → EAS-attest + IPFS → buyer redeems a platform-signed voucher (ERC-20 approve +
+  redeem) → lazy mint → indexed (Ponder). Audience: non-crypto users (embedded wallets, gasless: later phase).
 
 ## Layout
 ```
@@ -44,20 +55,30 @@ docs/         ARCHITECTURE.md · DECISIONS.md · KNOWN_ISSUES.md.
 - **Onboarding** (later): ERC-4337 smart accounts + gasless paymaster (EntryPoint v0.6/0.7/0.8 live on Celo Sepolia).
 - **Storage** (later): Cloudflare R2 + CDN primary, self-hosted IPFS (kubo) backup.
 
-## Deployed (Celo Sepolia testnet, chainId 11142220) — v2 (platform-issued lazy mint)
-Live and source-verified on Blockscout (`celo-sepolia.blockscout.com/address/<addr>`). Full record:
-`packages/contracts/deployments/celo-sepolia.json`. Design: `docs/SMART_CONTRACT_DESIGN.md`.
+## Deployed (v3, testnets)
+Source-verified on Blockscout. Full records, including proof transactions:
+`packages/contracts/deployments/*.json`. Design: `docs/SMART_CONTRACT_DESIGN.md`.
+
+**Arbitrum Sepolia (421614) and Robinhood Chain testnet (46630):** same deployer and nonce sequence, so the
+addresses are identical on both chains.
 
 | Contract | Address |
 |---|---|
-| TRWI (proxy) | `0x796B521EBF9221A0f4212C10767898AfCd81087d` |
-| RegenPrimarySale (voucher lazy-mint) | `0x49A5a77e3DBd76411737820fd968142b6154be26` |
-| RegenMarketplace (secondary escrow) | `0x09c0cbB98Dbb0E37B684abF33e7Beac7f62B4A21` |
-| TRWIStaking | `0x35BcD5DCb8A82197eC268f6E97e3e32d816E8A9b` |
-| REBAZ | `0xC367a4601D8e7D4f83DA5AFd549262886C33177F` |
-| EAS / Resolver / SchemaRegistry | `0x317D…8Cf9` / `0x625f…6999` / `0x25aD…7534` |
+| RegenPrimarySale (voucher lazy-mint, stablecoin payments) | `0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030` |
+| TRWI (ERC-1155, UUPS proxy) | `0x6F2C6F81DDd35199d2e015710c61CC6D8B5de9da` |
+| RegenMarketplace (secondary escrow) | `0x3Cd225C24183a7bcE3EefD3C309b82A27f6Be214` |
+| TRWIStaking | `0xB051e3B360A54e6E4808A2A06bEC765D246612B6` |
+| REBAZ | `0x5Ea6AE9758472733144Eb24CCE7f310B21367b92` |
+| EAS / SchemaRegistry / Resolver | `0x95cD…d95d` / `0xa5dB…40b4` / `0xA4B1…abB1` |
+| Paxos USDG (payment) | Arbitrum Sepolia `0xFFC9…1892` · Robinhood `0x7E95…802F` |
 
-ImpactClaim schemaUID `0x35151bab2b9912417175bbf5b49112d9828f4493811bf611f888c1cdd013e92a`.
+Example purchase in Paxos USDG on Robinhood Chain testnet (97.5% to the NGO in the same transaction):
+[`0xea4a18d2…`](https://explorer.testnet.chain.robinhood.com/tx/0xea4a18d20c2fc3c4ed2a46ef7681129a99b905118745ff2de9ad95609ca2ba77)
+
+**Celo Sepolia (11142220):** same v3 contracts at different addresses (`deployments/celo-sepolia.json`), with
+purchases made through the app in June 2026, e.g.
+[`0xce901fd1…`](https://celo-sepolia.blockscout.com/tx/0xce901fd12fceb8f166ddd585f96b5baa1c91e64864608b1c0d5f869bd79b1273).
+
 Flow (proven live): approve → EAS-attest + IPFS + register listing (no mint) → buyer redeems a platform-signed
 voucher → lazy mint + fee/NGO split → indexer. Secondary via the escrow marketplace.
 
@@ -74,7 +95,7 @@ pnpm web:dev            # http://localhost:3000 — in-process PGlite, auto-seed
 ## Test
 ```bash
 bash packages/contracts/scripts/install-deps.sh   # one-time: fetch pinned Foundry deps into lib/
-pnpm contracts:test                        # Foundry: 26 tests
+pnpm contracts:test                        # Foundry: 61 tests
 pnpm --filter @rb/impact-engine test       # 12
 pnpm --filter @rb/db test                  # 1
 pnpm --filter @rb/pipeline test            # 4
