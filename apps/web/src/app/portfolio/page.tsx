@@ -38,9 +38,9 @@ export default async function PortfolioPage() {
   }));
 
   return (
-    <main className="page-wrap py-12">
-      <h1 className="text-3xl font-bold">My impact</h1>
-      <p className="mt-2 text-muted">
+    <main className="page-wrap py-10 md:py-14">
+      <h1 className="text-[clamp(2.5rem,4vw,3.5rem)]">My impact</h1>
+      <p className="mt-3 max-w-[70ch] text-lg text-muted">
         tRWI you hold on {NETWORK.chain.name}, read live from the chain. Retire editions to permanently claim the
         impact they represent.
       </p>

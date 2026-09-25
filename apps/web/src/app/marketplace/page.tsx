@@ -204,9 +204,14 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
                     <div>
                       <div className="label-mono">Per edition</div>
                       <div className="text-xl font-semibold">
-                        {listing
-                          ? `${Number(formatUnits(BigInt(listing.pricePerEdition), NETWORK.saleCurrency.decimals)).toLocaleString("en-US", { maximumFractionDigits: 6 })} ${NETWORK.saleCurrency.symbol}`
-                          : "not listed"}
+                        {listing ? (
+                          <>
+                            {Number(formatUnits(BigInt(listing.pricePerEdition), NETWORK.saleCurrency.decimals)).toLocaleString("en-US", { maximumFractionDigits: 6 })}{" "}
+                            <span className="text-base font-normal text-muted">{NETWORK.saleCurrency.symbol}</span>
+                          </>
+                        ) : (
+                          <span className="text-base font-normal text-subtle">not listed</span>
+                        )}
                       </div>
                     </div>
                   </div>
