@@ -124,3 +124,12 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
 - Rotate the GitHub `admin:org` token used during earlier org operations (it appeared in chat).
 - Secrets (DeepSeek, deployer, DB) live only in server env / local `.env` files, never committed.
 - The next version-control step is pushing this monorepo to a GitHub repo (name/visibility TBD by owner).
+
+## Intermittent React hydration error #418 on /marketplace (found 2026-09-25)
+- About 1 in 10 fresh loads of `/marketplace` in headless Chrome throw React error #418 (server HTML does not
+  match the client). React recovers by client-rendering the page, so visitors see the same content.
+- Side effect fixed: the re-render dropped `data-theme` from `<html>`; `ThemeToggle` now re-applies the saved or
+  system theme on mount.
+- Root cause not found: server and client text are identical, so the mismatch is structural or timing related.
+  Likely candidates are the wagmi hooks in the six `BuyButton`s. Reproduce with a production build and the
+  non-minified React error, not in `next dev`.
