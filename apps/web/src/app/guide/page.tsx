@@ -108,8 +108,8 @@ export default function Guide() {
           <li>
             Open <Link href="/tokenize" className="text-gold underline">Tokenize impact</Link> and describe what you did in
             plain words, with numbers: for example{" "}
-            <i>&quot;planted 300 mangroves, collected 120 kg of waste, 25 volunteers&quot;</i>. The score on the right
-            updates as you type.
+            <i>&quot;planted 300 mangroves, collected 120 kg of waste, 25 volunteers&quot;</i>. The Impact Value
+            preview updates as you type.
           </li>
           <li>
             Enter your organisation name and a <b>payout wallet</b> (your MetaMask address). Every sale pays this wallet
@@ -145,8 +145,8 @@ export default function Guide() {
             resold.
           </li>
           <li>
-            <b>Approve / Confirm</b>: the two wallet pop-ups when funding. The first lets the site use your {cur.symbol}
-            for this purchase, the second makes the purchase.
+            <b>Approve / Confirm</b>: the two wallet pop-ups when funding. The first lets the site use your{" "}
+            {cur.symbol} for this purchase, the second makes the purchase.
           </li>
         </ul>
       </Section>
