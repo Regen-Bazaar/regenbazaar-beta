@@ -44,7 +44,7 @@ export default function Verify() {
     <main className="mx-auto max-w-4xl px-6 py-12">
       <h1 className="text-3xl font-bold">Verification queue</h1>
       <p className="mt-2 text-paper/70">
-        Validator review (beta: trusted admin). Approving attests the claim and unlocks tokenization.
+        Validator review. In this demo anyone can act as the validator; in production this is a trusted reviewer. Approving attests the claim on-chain and lists it in the Marketplace.
       </p>
 
       {loading ? (

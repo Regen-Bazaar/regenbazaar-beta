@@ -22,6 +22,11 @@ COPY packages/impact-engine/package.json packages/impact-engine/package.json
 COPY packages/pipeline/package.json packages/pipeline/package.json
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 # Copy the rest of the source and build the standalone server.
+# NEXT_PUBLIC_NETWORK is inlined at build time (web/src/lib/networks.ts): one image = one network.
+ARG NEXT_PUBLIC_NETWORK=arbitrum-sepolia
+ENV NEXT_PUBLIC_NETWORK=$NEXT_PUBLIC_NETWORK
+ARG NEXT_PUBLIC_SALE_CURRENCY=
+ENV NEXT_PUBLIC_SALE_CURRENCY=$NEXT_PUBLIC_SALE_CURRENCY
 COPY . .
 RUN pnpm --filter web build
 

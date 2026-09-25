@@ -15,6 +15,13 @@
       "when": 1780551754847,
       "tag": "0001_famous_young_avengers",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790242672114,
+      "tag": "0002_listings_chain_id",
+      "breakpoints": true
     }
   ]
 }

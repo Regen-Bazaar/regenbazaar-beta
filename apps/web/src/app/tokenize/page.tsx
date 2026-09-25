@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useAccount } from "wagmi";
 import { ruleBasedExtract, computeImpactValue, computePrice } from "@rb/impact-engine";
+import { NETWORK } from "../../lib/networks";
 import type { ComplexityAnswers, PopulationDensity } from "@rb/impact-engine";
 
 const DOMAINS = ["environment", "animal_welfare", "education", "poverty", "social", "health"];
@@ -54,6 +56,9 @@ export default function Tokenize() {
     environmentalConditions: "challenging",
   });
   const [mediaText, setMediaText] = useState("");
+  const [orgName, setOrgName] = useState("");
+  const [payoutWallet, setPayoutWallet] = useState("");
+  const { address } = useAccount();
   const mediaUris = mediaText
     .split(/[\n,]/)
     .map((s) => s.trim())
@@ -93,6 +98,8 @@ export default function Tokenize() {
           description,
           domain,
           mediaUris,
+          orgName: orgName || undefined,
+          payoutWallet: payoutWallet || undefined,
           context: { regionCode, populationDensity: density, complexity, periodStart, periodEnd },
         }),
       });
@@ -133,7 +140,40 @@ export default function Tokenize() {
               className="w-full rounded-md border border-gold/20 bg-ink-soft px-3 py-2 text-sm outline-none focus:border-gold"
             />
             <p className="mt-1 text-xs text-paper/45">
-              Beta uses keyword parsing; the live app uses an LLM extractor server-side.
+              Write it as you would to a funder: what, how many, where. The live preview uses quick keyword
+              matching; on submit our AI extractor re-reads the report, so the final Impact Value can differ slightly.
+            </p>
+          </div>
+          <div className="rounded-lg border border-gold/15 bg-ink-soft/30 p-4">
+            <div className="mb-3 text-sm text-gold">Your organisation</div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label>Organisation name</Label>
+                <input
+                  value={orgName}
+                  onChange={(e) => setOrgName(e.target.value)}
+                  placeholder="e.g. Green Coast Community"
+                  className="w-full rounded-md border border-gold/20 bg-ink-soft px-3 py-2 text-sm outline-none focus:border-gold"
+                />
+              </div>
+              <div>
+                <Label>Payout wallet (receives {NETWORK.saleCurrency.symbol})</Label>
+                <input
+                  value={payoutWallet}
+                  onChange={(e) => setPayoutWallet(e.target.value)}
+                  placeholder="0x…"
+                  className="w-full rounded-md border border-gold/20 bg-ink-soft px-3 py-2 font-mono text-xs outline-none focus:border-gold"
+                />
+                {address && payoutWallet !== address && (
+                  <button type="button" onClick={() => setPayoutWallet(address)} className="mt-1 text-xs text-gold underline">
+                    Use my connected wallet
+                  </button>
+                )}
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-paper/45">
+              Every sale pays this wallet directly, in the same transaction. Use a regular wallet (e.g. MetaMask), not a
+              multisig. Leave both empty to submit as the demo organisation (sample data).
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -172,7 +212,8 @@ export default function Tokenize() {
           </div>
 
           <div>
-            <div className="mb-3 text-sm text-gold">Complexity (ACDM)</div>
+            <div className="mb-1 text-sm text-gold">How hard was it? (complexity)</div>
+            <p className="mb-3 text-xs text-paper/45">Harder conditions raise the Impact Value slightly (ACDM factor).</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label>Technical expertise</Label>
@@ -221,9 +262,9 @@ export default function Tokenize() {
             </button>
             {result && (
               <div className="rounded-md border border-green/40 bg-green/15 px-4 py-3 text-sm">
-                Submitted ✓ — status <b>{result.status.replace(/_/g, " ")}</b>, Impact Value{" "}
-                <b className="text-gold">{result.impactValue.toLocaleString()}</b>. Now in the{" "}
-                <a href="/verify" className="underline">verification queue</a>.
+                Submitted ✓ Status <b>{result.status.replace(/_/g, " ")}</b>, Impact Value{" "}
+                <b className="text-gold">{result.impactValue.toLocaleString()}</b>. Next: a validator reviews it in the{" "}
+                <a href="/verify" className="underline">verification queue</a> (in this demo, you can act as the validator).
               </div>
             )}
             {error && (
@@ -237,7 +278,7 @@ export default function Tokenize() {
         {/* live IV preview */}
         <aside className="h-fit lg:sticky lg:top-6">
           <div className="rounded-xl border border-gold/25 bg-ink-soft/60 p-6">
-            <div className="text-xs uppercase tracking-wide text-paper/55">Impact Value (live)</div>
+            <div className="text-xs uppercase tracking-wide text-paper/55">Impact Value (live preview)</div>
             <div className="mt-1 text-5xl font-bold text-gold">{iv.impactValue.toLocaleString()}</div>
             <div className="mt-1 text-[11px] text-paper/45">
               platform-assessed (beta) · not third-party certified ·{" "}
@@ -247,10 +288,12 @@ export default function Tokenize() {
             <div className="mt-4 rounded-lg border border-gold/20 bg-ink/50 p-3">
               <div className="text-xs uppercase tracking-wide text-paper/55">Suggested price (formula)</div>
               <div className="mt-1 text-2xl font-semibold text-paper">
-                {price.totalPrice.toLocaleString()} <span className="text-sm text-paper/50">total</span>
+                {price.totalPrice.toLocaleString()} {NETWORK.saleCurrency.symbol}{" "}
+                <span className="text-sm text-paper/50">total</span>
               </div>
               <div className="mt-0.5 text-[11px] text-paper/45">
-                ≈ {price.pricePerEdition.toLocaleString()} per edition (×100) · IV × {price.rate} · {price.modelVersion}
+                ≈ {price.pricePerEdition.toLocaleString()} {NETWORK.saleCurrency.symbol} per edition × 100 editions · IV ×{" "}
+                {price.rate} · {price.modelVersion}
               </div>
             </div>
 
@@ -268,7 +311,11 @@ export default function Tokenize() {
             </div>
 
             <div className="mt-5">
-              <div className="mb-2 text-xs uppercase tracking-wide text-paper/55">Breakdown</div>
+              <div className="mb-1 text-xs uppercase tracking-wide text-paper/55">Breakdown</div>
+              <p className="mb-2 text-[11px] text-paper/40">
+                AW action weight · SM scope · TBV time · ESM environmental sensitivity · PIM population · ACDM complexity.{" "}
+                <a href="/methodology" className="underline hover:text-gold">Methodology</a>
+              </p>
               <div className="space-y-2">
                 {iv.breakdown.map((b) => (
                   <div key={b.actionType} className="rounded-md bg-ink/60 px-3 py-2 text-xs">

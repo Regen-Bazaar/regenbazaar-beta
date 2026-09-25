@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Test} from "forge-std/Test.sol";
-import {RegenMarketplace} from "../src/RegenMarketplace.sol";
-import {MockImpactToken} from "./mocks/MockImpactToken.sol";
-import {MockERC20} from "./mocks/MockERC20.sol";
+import { Test } from "forge-std/Test.sol";
+import { RegenMarketplace } from "../src/RegenMarketplace.sol";
+import { MockImpactToken } from "./mocks/MockImpactToken.sol";
+import { MockERC20 } from "./mocks/MockERC20.sol";
 
 contract RegenMarketplaceTest is Test {
     RegenMarketplace internal mkt;
@@ -28,6 +28,7 @@ contract RegenMarketplaceTest is Test {
 
         token.mint(seller, ID, 100);
         token.setRoyalty(ID, creator, 500); // 5% royalty -> creator
+        mkt.setCurrencyAllowed(address(usd), true); // allowlist the ERC-20 payment currency
         vm.prank(seller);
         token.setApprovalForAll(address(mkt), true);
     }
@@ -53,7 +54,7 @@ contract RegenMarketplaceTest is Test {
         vm.deal(buyer, total);
 
         vm.prank(buyer);
-        mkt.buy{value: total}(id, 10);
+        mkt.buy{ value: total }(id, 10);
 
         // editions delivered, escrow reduced
         assertEq(token.balanceOf(buyer, ID), 10);
@@ -99,7 +100,7 @@ contract RegenMarketplaceTest is Test {
         vm.deal(buyer, 1000 ether);
         vm.prank(buyer);
         vm.expectRevert(RegenMarketplace.NotAvailable.selector);
-        mkt.buy{value: 101 * PRICE}(id, 101);
+        mkt.buy{ value: 101 * PRICE }(id, 101);
     }
 
     function test_Revert_WrongNativeValue() public {
@@ -107,7 +108,7 @@ contract RegenMarketplaceTest is Test {
         vm.deal(buyer, 1000 ether);
         vm.prank(buyer);
         vm.expectRevert(RegenMarketplace.WrongPayment.selector);
-        mkt.buy{value: 1 ether}(id, 10); // should be 10*PRICE = 0.1 ether
+        mkt.buy{ value: 1 ether }(id, 10); // should be 10*PRICE = 0.1 ether
     }
 
     function test_Revert_NonSellerCancel() public {
@@ -121,9 +122,53 @@ contract RegenMarketplaceTest is Test {
         uint256 id = _list();
         vm.deal(buyer, 100 * PRICE);
         vm.prank(buyer);
-        mkt.buy{value: 100 * PRICE}(id, 100);
+        mkt.buy{ value: 100 * PRICE }(id, 100);
         (,,, uint256 remaining,,, bool active) = mkt.listings(id);
         assertEq(remaining, 0);
         assertFalse(active);
+    }
+
+    /// M5: a royalty above MAX_ROYALTY_BPS is clamped so it can't starve the beneficiary.
+    function test_Royalty_CappedAtMax() public {
+        token.setRoyalty(ID, creator, 5000); // 50% (mock allows it; TRWI itself caps at registration)
+        uint256 id = _list();
+        uint256 total = 10 * PRICE;
+        vm.deal(buyer, total);
+        vm.prank(buyer);
+        mkt.buy{ value: total }(id, 10);
+
+        uint256 fee = (total * 250) / 10_000;
+        uint256 cappedRoyalty = (total * 1000) / 10_000; // capped at 10%, not 50%
+        assertEq(creator.balance, cappedRoyalty);
+        assertEq(ngo.balance, total - fee - cappedRoyalty);
+    }
+
+    /// L1: listing in a non-allowlisted ERC-20 is rejected.
+    function test_NonAllowlistedCurrency_Reverts() public {
+        MockERC20 other = new MockERC20();
+        vm.prank(seller);
+        vm.expectRevert(RegenMarketplace.BadCurrency.selector);
+        mkt.list(ID, 100, PRICE, address(other), ngo);
+    }
+
+    /// M4: pause blocks list + buy; cancel (exit) still returns escrow to the seller.
+    function test_Paused_BlocksEntry_CancelStillWorks() public {
+        vm.prank(seller);
+        uint256 id = mkt.list(ID, 50, PRICE, address(0), ngo); // escrow 50, seller keeps 50
+        mkt.grantRole(mkt.PAUSER_ROLE(), address(this));
+        mkt.pause();
+
+        vm.prank(seller);
+        vm.expectRevert(); // EnforcedPause
+        mkt.list(ID, 10, PRICE, address(0), ngo);
+
+        vm.deal(buyer, 10 * PRICE);
+        vm.prank(buyer);
+        vm.expectRevert(); // EnforcedPause
+        mkt.buy{ value: 10 * PRICE }(id, 10);
+
+        vm.prank(seller);
+        mkt.cancel(id); // exit still works while paused
+        assertEq(token.balanceOf(seller, ID), 100);
     }
 }

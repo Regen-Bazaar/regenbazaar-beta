@@ -16,6 +16,11 @@
         "name": "initialSupply",
         "type": "uint256",
         "internalType": "uint256"
+      },
+      {
+        "name": "cap_",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "nonpayable"
@@ -156,6 +161,19 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "cap",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -682,6 +700,22 @@
   },
   {
     "type": "error",
+    "name": "ERC20ExceededCap",
+    "inputs": [
+      {
+        "name": "increasedSupply",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "cap",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "ERC20InsufficientAllowance",
     "inputs": [
       {
@@ -730,6 +764,17 @@
         "name": "approver",
         "type": "address",
         "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "ERC20InvalidCap",
+    "inputs": [
+      {
+        "name": "cap",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ]
   },

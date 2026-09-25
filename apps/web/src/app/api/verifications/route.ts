@@ -7,12 +7,12 @@ import { parseUnits } from "viem";
 import { getDb } from "../../../lib/db";
 import { pinJson } from "../../../lib/ipfs";
 import { onchainEnabled, attestImpact, ivToWei } from "../../../lib/onchain";
+import { NETWORK } from "../../../lib/networks";
 import type { DB } from "@rb/db";
 
 export const runtime = "nodejs";
 
 const MAX_EDITIONS = 100;
-const NATIVE = "0x0000000000000000000000000000000000000000";
 
 type Hex = `0x${string}`;
 
@@ -44,19 +44,24 @@ async function registerListing(db: DB, submissionId: string, reqUrl: string) {
   const { uid } = await attestImpact(ngo, s.ivValue, metadataURI); // platform attests provenance
 
   // assign the next on-chain tokenId off-chain (collection materializes on first redeem)
-  const [{ m }] = await db.select({ m: sql<string>`coalesce(max(${listings.tokenId}), 0)` }).from(listings);
+  const [{ m }] = await db
+    .select({ m: sql<string>`coalesce(max(${listings.tokenId}), 0)` })
+    .from(listings)
+    .where(eq(listings.chainId, NETWORK.chain.id));
   const tokenId = (BigInt(m ?? "0") + 1n).toString();
 
   const price = computePrice(Number(s.ivValue), MAX_EDITIONS);
-  const pricePerEditionWei = parseUnits(price.pricePerEdition.toFixed(18), 18).toString();
+  const { address: currency, decimals } = NETWORK.saleCurrency;
+  const pricePerEditionWei = parseUnits(price.pricePerEdition.toFixed(decimals), decimals).toString();
 
   await db.insert(listings).values({
     submissionId,
+    chainId: NETWORK.chain.id,
     tokenId,
     totalIvWei: ivToWei(s.ivValue).toString(),
     maxEditions: MAX_EDITIONS,
     pricePerEdition: pricePerEditionWei,
-    currency: NATIVE,
+    currency,
     beneficiary: ngo,
     easUid: uid,
     metadataUri: metadataURI,

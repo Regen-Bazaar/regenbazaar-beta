@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { desc, eq, inArray } from "drizzle-orm";
-import { impactSubmissions, listings } from "@rb/db/schema";
+import { and, desc, eq, inArray } from "drizzle-orm";
+import { impactSubmissions, listings, organizations } from "@rb/db/schema";
 import { getDb } from "../../lib/db";
 import { BuyButton } from "../../components/BuyButton";
+import { NETWORK } from "../../lib/networks";
+import { formatUnits } from "viem";
 
 export const dynamic = "force-dynamic";
 
@@ -20,19 +22,27 @@ function hrefWith(current: Search, patch: Partial<Search>): string {
 export default async function Marketplace({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
   const db = await getDb();
-  const all = await db
-    .select()
-    .from(impactSubmissions)
-    .where(inArray(impactSubmissions.status, ["verified", "tokenized"]))
-    .orderBy(desc(impactSubmissions.ivValue))
-    .limit(120);
+  const all = (
+    await db
+      .select({ s: impactSubmissions, orgName: organizations.name })
+      .from(impactSubmissions)
+      .innerJoin(organizations, eq(impactSubmissions.orgId, organizations.id))
+      .where(inArray(impactSubmissions.status, ["verified", "tokenized"]))
+      .orderBy(desc(impactSubmissions.ivValue))
+      .limit(120)
+  ).map((r) => ({ ...r.s, orgName: r.orgName }));
 
   // Active primary listings (v2): submissionId -> listingId. A listed item is buyable via voucher redeem.
   const listingRows = await db
-    .select({ submissionId: listings.submissionId, id: listings.id })
+    .select({
+      submissionId: listings.submissionId,
+      id: listings.id,
+      pricePerEdition: listings.pricePerEdition,
+      maxEditions: listings.maxEditions,
+    })
     .from(listings)
-    .where(eq(listings.active, true));
-  const listingBySubmission = new Map(listingRows.map((r) => [r.submissionId, r.id]));
+    .where(and(eq(listings.active, true), eq(listings.chainId, NETWORK.chain.id)));
+  const listingBySubmission = new Map(listingRows.map((r) => [r.submissionId, r]));
 
   // Filter facets derived from the full set (so chips reflect what's actually available).
   const domains = [...new Set(all.map((r) => r.domain).filter(Boolean) as string[])].sort();
@@ -66,7 +76,11 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
     <main className="mx-auto max-w-6xl px-6 py-12">
       <h1 className="text-3xl font-bold">Marketplace</h1>
       <p className="mt-2 text-paper/70">
-        Fund verified real-world impact. Each edition is a fractional share of the claim.
+        Fund verified real-world impact. Each edition is a fractional share of the claim. Paid in{" "}
+        {NETWORK.saleCurrency.symbol} on {NETWORK.chain.name}.{" "}
+        <Link href="/guide" className="text-gold underline">
+          New here? How to fund →
+        </Link>
       </p>
 
       {/* filter bar */}
@@ -130,14 +144,19 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {rows.map((l) => {
             const tags = l.frameworkTags as Tags;
-            const tokenized = l.status === "tokenized";
+            const listing = listingBySubmission.get(l.id);
+            const tokenized = !!listing; // listed (EAS-attested) on THIS network
             return (
               <div key={l.id} className="flex flex-col rounded-xl border border-gold/15 bg-ink-soft/40 p-5">
-                <div className="mb-3 h-28 rounded-lg bg-gradient-to-br from-green/40 to-ink" />
-                <div className="text-xs capitalize text-paper/50">{(l.domain ?? "").replace(/_/g, " ")}</div>
-                <Link href={`/submission/${l.id}`} className="mt-1 font-medium leading-snug hover:text-gold">
+                <div className="mb-3 flex h-24 items-end rounded-lg bg-gradient-to-br from-green/40 to-ink p-3">
+                  <span className="text-xs uppercase tracking-[0.2em] text-paper/70">
+                    {(l.domain ?? "impact").replace(/_/g, " ")}
+                  </span>
+                </div>
+                <Link href={`/submission/${l.id}`} className="font-medium leading-snug hover:text-gold">
                   {l.title}
                 </Link>
+                <div className="mt-0.5 text-xs text-paper/50">by {l.orgName}</div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {tags?.sdg.slice(0, 3).map((t) => (
                     <span key={t} className="rounded-full bg-green/25 px-2 py-0.5 text-xs text-paper/80">{t}</span>
@@ -146,25 +165,34 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
                     <span key={t} className="rounded-full border border-gold/40 px-2 py-0.5 text-xs text-gold">EBF {t}</span>
                   ))}
                 </div>
-                <div className="mt-4 flex items-end justify-between">
+                <div className="mt-auto flex items-end justify-between pt-4">
                   <div>
                     <div className="text-xs text-paper/45">Impact Value</div>
                     <div className="font-semibold text-gold">{Number(l.ivValue ?? 0).toLocaleString()}</div>
                   </div>
+                  {listing && (
+                    <div>
+                      <div className="text-xs text-paper/45">Price per edition</div>
+                      <div className="font-semibold">
+                        {formatUnits(BigInt(listing.pricePerEdition), NETWORK.saleCurrency.decimals)}{" "}
+                        {NETWORK.saleCurrency.symbol}
+                      </div>
+                    </div>
+                  )}
                   <span
                     className={`rounded-full px-2.5 py-1 text-xs ${tokenized ? "bg-green-soft/50 text-paper" : "bg-gold/20 text-gold"}`}
                   >
                     {tokenized ? "on-chain" : "verified"}
                   </span>
                 </div>
-                {listingBySubmission.has(l.id) ? (
-                  <BuyButton listingId={listingBySubmission.get(l.id)!} />
+                {listing ? (
+                  <BuyButton listingId={listing.id} />
                 ) : (
                   <button
                     disabled
                     className="mt-4 rounded-md border border-gold/40 py-2 text-sm opacity-50"
                   >
-                    {tokenized ? "Listing pending" : "Awaiting verification"}
+                    {l.status === "tokenized" ? `Not yet listed on ${NETWORK.chain.name}` : "Awaiting verification"}
                   </button>
                 )}
               </div>

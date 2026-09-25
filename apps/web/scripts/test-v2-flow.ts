@@ -1,14 +1,20 @@
-// Live validation of the v2 voucher flow against the deployed Celo Sepolia contracts:
-// EAS attest -> sign EIP-712 voucher -> redeem (pay + lazy mint to buyer). Proves the off-chain
-// signing matches RegenPrimarySale (redeem reverts BadSignature otherwise). Placeholder metadataURI.
-//   OPERATOR_PRIVATE_KEY=0x.. CELO_SEPOLIA_RPC_URL=.. node --import tsx scripts/test-v2-flow.ts
+// Live validation of the voucher flow against the build's NETWORK (see src/lib/networks.ts):
+// EAS attest -> sign EIP-712 voucher -> (approve ERC-20) -> redeem (pay + lazy mint to buyer). Proves the
+// off-chain signing matches RegenPrimarySale (redeem reverts BadSignature otherwise). Placeholder metadataURI.
+//   NEXT_PUBLIC_NETWORK=arbitrum-sepolia OPERATOR_PRIVATE_KEY=0x.. TRWI_ADDRESS=0x.. \
+//     node --import tsx scripts/test-v2-flow.ts
 import { createPublicClient, createWalletClient, http, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { attestImpact, signVoucher, ivToWei, operatorAddress, celoSepolia, type ImpactVoucher } from "../src/lib/onchain.ts";
+import { attestImpact, signVoucher, ivToWei, operatorAddress, type ImpactVoucher } from "../src/lib/onchain.ts";
+import { NETWORK, NATIVE } from "../src/lib/networks.ts";
+import { erc20Abi } from "../src/lib/chain.ts";
 
-const PRIMARY_SALE = "0x49A5a77e3DBd76411737820fd968142b6154be26" as Hex;
-const TRWI = "0x796B521EBF9221A0f4212C10767898AfCd81087d" as Hex;
-const RPC = process.env.CELO_SEPOLIA_RPC_URL ?? "https://forno.celo-sepolia.celo-testnet.org";
+const PRIMARY_SALE = NETWORK.primarySale;
+const TRWI = process.env.TRWI_ADDRESS as Hex;
+if (!TRWI) throw new Error("TRWI_ADDRESS not set");
+const RPC = process.env.SERVER_RPC_URL || NETWORK.chain.rpcUrls.default.http[0];
+const chain = NETWORK.chain;
+const { address: currency, decimals, symbol } = NETWORK.saleCurrency;
 
 const op = operatorAddress();
 const iv = "292.5";
@@ -22,12 +28,13 @@ const voucher: ImpactVoucher = {
   creator: op,
   totalIV: ivToWei(iv),
   maxEditions: 100n,
-  pricePerEdition: 10_000_000_000_000_000n, // 0.01 CELO
-  currency: "0x0000000000000000000000000000000000000000" as Hex,
+  pricePerEdition: 10n ** BigInt(decimals - 2), // 0.01 of the sale currency
+  currency,
   beneficiary: op,
   easUID: uid,
   metadataURI,
   royaltyBps: 500n,
+  feeBps: 250n,
   nonce: 0n,
   deadline: BigInt(Math.floor(Date.now() / 1000) + 3600),
 };
@@ -45,6 +52,7 @@ const voucherComponents = [
   { name: "easUID", type: "bytes32" },
   { name: "metadataURI", type: "string" },
   { name: "royaltyBps", type: "uint96" },
+  { name: "feeBps", type: "uint96" },
   { name: "nonce", type: "uint256" },
   { name: "deadline", type: "uint256" },
 ] as const;
@@ -69,18 +77,26 @@ const trwiAbi = [
 const account = privateKeyToAccount(
   (process.env.OPERATOR_PRIVATE_KEY!.startsWith("0x") ? process.env.OPERATOR_PRIVATE_KEY! : `0x${process.env.OPERATOR_PRIVATE_KEY}`) as Hex,
 );
-const wallet = createWalletClient({ account, chain: celoSepolia, transport: http(RPC) });
-const pub = createPublicClient({ chain: celoSepolia, transport: http(RPC) });
+const wallet = createWalletClient({ account, chain, transport: http(RPC) });
+const pub = createPublicClient({ chain, transport: http(RPC) });
 
 const amount = 10n;
+const total = voucher.pricePerEdition * amount;
+if (currency !== NATIVE) {
+  const approveHash = await wallet.writeContract({
+    address: currency, abi: erc20Abi, functionName: "approve", args: [PRIMARY_SALE, total], account, chain,
+  });
+  await pub.waitForTransactionReceipt({ hash: approveHash });
+  console.log(`approved ${total} (${symbol} smallest units):`, approveHash);
+}
 const txHash = await wallet.writeContract({
   address: PRIMARY_SALE,
   abi: saleAbi,
   functionName: "redeem",
   args: [voucher, amount, sig],
-  value: voucher.pricePerEdition * amount,
+  value: currency === NATIVE ? total : 0n,
   account,
-  chain: celoSepolia,
+  chain,
 });
 const receipt = await pub.waitForTransactionReceipt({ hash: txHash });
 console.log("redeem tx:", txHash, "status:", receipt.status);

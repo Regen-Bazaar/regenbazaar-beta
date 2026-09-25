@@ -20,10 +20,10 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   wording may be missed or mis-bucketed. The DeepSeek LLM path is the canonical extractor; rule-based is
   the no-API-key fallback. Quantities are read but units/synonyms are limited.
 
-## On-chain layer is built but not wired to the app
-- Contracts compile and pass tests (Foundry, 26 tests) but are **not deployed**. The web app's tokenize /
-  marketplace "Fund" actions are UI-level until a funded deployer key lets us deploy to Celo Sepolia and
-  connect the front end. Tokenized/verified status in the demo comes from seeded DB rows, not real chain state.
+## On-chain layer: deployed on Celo Sepolia and Arbitrum Sepolia (2026-09)
+- Both run the v3 contracts. The hosted app targets one network per build (`NEXT_PUBLIC_NETWORK`,
+  default Arbitrum Sepolia). Submissions are off-chain and shared; listings are per chain (`listings.chain_id`).
+  A submission approved on Celo has no Arbitrum listing until re-approved on an Arbitrum build.
 
 ## Deploy artifacts are unvalidated
 - `deploy/` (Dockerfile, compose, nginx, runbook) is code-ready but has **not been built on a Docker host**
@@ -68,6 +68,44 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   code-ready but unrun on a Docker host; expect first-deploy iteration on the VPS.
 - **Ponder reads `.env.local`** (not `.env`); contract addresses + start blocks must be set there (or in the
   process env) or it syncs from block 0.
+
+## Hardening pass (mainnet-readiness) — status (see `docs/AUDIT.md`)
+- **DONE: v3 deployed + verified.** Audited contracts deployed to Celo Sepolia (addresses in
+  `deployments/celo-sepolia.json`, startBlock 27285071), live-verified on-chain (deployer NOT a TRWI minter,
+  REBAZ cap=1e27, e2e attest→feeBps-voucher→redeem→mint smoke), and source-verified on Blockscout. Off-chain
+  signer + frontend EIP-712 updated with `feeBps` and pointed at v3. Branch merged to local `main`.
+- **Superseded (2026-09):** the old HelpRent VPS 62.72.44.6 was decommissioned 2026-07-12; the app now runs on
+  169.58.27.199 against the Arbitrum Sepolia deployment (see "Arbitrum buildathon deployment" below).
+- **NOT DONE — push to remote.** `main` is merged locally only; not pushed to `origin`
+  (`Regen-Bazaar/regenbazaar-beta`) per the never-push-to-main policy. Push the branch + open a PR instead.
+- **Emissions still mint-on-claim (now capped).** REBAZ has a hard cap, but staking still mints rewards on
+  demand; once the cap is hit, normal `claim`/`unstake` revert (principal still exits via `emergencyUnstake`).
+  A funded-reserve emission model is the intended longer-term replacement.
+- **Multisig + timelock — needs a Safe address (not provisionable in code).** The deploy script supports
+  role separation + an admin→multisig handoff via env (`ADMIN_MULTISIG`, `RENOUNCE_DEPLOYER_ADMIN`, etc.),
+  but a Gnosis Safe and an OZ `TimelockController` must be created and their addresses supplied before mainnet.
+- **Branch coverage gaps.** Line coverage on changed contracts is ~80–87% and the security-critical paths
+  (pause/exit, royalty cap, RoyaltyTooHigh, currency-allowlist toggle, emergency exit, non-retroactive rate)
+  have direct tests (61 total). Remaining gaps are branch-level (some revert/edge branches, the deploy-script
+  multisig-handoff path). Add full branch coverage + a fork test of the real deploy before mainnet.
+
+## Arbitrum buildathon deployment (2026-09)
+- **Indexer schema must be bumped** (`INDEXER_SCHEMA` in `deploy/.env`) whenever contract addresses or indexer
+  config change, or Ponder exits (now capped at 5 restarts instead of looping).
+- **USDG is a Paxos testnet token**; buyers need testnet USDG (faucet.paxos.com, Arbitrum Sepolia) plus a
+  little ETH for gas. Approve is for the exact amount (one approval per purchase).
+- **Public RPC** (`sepolia-rollup.arbitrum.io`) is rate-limited; set `RPC_URL` in `deploy/.env` to a provider.
+- **Two contracts are partial matches on Blockscout** (SchemaRegistry, ERC1967Proxy: metadata hash differs);
+  sources are published and readable. All Arbitrum Sepolia contracts are also verified on Arbiscan.
+- **Live at https://app.regenbazaar.com** (VPS 169.58.27.199, nginx `regenbazaar.conf`, Let's Encrypt via webroot,
+  renew hook reloads nginx). Cloudflare record `app` is **DNS-only (not proxied)**: proxying would break the
+  HTTP-01 webroot renewal unless the challenge path is also served on 443 or the cert moves to dns-cloudflare.
+- **`/api/verifications` has no auth** and the app is now public: anyone can approve a submission, which makes
+  the operator key pay gas for an EAS attestation. Testnet-only risk (burner key, ~0.00002 ETH per attest), but
+  add validator auth before any real use. Watch the operator balance during judging.
+- **Demo sells in tUSDG** (`SALE_CURRENCY=tUSDG`) because the Paxos testnet faucet stopped dispensing
+  (no outgoing transfers from `0xcc96…70a3` after 2026-09-22). Real USDG is allowlisted; switch = unset
+  `SALE_CURRENCY` + rebuild. Listings are priced in the currency active at approve time.
 
 ## Operational reminders
 - Rotate the GitHub `admin:org` token used during earlier org operations (it appeared in chat).

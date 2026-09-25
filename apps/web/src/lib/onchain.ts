@@ -1,4 +1,4 @@
-// On-chain wiring for Celo Sepolia (v2 — platform-issued lazy mint via vouchers). SERVER-ONLY.
+// On-chain wiring for the build's NETWORK (v2 — platform-issued lazy mint via vouchers). SERVER-ONLY.
 // The platform operator (OPERATOR_PRIVATE_KEY) is both the EAS ATTESTER and the voucher SIGNER. It:
 //  1) creates an EAS ImpactClaim attestation for a verified impact (provenance, source of truth), and
 //  2) signs an EIP-712 ImpactVoucher (commercial terms) that a buyer redeems to lazily mint editions.
@@ -10,7 +10,6 @@ import {
   createPublicClient,
   createWalletClient,
   http,
-  defineChain,
   encodeAbiParameters,
   parseUnits,
   parseEventLogs,
@@ -19,22 +18,14 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
-const RPC = process.env.CELO_SEPOLIA_RPC_URL ?? "https://forno.celo-sepolia.celo-testnet.org";
-// Public v2 addresses (overridable via env); defaults = the live Celo Sepolia v2 deployment.
-const EAS_ADDRESS = (process.env.EAS_ADDRESS ?? "0x317D1b35608Eb8CF390d0280042a0cDbBA238Cf9") as Hex;
-const PRIMARY_SALE_ADDRESS = (process.env.PRIMARY_SALE_ADDRESS ?? "0x49A5a77e3DBd76411737820fd968142b6154be26") as Hex;
-const SCHEMA_UID = (process.env.IMPACT_CLAIM_SCHEMA_UID ??
-  "0x35151bab2b9912417175bbf5b49112d9828f4493811bf611f888c1cdd013e92a") as Hex;
-const CHAIN_ID = 11142220;
+import { NETWORK } from "./networks";
 
-export const celoSepolia = defineChain({
-  id: CHAIN_ID,
-  name: "Celo Sepolia",
-  nativeCurrency: { name: "CELO", symbol: "CELO", decimals: 18 },
-  rpcUrls: { default: { http: [RPC] } },
-  blockExplorers: { default: { name: "Blockscout", url: "https://celo-sepolia.blockscout.com" } },
-  testnet: true,
-});
+// Server RPC may differ from the public one (e.g. a provider URL); addresses always come from NETWORK.
+const RPC = process.env.SERVER_RPC_URL || NETWORK.chain.rpcUrls.default.http[0];
+const EAS_ADDRESS = NETWORK.eas;
+const PRIMARY_SALE_ADDRESS = NETWORK.primarySale;
+const SCHEMA_UID = NETWORK.schemaUID;
+const CHAIN = NETWORK.chain;
 
 const easAbi = [
   {
@@ -90,6 +81,7 @@ const VOUCHER_TYPES = {
     { name: "easUID", type: "bytes32" },
     { name: "metadataURI", type: "string" },
     { name: "royaltyBps", type: "uint96" },
+    { name: "feeBps", type: "uint96" },
     { name: "nonce", type: "uint256" },
     { name: "deadline", type: "uint256" },
   ],
@@ -106,6 +98,7 @@ export interface ImpactVoucher {
   easUID: Hex;
   metadataURI: string;
   royaltyBps: bigint;
+  feeBps: bigint;
   nonce: bigint;
   deadline: bigint;
 }
@@ -118,8 +111,8 @@ function clients() {
   const pk = process.env.OPERATOR_PRIVATE_KEY;
   if (!pk) throw new Error("OPERATOR_PRIVATE_KEY not set");
   const account = privateKeyToAccount((pk.startsWith("0x") ? pk : `0x${pk}`) as Hex);
-  const wallet = createWalletClient({ account, chain: celoSepolia, transport: http(RPC) });
-  const pub = createPublicClient({ chain: celoSepolia, transport: http(RPC) });
+  const wallet = createWalletClient({ account, chain: CHAIN, transport: http(RPC) });
+  const pub = createPublicClient({ chain: CHAIN, transport: http(RPC) });
   return { account, wallet, pub };
 }
 
@@ -145,7 +138,7 @@ export async function attestImpact(ngo: Hex, ivDecimal: string, metadataURI: str
     functionName: "attest",
     args: [{ schema: SCHEMA_UID, data: { recipient: ngo, expirationTime: 0n, revocable: true, refUID: zeroHash, data, value: 0n } }],
     account,
-    chain: celoSepolia,
+    chain: CHAIN,
   });
   const receipt = await pub.waitForTransactionReceipt({ hash: txHash });
   const logs = parseEventLogs({ abi: easAbi, eventName: "Attested", logs: receipt.logs });
@@ -159,7 +152,7 @@ export async function signVoucher(v: ImpactVoucher): Promise<Hex> {
   const { account, wallet } = clients();
   return wallet.signTypedData({
     account,
-    domain: { name: "RegenPrimarySale", version: "1", chainId: CHAIN_ID, verifyingContract: PRIMARY_SALE_ADDRESS },
+    domain: { name: "RegenPrimarySale", version: "1", chainId: CHAIN.id, verifyingContract: PRIMARY_SALE_ADDRESS },
     types: VOUCHER_TYPES,
     primaryType: "Voucher",
     message: v,

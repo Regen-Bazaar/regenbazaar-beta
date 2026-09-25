@@ -1,30 +1,37 @@
-// Ponder config — Celo Sepolia v2 (platform-issued lazy mint). Addresses + start blocks from env.
+// Ponder config — one network per deployment (default Arbitrum Sepolia; Robinhood / Celo via env).
+// Chain id, RPC, addresses and start blocks all come from env; nothing chain-specific is hardcoded here.
 import { createConfig } from "ponder";
 import { http } from "viem";
 import { TRWIAbi, PrimarySaleAbi, TRWIStakingAbi } from "./src/abis";
 
+const DEFAULT_RPC: Record<number, string> = {
+  421614: "https://sepolia-rollup.arbitrum.io/rpc",
+  11142220: "https://forno.celo-sepolia.celo-testnet.org",
+  46630: "https://rpc.testnet.chain.robinhood.com",
+};
+const chainId = Number(process.env.PONDER_CHAIN_ID ?? 421614);
+const rpc = process.env.PONDER_RPC_URL || DEFAULT_RPC[chainId];
+if (!rpc) throw new Error(`no RPC for chain ${chainId}: set PONDER_RPC_URL`);
+
 export default createConfig({
   networks: {
-    celoSepolia: {
-      chainId: 11142220,
-      transport: http(process.env.PONDER_RPC_URL_11142220 ?? "https://forno.celo-sepolia.celo-testnet.org"),
-    },
+    chain: { chainId, transport: http(rpc) },
   },
   contracts: {
     TRWI: {
-      network: "celoSepolia",
+      network: "chain",
       abi: TRWIAbi,
       address: process.env.TRWI_ADDRESS as `0x${string}`,
       startBlock: Number(process.env.TRWI_START_BLOCK ?? 0),
     },
     RegenPrimarySale: {
-      network: "celoSepolia",
+      network: "chain",
       abi: PrimarySaleAbi,
       address: process.env.PRIMARY_SALE_ADDRESS as `0x${string}`,
       startBlock: Number(process.env.TRWI_START_BLOCK ?? 0),
     },
     TRWIStaking: {
-      network: "celoSepolia",
+      network: "chain",
       abi: TRWIStakingAbi,
       address: process.env.STAKING_ADDRESS as `0x${string}`,
       startBlock: Number(process.env.STAKING_START_BLOCK ?? 0),

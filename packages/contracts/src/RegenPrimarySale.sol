@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
-import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
+import { EIP712 } from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /// @dev Minimal interface to TRWI v2's gated mint (registers-on-first-mint, EAS-anchored, cap-enforced).
 interface ITRWI {
@@ -28,24 +29,30 @@ interface ITRWI {
 ///         A buyer redeems it: pays, the platform fee + the NGO `beneficiary` are paid, and `amount` editions
 ///         are minted (lazily) to the buyer through TRWI. Nothing is minted before a buyer exists.
 /// @dev    Voucher integrity is anchored at the TOKEN: TRWI cross-checks (creator,totalIV,metadataURI) against
-///         the immutable EAS attestation, so a voucher can't contradict the verified impact. Vouchers carry a
-///         `deadline` and a per-tokenId `nonce` so the platform can reprice/delist by bumping the nonce.
-contract RegenPrimarySale is AccessControl, ReentrancyGuard, EIP712 {
+///         the immutable EAS attestation, so a voucher can't contradict the verified impact. The platform
+///         fee (`feeBps`) is part of the SIGNED voucher, so the buyer/NGO split can't be changed after
+///         signing. Vouchers carry a `deadline` and a per-tokenId `nonce` so the platform can reprice/delist
+///         by bumping the nonce. Payment currency must be NATIVE or on the admin allowlist.
+contract RegenPrimarySale is AccessControl, ReentrancyGuard, Pausable, EIP712 {
     using SafeERC20 for IERC20;
 
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     address public constant NATIVE = address(0);
     uint96 public constant MAX_FEE_BPS = 1000; // 10%
     uint96 internal constant BPS = 10_000;
 
     bytes32 private constant VOUCHER_TYPEHASH = keccak256(
-        "Voucher(uint256 tokenId,address creator,uint256 totalIV,uint256 maxEditions,uint256 pricePerEdition,address currency,address beneficiary,bytes32 easUID,string metadataURI,uint96 royaltyBps,uint256 nonce,uint256 deadline)"
+        "Voucher(uint256 tokenId,address creator,uint256 totalIV,uint256 maxEditions,uint256 pricePerEdition,address currency,address beneficiary,bytes32 easUID,string metadataURI,uint96 royaltyBps,uint96 feeBps,uint256 nonce,uint256 deadline)"
     );
 
     ITRWI public immutable trwi;
     address public feeRecipient;
-    uint96 public feeBps;
+
+    /// @notice Currencies accepted besides NATIVE. Allowlisting blocks fee-on-transfer/rebasing tokens that
+    ///         would break the pay-in/pay-out accounting.
+    mapping(address => bool) public allowedCurrency;
 
     /// @notice Per-collection voucher version; a voucher is valid only if `voucher.nonce == currentNonce[id]`.
     mapping(uint256 => uint256) public currentNonce;
@@ -56,18 +63,22 @@ contract RegenPrimarySale is AccessControl, ReentrancyGuard, EIP712 {
         uint256 totalIV;
         uint256 maxEditions;
         uint256 pricePerEdition;
-        address currency; // NATIVE or ERC-20
+        address currency; // NATIVE or an allowlisted ERC-20
         address beneficiary; // NGO payout
         bytes32 easUID;
         string metadataURI;
         uint96 royaltyBps;
+        uint96 feeBps; // platform fee for this sale, signed (<= MAX_FEE_BPS)
         uint256 nonce;
         uint256 deadline;
     }
 
-    event Sold(uint256 indexed tokenId, address indexed buyer, uint256 amount, uint256 total, address currency);
+    event Sold(
+        uint256 indexed tokenId, address indexed buyer, uint256 amount, uint256 total, address currency
+    );
     event NonceBumped(uint256 indexed tokenId, uint256 newNonce);
-    event FeeUpdated(address feeRecipient, uint96 feeBps);
+    event FeeRecipientUpdated(address feeRecipient);
+    event CurrencyAllowed(address indexed currency, bool allowed);
 
     error BadParams();
     error Expired();
@@ -75,24 +86,28 @@ contract RegenPrimarySale is AccessControl, ReentrancyGuard, EIP712 {
     error BadSignature();
     error WrongPayment();
     error TransferFailed();
+    error BadCurrency();
 
-    constructor(address admin, address trwi_, address feeRecipient_, uint96 feeBps_)
-        EIP712("RegenPrimarySale", "1")
-    {
+    constructor(address admin, address trwi_, address feeRecipient_) EIP712("RegenPrimarySale", "1") {
         if (admin == address(0) || trwi_ == address(0) || feeRecipient_ == address(0)) revert BadParams();
-        if (feeBps_ > MAX_FEE_BPS) revert BadParams();
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(ADMIN_ROLE, admin);
         trwi = ITRWI(trwi_);
         feeRecipient = feeRecipient_;
-        feeBps = feeBps_;
     }
 
     /// @notice Redeem a platform-signed voucher: pay, split fee + beneficiary, lazily mint to the buyer.
-    function redeem(Voucher calldata v, uint256 amount, bytes calldata sig) external payable nonReentrant {
+    function redeem(Voucher calldata v, uint256 amount, bytes calldata sig)
+        external
+        payable
+        nonReentrant
+        whenNotPaused
+    {
         if (amount == 0) revert BadParams();
+        if (v.feeBps > MAX_FEE_BPS) revert BadParams();
         if (block.timestamp > v.deadline) revert Expired();
         if (v.nonce != currentNonce[v.tokenId]) revert StaleVoucher();
+        if (v.currency != NATIVE && !allowedCurrency[v.currency]) revert BadCurrency();
 
         address signer = ECDSA.recover(_hashTypedDataV4(_voucherStructHash(v)), sig);
         if (!hasRole(SIGNER_ROLE, signer)) revert BadSignature();
@@ -105,7 +120,7 @@ contract RegenPrimarySale is AccessControl, ReentrancyGuard, EIP712 {
             IERC20(v.currency).safeTransferFrom(msg.sender, address(this), total);
         }
 
-        uint256 fee = (total * feeBps) / BPS;
+        uint256 fee = (total * v.feeBps) / BPS;
         _pay(v.currency, feeRecipient, fee);
         _pay(v.currency, v.beneficiary, total - fee);
 
@@ -132,11 +147,24 @@ contract RegenPrimarySale is AccessControl, ReentrancyGuard, EIP712 {
         emit NonceBumped(tokenId, n);
     }
 
-    function setFee(address feeRecipient_, uint96 feeBps_) external onlyRole(ADMIN_ROLE) {
-        if (feeRecipient_ == address(0) || feeBps_ > MAX_FEE_BPS) revert BadParams();
+    function setFeeRecipient(address feeRecipient_) external onlyRole(ADMIN_ROLE) {
+        if (feeRecipient_ == address(0)) revert BadParams();
         feeRecipient = feeRecipient_;
-        feeBps = feeBps_;
-        emit FeeUpdated(feeRecipient_, feeBps_);
+        emit FeeRecipientUpdated(feeRecipient_);
+    }
+
+    function setCurrencyAllowed(address currency, bool allowed) external onlyRole(ADMIN_ROLE) {
+        if (currency == NATIVE) revert BadCurrency(); // NATIVE is always accepted; nothing to toggle
+        allowedCurrency[currency] = allowed;
+        emit CurrencyAllowed(currency, allowed);
+    }
+
+    function pause() external onlyRole(PAUSER_ROLE) {
+        _pause();
+    }
+
+    function unpause() external onlyRole(PAUSER_ROLE) {
+        _unpause();
     }
 
     /// @notice EIP-712 digest for a voucher (off-chain signer + tests compute the same).
@@ -158,6 +186,7 @@ contract RegenPrimarySale is AccessControl, ReentrancyGuard, EIP712 {
                 v.easUID,
                 keccak256(bytes(v.metadataURI)),
                 v.royaltyBps,
+                v.feeBps,
                 v.nonce,
                 v.deadline
             )
@@ -167,7 +196,7 @@ contract RegenPrimarySale is AccessControl, ReentrancyGuard, EIP712 {
     function _pay(address currency, address to, uint256 amount) internal {
         if (amount == 0 || to == address(0)) return;
         if (currency == NATIVE) {
-            (bool ok,) = payable(to).call{value: amount}("");
+            (bool ok,) = payable(to).call{ value: amount }("");
             if (!ok) revert TransferFailed();
         } else {
             IERC20(currency).safeTransfer(to, amount);

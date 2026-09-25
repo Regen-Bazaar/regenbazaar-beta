@@ -89,3 +89,69 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   edition accounting. Pricing is off-chain by formula (IV × rate).
 - **Trade-off:** custom payment/voucher contracts (self-reviewed, not third-party audited); secondary is open
   (no forced royalty); operator hot key (testnet burner → multisig before mainnet).
+
+## 2026-06 — Mainnet-readiness hardening pass (security/gas audit) — see `docs/AUDIT.md`
+- **What:** Audited all six contracts (manual + Slither + OpenZeppelin MCP/Skills ruleset) and remediated
+  for mainnet. Key changes:
+  - **Role/key separation** (`Deploy.s.sol`): distinct env addresses for admin-multisig / signer / attester /
+    upgrader / pauser / feeRecipient / treasury; explicit `UPGRADER_ROLE`+`PAUSER_ROLE` grants; the deployer
+    EOA is no longer a TRWI minter; optional guarded admin→multisig handoff.
+  - **Reward accounting → global cumulative index** in `TRWIStaking` (Σ rate·seconds). Rate changes settle
+    first, so accrual is never retroactive; rewards are per-stake APR (not pool-diluted), so no totals or
+    div-by-zero. Chosen over per-stake checkpoint loops (unbounded) and over a Synthetix pool index (wrong
+    model here — accrual isn't shared).
+  - **`emergencyUnstake`**: principal exit decoupled from reward minting (and from the lock while paused) so
+    tRWI can never be trapped by a revoked/capped minter.
+  - **`Pausable`** everywhere (entry paths gated; principal exits always open).
+  - **Fee baked into the signed voucher** (`feeBps` in struct + typehash) so the NGO/buyer split is tamper-proof.
+  - **REBAZ capped** (`ERC20Capped`); **royalty capped** at 10% (registration + proportional marketplace clamp);
+    **currency allowlist** (blocks fee-on-transfer/rebasing tokens); **metadata immutable** post-registration
+    (removed `setURI`); `EnumerableSet` for stake bookkeeping; CEI reorder; `unchecked` on proven-safe math.
+- **Why:** Code was explicitly "testnet placeholder"; the owner requested a full mainnet-readiness pass.
+- **Trade-offs accepted:** TRWIStaking storage layout changed (immutable contract → fresh redeploy required,
+  no migration). The voucher typehash changed → off-chain signer + frontend EIP-712 must update in lockstep
+  with the redeploy (documented in `docs/AUDIT.md`). Emissions remain mint-on-claim (now capped); a funded
+  reserve is the longer-term model. Secondary marketplace remains open (royalty now capped, not removed).
+- **Verification:** `forge test` 55/55 green; Slither `reentrancy-benign` on `list`/`stake` cleared; no real
+  high/medium in `src/` (remaining detectors are OZ-lib false positives or by-design, triaged in `docs/AUDIT.md`).
+
+## 2026-09 — Arbitrum Sepolia deployment + multichain config (Arbitrum Open House buildathon)
+- **What:** Same v3 contracts deployed to Arbitrum Sepolia (`deployments/arbitrum-sepolia.json`, own EAS +
+  SchemaRegistry, USDG allowlisted on `RegenPrimarySale` via new `ALLOWED_CURRENCY` deploy env). Celo Sepolia
+  deployment untouched. Web: `apps/web/src/lib/networks.ts` is the single registry of chain + public addresses
+  + sale currency, selected by `NEXT_PUBLIC_NETWORK` at build (default `arbitrum-sepolia`); the four hardcoded
+  `11142220` sites now read it. Indexer: chain id / RPC / addresses from env. DB: `listings.chain_id` and a
+  per-chain unique `(chain_id, token_id)` so both networks can share one Postgres.
+- **Why build-time network, not runtime switch:** `NEXT_PUBLIC_*` is inlined into the browser bundle and wagmi
+  config; one image = one network keeps server signer, voucher EIP-712 domain, and wallet chain consistent by
+  construction. A runtime multi-network UI was more code for no demo benefit.
+- **Why own EAS instead of a canonical EAS:** keeps the deploy script identical across chains and the
+  `AuthorizedAttesterResolver` wiring unchanged.
+- **Payment in USDG (Paxos testnet token, 6 decimals):** price model output is converted with the sale
+  currency's decimals. Buyer flow = ERC-20 `approve` (exact amount) → `redeem`.
+- **Bridge instead of faucet:** Arbitrum Sepolia faucets required mainnet balance / LINK / were down; test ETH
+  was taken from the Google Cloud Sepolia faucet and bridged via the official Arbitrum Inbox (`depositEth`).
+- **Indexer crash loop (root cause):** Ponder 0.8 `start` throws a NonRetryableError when its DB schema was
+  created by a different build (contract addresses are part of the build), and `restart: unless-stopped`
+  looped it forever (~50% CPU). Fix: per-deployment `INDEXER_SCHEMA` + `restart: on-failure:5` + CPU/memory
+  limits.
+- **Verification:** Blockscout (no API key to store). Arbiscan would need an Etherscan key; not done.
+
+## 2026-09 — LLM extractor via OpenRouter, model chosen by eval
+- **What:** Production extractor points the existing OpenAI-compatible client at OpenRouter
+  (`DEEPSEEK_BASE_URL=https://openrouter.ai/api/v1`, `DEEPSEEK_MODEL=deepseek/deepseek-v4-flash-0731`). No code
+  path change; env names kept for backward compatibility.
+- **Why this model:** `packages/pipeline/eval/extract-eval.ts` (10 cases: units, multi-domain, Russian text,
+  no-numbers, future plans, prompt injection) over 8 cheap tool-calling models. DeepSeek V4 Flash: 20/21 (the
+  one "miss" is a defensible extra action), no invented numbers, ignored the injection; ~$0.00005 per report.
+  Rejected: Mistral Nemo (invented numbers, followed injection), GPT-4.1-nano and Llama 3.1 8B (followed
+  injection), Nova Micro and Gemini Flash-Lite (missed actions). Pinned version id, not the floating alias.
+- **Budget guard:** submission text capped (title 200, description 5000 chars); key has a $5 OpenRouter limit.
+- **Revisit:** with grant money, re-run the eval on a stronger model; add cases from real partner reports.
+
+## 2026-09 — Organisation identified by payout wallet (no auth yet)
+- **What:** `/api/submissions` accepts `orgName` + `payoutWallet`; the org is found (case-insensitive) or
+  created, unverified. Without them, submissions go to the demo org (renamed "Regen Bazaar demo org (sample
+  data)"). Arbitrary `orgId` from the client is no longer accepted.
+- **Trade-off:** anyone can create an org for any wallet; payouts only ever go to that wallet, so the harm is
+  spam, not theft. Wallet-signature auth (SIWE) is the proper fix.

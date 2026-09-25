@@ -7,13 +7,13 @@ agents). Product backbone: **Work → Tokenize → Evaluate → Fund**. Reuse-fi
 primitives where possible; custom only where it's the moat — the AI Impact-Value engine and the
 $REBAZ token.
 
-> Beta target network: **Celo Sepolia** (chainId 11142220). Audience: non-crypto users (embedded /
-> account-abstraction wallets, gasless — later phase).
-> **Not currently hosted.** The demo ran on a VPS that has since been decommissioned, and
-> `app.regenbazaar.com` was removed rather than left pointing at a machine we no longer control.
-> The flow it proved is intact in this repository and runs locally: tokenize → verify →
-> EAS-attest + IPFS → buyer redeems a platform-signed voucher → lazy mint → indexed, all on
-> Celo Sepolia.
+> **Live demo: https://app.regenbazaar.com** on **Arbitrum Sepolia** (chainId 421614), contracts in
+> `packages/contracts/deployments/arbitrum-sepolia.json`, source-verified on Blockscout. The same v3 contracts
+> also run on **Celo Sepolia** (`deployments/celo-sepolia.json`); one build targets one network
+> (`NEXT_PUBLIC_NETWORK`). Payment: Paxos USDG is allowlisted; the demo currently sells in `tUSDG`, a testnet
+> stand-in with the same interface, because the Paxos testnet faucet is not dispensing.
+> Flow: tokenize → verify → EAS-attest + IPFS → buyer redeems a platform-signed voucher (ERC-20 approve +
+> redeem) → lazy mint → indexed (Ponder). Audience: non-crypto users (embedded wallets, gasless: later phase).
 
 ## Layout
 ```
