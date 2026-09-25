@@ -16,6 +16,17 @@ export const ROADMAP_INTRO =
   "organisation paid in the same transaction. This roadmap is ordered by priority, has no dates, and marks the " +
   "milestones we would take on with grant funding. Everything today runs on test networks.";
 
+// Verified against GitHub repo dates (Regen-Bazaar org) and Karma GAP grant records, 2026-09-25.
+export const HISTORY: { when: string; text: string }[] = [
+  { when: "Before the platform", text: "Two single-organisation pilots of the model: Clean Phangan (community beach cleanups, Optimism) and EcoThailand Foundation (mangrove restoration, Celo)" },
+  { when: "Jan to Feb 2025", text: "Litepaper and the first MVP monorepo" },
+  { when: "Mar to May 2025", text: "Contract prototypes on Starknet (Cairo), Move and Stellar" },
+  { when: "Apr 2025", text: "Gitcoin Grants GG23 (OSS dApps and Apps round)" },
+  { when: "Apr to Jul 2025", text: "EVM contracts and a Next.js dApp; Celo Proof of Ship, Season 4" },
+  { when: "Jun 2026", text: "Rebuilt from scratch: impact-scoring engine, lazy-mint contracts with a security self-audit (v1 to v3), end-to-end purchases on Celo Sepolia" },
+  { when: "Sep 2026", text: "Arbitrum Open House buildathon: Arbitrum Sepolia and Robinhood Chain testnet, USDG checkout, public beta" },
+];
+
 export const DONE: { text: string; proof?: string }[] = [
   { text: "Live beta on two Arbitrum chains (Arbitrum Sepolia, Robinhood Chain testnet), one site with a network switcher", proof: "https://app.regenbazaar.com" },
   { text: "Contracts source-verified; 61 Foundry tests; June 2026 security self-audit", proof: "https://sepolia.arbiscan.io/address/0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030#code" },
@@ -24,7 +35,6 @@ export const DONE: { text: string; proof?: string }[] = [
   { text: "Generated artwork for every tRWI, pinned to IPFS as the token image" },
   { text: "Funder page with holdings and retirement; step-by-step guide", proof: "https://app.regenbazaar.com/guide" },
   { text: "Public-beta safety: content moderation, rate limits, reviewer-only approvals, duplicate hints for reviewers" },
-  { text: "Two single-organisation pilots before the platform existed (Clean Phangan on Optimism, EcoThailand Foundation on Celo)" },
 ];
 
 export const PHASES: Phase[] = [
