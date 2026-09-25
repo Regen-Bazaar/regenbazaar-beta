@@ -189,6 +189,41 @@ during the buildathon, all on branch `feat/arbitrum-buildathon`
 - Calibrate Impact-Value weights with domain experts.
 - Multisig + timelock, external audit, then mainnet (Arbitrum One / Robinhood Chain).
 
+## HackQuest project card (Project Setup page)
+
+> Для Paul: поля карточки проекта. Кошелёк подключаете вы (для получения приза, сеть Arbitrum). Fundraising status — ваше решение.
+
+- **Name:** Regen Bazaar
+- **Intro** (199/200):
+
+```
+NGOs turn verified real-world impact into tRWI tokens that anyone can fund in Paxos USDG. AI extracts, a transparent formula scores, EAS attests on-chain, and the NGO is paid in the same transaction.
+```
+
+- **Sector (up to 4):** RWA, AI, DeFi
+- **Tech tags (up to 8):** Solidity, Next, React, Node, Web3
+- **MVP Link:** https://robinhood.regenbazaar.com
+- **Project Link:** https://github.com/Regen-Bazaar/regenbazaar-beta
+- **X (Twitter):** [?]
+- **Images (4, 1280x720):** screenshots of home, marketplace, submission detail with on-chain proof, tokenize form
+- **Demo video:** later (optional)
+- **Description:** sections "At a glance", "Problem", "Solution", "Who pays and why", "Methodology status", "Why on-chain", "USDG integration", "Try it" from this document
+- **Progress During Hackathon:**
+
+```
+Built during the buildathon (branch feat/arbitrum-buildathon, PR https://github.com/Regen-Bazaar/regenbazaar-beta/pull/26):
+- Deployed and source-verified the full contract set on Arbitrum Sepolia (Blockscout + Arbiscan) and Robinhood Chain testnet.
+- USDG checkout: Paxos USDG allowlisted on both chains; real USDG purchases on Robinhood Chain testnet; labelled tUSDG stand-in on Arbitrum Sepolia while the Paxos faucet is not dispensing there.
+- Multichain app and indexer: one network registry, per-chain listings, config-driven Ponder indexer, fix for an indexer crash loop.
+- Buyer "My impact" page (live holdings, Impact Value funded, retire), step-by-step /guide, prices on cards, organisation + payout wallet on submission, no-wallet hints, on-chain proof links.
+- LLM extraction via OpenRouter, model chosen by an eval of 8 low-cost models (no invented numbers, resists prompt injection).
+- Live apps with TLS: app.regenbazaar.com and robinhood.regenbazaar.com.
+Before the buildathon (not claimed): the Impact Value engine, the contract set and its June 2026 self-audit, a Celo Sepolia deployment.
+```
+
+- **Fundraising Status:** [?]
+- **Deployment details (judges only):** Ecosystem: Arbitrum; Testnet; RegenPrimarySale 0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030, https://sepolia.arbiscan.io/address/0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030 (and Robinhood Chain testnet, same address, https://explorer.testnet.chain.robinhood.com/address/0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030)
+
 ## HackQuest form fields (each max 300 characters, checked)
 
 > Для Paul: поля формы подачи на HackQuest. Сначала создаётся карточка проекта (название, описание и т.д.), потом эта форма.
