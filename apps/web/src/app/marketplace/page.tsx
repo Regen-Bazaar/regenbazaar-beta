@@ -4,6 +4,7 @@ import { impactSubmissions, listings, organizations } from "@rb/db/schema";
 import { getDb } from "../../lib/db";
 import { BuyButton } from "../../components/BuyButton";
 import { currentNetwork } from "../../lib/network-server";
+import { DEFAULT_NETWORK_KEY, getNetwork } from "../../lib/networks";
 import { formatUnits } from "viem";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
   const NETWORK = await currentNetwork();
   const sp = await searchParams;
   const db = await getDb();
-  const all = (
+  const submitted = (
     await db
       .select({ s: impactSubmissions, orgName: organizations.name })
       .from(impactSubmissions)
@@ -44,6 +45,18 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
     .from(listings)
     .where(and(eq(listings.active, true), eq(listings.chainId, NETWORK.chain.id)));
   const listingBySubmission = new Map(listingRows.map((r) => [r.submissionId, r]));
+
+  // One report, one network: show a report only on the network it is listed on, or (not listed yet) the one
+  // it was submitted on. Legacy rows without a network belong to the default network.
+  const listedAnywhere = new Set(
+    (await db.select({ submissionId: listings.submissionId }).from(listings)).map((r) => r.submissionId),
+  );
+  const defaultChainId = getNetwork(DEFAULT_NETWORK_KEY).chain.id;
+  const all = submitted.filter(
+    (r) =>
+      listingBySubmission.has(r.id) ||
+      (!listedAnywhere.has(r.id) && (r.chainId ?? defaultChainId) === NETWORK.chain.id),
+  );
 
   // Filter facets derived from the full set (so chips reflect what's actually available).
   const domains = [...new Set(all.map((r) => r.domain).filter(Boolean) as string[])].sort();
@@ -174,7 +187,7 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
                     <div>
                       <div className="text-xs text-paper/45">Price per edition</div>
                       <div className="font-semibold">
-                        {formatUnits(BigInt(listing.pricePerEdition), NETWORK.saleCurrency.decimals)}{" "}
+                        {Number(formatUnits(BigInt(listing.pricePerEdition), NETWORK.saleCurrency.decimals)).toLocaleString("en-US", { maximumFractionDigits: 6 })}{" "}
                         {NETWORK.saleCurrency.symbol}
                       </div>
                     </div>

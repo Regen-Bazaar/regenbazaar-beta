@@ -104,8 +104,8 @@ const BUILDERS: Record<NetworkKey, () => Network> = {
   "robinhood-testnet": robinhoodTestnet,
 };
 
-/** Networks offered in the site's network switcher (Celo Sepolia stays deployable but is not listed). */
-export const ENABLED_NETWORKS: NetworkKey[] = ["arbitrum-sepolia", "robinhood-testnet"];
+/** Networks offered in the site's network switcher. Each report is listed on ONE of them (chosen at submission). */
+export const ENABLED_NETWORKS: NetworkKey[] = ["arbitrum-sepolia", "robinhood-testnet", "celo-sepolia"];
 export const DEFAULT_NETWORK_KEY: NetworkKey = "arbitrum-sepolia";
 export const NETWORK_COOKIE = "rb_network";
 

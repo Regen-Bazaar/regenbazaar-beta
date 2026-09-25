@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { and, desc, eq } from "drizzle-orm";
 import { impactSubmissions, listings, verifications } from "@rb/db/schema";
 import { currentNetwork } from "../../../lib/network-server";
+import { networkByChainId } from "../../../lib/networks";
 import { getDb } from "../../../lib/db";
 
 export const dynamic = "force-dynamic";
@@ -54,6 +55,11 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
     .from(listings)
     .where(and(eq(listings.submissionId, id), eq(listings.chainId, NETWORK.chain.id)))
     .limit(1);
+  // One report, one network: if it is listed elsewhere, point there instead of "not listed".
+  const [elsewhere] = listing
+    ? []
+    : await db.select({ chainId: listings.chainId }).from(listings).where(eq(listings.submissionId, id)).limit(1);
+  const otherNet = elsewhere ? networkByChainId(elsewhere.chainId) : undefined;
   const explorer = NETWORK.chain.blockExplorers?.default.url ?? "";
 
   const iv = s.ivResult as IVResult;
@@ -177,6 +183,13 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
                   Fund this impact
                 </Link>
               </div>
+            ) : otherNet ? (
+              <p className="text-sm text-paper/60">
+                Listed on {otherNet.chain.name}.{" "}
+                <a href={`/submission/${s.id}?network=${otherNet.key}`} className="text-gold underline">
+                  Switch to {otherNet.chain.name}
+                </a>
+              </p>
             ) : s.status === "verified" || s.status === "tokenized" ? (
               <p className="text-sm text-paper/60">Verified. Not listed on {NETWORK.chain.name} yet.</p>
             ) : (

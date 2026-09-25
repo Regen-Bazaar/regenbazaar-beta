@@ -113,8 +113,12 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   The first name typed for a wallet is kept; later names for the same wallet are ignored silently.
 - **Double counting** is guarded by human review + heuristics, not by cryptographic uniqueness. Cross-registry
   checks (other platforms, Hypercerts) and evidence requirements (geotagged photos) are not built.
-- **Indexers are per chain** (`indexer_arbsep_v2`, `indexer_rh_v1`); public RPCs occasionally throw transient
-  BlockNotFound errors that Ponder retries.
+- **Indexers are per chain** (`indexer_arbsep_v2`, `indexer_rh_v1`; none for Celo); public RPCs
+  occasionally throw transient BlockNotFound errors that Ponder retries. The web app does not read these tables yet.
+- **Legacy double listings:** reports approved before 2026-09-25 are listed on both Arbitrum Sepolia and Robinhood
+  Chain testnet (test data, intentionally left). New reports are listed on one network only.
+- **Network chosen by cookie at submit:** a report goes to whichever network was selected in the header when it
+  was submitted; there is no way to move it to another network after submission.
 
 ## Operational reminders
 - Rotate the GitHub `admin:org` token used during earlier org operations (it appeared in chat).

@@ -27,6 +27,7 @@ export interface SubmissionInput {
   domain?: SubmissionDomain;
   context?: ImpactContext;
   mediaUris?: string[];
+  chainId?: number; // network the report will be listed on (one chain only)
 }
 
 export interface ProcessOptions {
@@ -87,6 +88,7 @@ export async function processSubmission(db: DB, input: SubmissionInput, opts: Pr
       tablesVersion: iv.tablesVersion,
       frameworkTags: iv.frameworkTags,
       mediaUris: input.mediaUris ?? [],
+      chainId: input.chainId ?? null,
     })
     .returning();
 

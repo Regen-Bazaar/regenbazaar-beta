@@ -1,0 +1,1 @@
+ALTER TABLE "impact_submissions" ADD COLUMN "chain_id" integer;

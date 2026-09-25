@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS "impact_submissions" (
   "tables_version" varchar(40),
   "framework_tags" jsonb,
   "media_uris" jsonb,
+  "chain_id" integer,
   "created_at" timestamp with time zone DEFAULT now() NOT NULL,
   "updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );

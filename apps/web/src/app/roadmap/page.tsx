@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { DONE, EXPLORING, PHASES, ROADMAP_INTRO, type Phase } from "../../lib/roadmap";
+import { DONE, EXPLORING, HISTORY, PHASES, ROADMAP_INTRO, type Phase } from "../../lib/roadmap";
 
 export const metadata = { title: "Roadmap · Regen Bazaar" };
 
@@ -15,6 +15,19 @@ export default function Roadmap() {
     <main className="mx-auto max-w-3xl px-6 py-12">
       <h1 className="text-3xl font-bold">Roadmap</h1>
       <p className="mt-2 text-paper/70">{ROADMAP_INTRO}</p>
+
+      <section className="mt-8">
+        <h2 className="text-lg font-semibold">Journey so far</h2>
+        <ol className="mt-3 border-l border-gold/30 pl-5">
+          {HISTORY.map((h) => (
+            <li key={h.when} className="relative pb-4 last:pb-0">
+              <span className="absolute -left-[26px] top-1.5 h-2.5 w-2.5 rounded-full bg-gold" />
+              <p className="text-xs uppercase tracking-wide text-gold">{h.when}</p>
+              <p className="text-sm text-paper/85">{h.text}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
 
       <section className="mt-8 rounded-xl border border-green/30 bg-ink-soft/30 p-5">
         <h2 className="text-lg font-semibold">Already built</h2>

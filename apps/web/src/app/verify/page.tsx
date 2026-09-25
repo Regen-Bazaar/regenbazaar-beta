@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { DEFAULT_NETWORK_KEY, getNetwork, networkByChainId } from "../../lib/networks";
 
 type Submission = {
   id: string;
@@ -8,6 +9,7 @@ type Submission = {
   description: string;
   domain: string | null;
   ivValue: string | null;
+  chainId: number | null;
   frameworkTags: { sdg: string[]; ebf: string[] } | null;
   extractedActions: { actionType: string; quantity: number; unit: string }[] | null;
   possibleDuplicates?: { id: string; title: string; status: string; reason: string }[];
@@ -58,7 +60,7 @@ export default function Verify() {
       <h1 className="text-3xl font-bold">Verification queue</h1>
       <p className="mt-2 text-paper/70">
         Validator review by the Regen Bazaar team. Approving attests the claim on-chain and lists it in the
-        Marketplace. Submitted a report? It will appear in the Marketplace once reviewed.
+        Marketplace of the one network it was submitted on. Submitted a report? It will appear in the Marketplace once reviewed.
       </p>
 
       {denied && (
@@ -95,6 +97,9 @@ export default function Verify() {
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <div className="font-medium">{s.title}</div>
+                  <div className="mt-0.5 text-xs text-gold">
+                    Lists on {(s.chainId == null ? getNetwork(DEFAULT_NETWORK_KEY) : networkByChainId(s.chainId))?.chain.name ?? `chain ${s.chainId}`}
+                  </div>
                   <div className="mt-1 text-sm text-paper/60">{s.description}</div>
                   <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
                     {s.frameworkTags?.sdg.map((t) => (

@@ -16,11 +16,13 @@ test("processSubmission: extract -> score -> persist into verification queue", a
     title: "Restoration",
     description: "1000 trees planted and 5 workshops held",
     context: { regionCode: "temperate" },
+    chainId: 11142220,
   });
 
   // trees: 0.1*1000*1.5 = 150 ; workshops: 0.05*5*1.0 = 0.25 -> 150.25
   assert.equal(iv.impactValue, 150.25);
   assert.equal(submission.status, "pending_verification");
+  assert.equal(submission.chainId, 11142220); // one report, one network
   assert.equal(submission.ivValue, "150.2500");
   assert.equal(submission.tablesVersion, iv.tablesVersion);
   assert.deepEqual(submission.frameworkTags, iv.frameworkTags);
@@ -54,6 +56,7 @@ test("LLM extractor path with sanitization of bad output", async () => {
   // only trees_planted 200 survived: 0.1 * 200 * 1.2 (sm>=100) = 24
   assert.equal(iv.impactValue, 24);
   assert.equal((submission.extractedActions as unknown[]).length, 1);
+  assert.equal(submission.chainId, null); // no network given -> legacy/default at approval
 });
 
 test("deepseek extractor factory constructs (no network)", () => {

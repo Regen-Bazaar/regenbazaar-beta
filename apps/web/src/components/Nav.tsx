@@ -2,14 +2,16 @@ import Link from "next/link";
 import { ConnectButton } from "./ConnectButton";
 import { NetworkSwitcher } from "./NetworkSwitcher";
 
+// Verify is reviewer-only (password) and deliberately not in the menu; reviewers use /verify directly.
 const LINKS = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/tokenize", label: "Tokenize impact" },
   { href: "/marketplace", label: "Marketplace" },
+  { href: "/tokenize", label: "Tokenize impact" },
   { href: "/portfolio", label: "My impact" },
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/methodology", label: "Methodology" },
-  { href: "/verify", label: "Verify" },
+  { href: "/roadmap", label: "Roadmap" },
+  { href: "/guide", label: "Guide" },
 ];
 
 export function Nav() {
@@ -46,9 +48,6 @@ export function Nav() {
                 {l.label}
               </Link>
             ))}
-            <Link href="/guide" className="rounded px-3 py-2 text-paper/80 hover:bg-ink hover:text-gold">
-              How to try it
-            </Link>
             <div className="mt-1 border-t border-gold/15">
               <NetworkSwitcher compact />
             </div>

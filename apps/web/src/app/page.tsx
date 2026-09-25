@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { currentNetwork } from "../lib/network-server";
-import { enabledNetworks } from "../lib/networks";
+import { NATIVE, enabledNetworks } from "../lib/networks";
 
 const CYCLE = [
   { k: "Report", d: "An NGO describes its work in plain language: what, how many, where, when." },
   { k: "Evaluate", d: "AI extracts the actions, a published formula scores Impact Value, a validator attests it on-chain." },
   { k: "List", d: "The attested impact is listed as tRWI editions. Nothing is minted until someone funds it." },
-  { k: "Fund", d: "A funder pays in a USDG stablecoin: tRWI is minted to them and the NGO is paid in the same transaction." },
+  { k: "Fund", d: "A funder pays in the network's currency (USDG stablecoin, or CELO on Celo): tRWI is minted to them and the NGO is paid in the same transaction." },
 ];
 
 export default async function Home() {
@@ -38,7 +38,7 @@ export default async function Home() {
 
       <section className="mt-14">
         <h2 className="text-sm uppercase tracking-[0.2em] text-gold">Choose your network</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {enabledNetworks().map((n) => {
             const active = n.key === NETWORK.key;
             return (
@@ -52,7 +52,9 @@ export default async function Home() {
                   {active && <span className="rounded-full bg-gold/20 px-2 py-0.5 text-xs text-gold">selected</span>}
                 </div>
                 <p className="mt-2 text-sm text-paper/70">
-                  {n.saleCurrency.testMint
+                  {n.saleCurrency.address === NATIVE
+                    ? `Pay in ${n.saleCurrency.symbol}, the network's own coin: one test token covers fees and purchase.`
+                    : n.saleCurrency.testMint
                     ? `Easiest start: pay in ${n.saleCurrency.symbol}, free test tokens in one click.`
                     : `Pay in ${n.saleCurrency.symbol}, the Paxos stablecoin (test version from the Paxos faucet).`}
                 </p>
@@ -62,7 +64,8 @@ export default async function Home() {
           })}
         </div>
         <p className="mt-3 text-xs text-paper/50">
-          Same contracts on both Arbitrum chains. You can switch any time from the header.
+          Same contracts on every network. Each impact report is listed on one network only, so nothing is counted twice.
+          You can switch any time from the header.
         </p>
       </section>
 

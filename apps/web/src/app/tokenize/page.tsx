@@ -254,6 +254,10 @@ export default function Tokenize() {
           </div>
 
           <div className="space-y-3">
+            <p className="text-xs text-paper/55">
+              This report will be listed on <b>{NETWORK.chain.name}</b> only (switch networks in the header before
+              submitting). One report is never listed on several networks.
+            </p>
             <button
               onClick={submit}
               disabled={submitting}
@@ -265,7 +269,7 @@ export default function Tokenize() {
               <div className="rounded-md border border-green/40 bg-green/15 px-4 py-3 text-sm">
                 Submitted ✓ Status <b>{result.status.replace(/_/g, " ")}</b>, Impact Value{" "}
                 <b className="text-gold">{result.impactValue.toLocaleString()}</b>. Next: the Regen Bazaar team reviews it. Once approved, it is attested on-chain and appears in the{" "}
-                <a href="/marketplace" className="underline">Marketplace</a>.
+                <a href="/marketplace" className="underline">Marketplace</a> on {NETWORK.chain.name} only.
               </div>
             )}
             {error && (
