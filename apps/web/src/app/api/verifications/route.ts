@@ -73,7 +73,9 @@ async function registerListing(db: DB, net: Network, submissionId: string, reqUr
 
   const price = computePrice(Number(s.ivValue), MAX_EDITIONS);
   const { address: currency, decimals } = net.saleCurrency;
-  const pricePerEditionWei = parseUnits(price.pricePerEdition.toFixed(decimals), decimals).toString();
+  // computePrice rounds to 4 decimals; toFixed(18) would expose binary float noise (0.369 -> 0.368999999999999995),
+  // so cap at 6 decimals: exact for the rounded price, unchanged for 6-decimal USDG.
+  const pricePerEditionWei = parseUnits(price.pricePerEdition.toFixed(Math.min(decimals, 6)), decimals).toString();
 
   await db.insert(listings).values({
     submissionId,
