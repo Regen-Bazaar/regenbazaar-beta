@@ -4,12 +4,12 @@ import { NETWORK, otherDeployments } from "../../lib/networks";
 // Plain-language walkthrough for first-time visitors (judges, testers). Faucet links differ per network.
 const GAS_FAUCETS: Record<string, { name: string; url: string }[]> = {
   "robinhood-testnet": [
-    { name: "Chainlink faucet (Robinhood testnet)", url: "https://faucets.chain.link/robinhood-testnet" },
+    { name: "Official Robinhood Chain faucet", url: "https://faucet.testnet.chain.robinhood.com" },
     { name: "QuickNode faucet (Robinhood testnet)", url: "https://faucet.quicknode.com/robinhood/testnet" },
   ],
   "arbitrum-sepolia": [
-    { name: "Chainlink faucet (Arbitrum Sepolia)", url: "https://faucets.chain.link/arbitrum-sepolia" },
-    { name: "Alchemy faucet (Arbitrum Sepolia)", url: "https://www.alchemy.com/faucets/arbitrum-sepolia" },
+    { name: "HackQuest faucet (free with a HackQuest profile)", url: "https://www.hackquest.io/faucets" },
+    { name: "Alchemy faucet (needs a small mainnet ETH balance)", url: "https://www.alchemy.com/faucets/arbitrum-sepolia" },
   ],
 };
 
@@ -74,7 +74,7 @@ export default function Guide() {
                 </li>
               ))}
             </ul>
-            <span className="text-paper/55">Some faucets ask you to sign in or hold a small mainnet balance.</span>
+            <span className="text-paper/55">One claim is enough for many purchases: each costs a tiny fraction of a cent in test ETH.</span>
           </li>
           <li>
             <b>Get {cur.symbol}.</b>{" "}
