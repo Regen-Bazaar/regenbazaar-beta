@@ -6,6 +6,16 @@ import { enabledNetworks } from "./src/lib/networks";
 // Browser-side reads (allowance, receipts, balances) go straight to each network's public RPC.
 const rpcOrigins = [...new Set(enabledNetworks().map((n) => new URL(n.chain.rpcUrls.default.http[0]).origin))];
 
+// WalletConnect relay (websocket), Reown APIs for the QR modal.
+const walletConnect = [
+  "wss://relay.walletconnect.org",
+  "wss://relay.walletconnect.com",
+  "https://*.walletconnect.org",
+  "https://*.walletconnect.com",
+  "https://*.reown.com",
+  "https://api.web3modal.org",
+].join(" ");
+
 // Permissive enough not to break Next/RSC, strict enough to add real defense.
 // img-src allows https: so externally-hosted impact evidence images render.
 const csp = [
@@ -13,9 +23,11 @@ const csp = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
-  "font-src 'self' data:",
+  "font-src 'self' data: https://fonts.reown.com",
   // allow the Sentry browser SDK to send events/traces to its ingest endpoint
-  `connect-src 'self' https://*.ingest.us.sentry.io https://*.ingest.sentry.io ${rpcOrigins.join(" ")}`,
+  `connect-src 'self' https://*.ingest.us.sentry.io https://*.ingest.sentry.io ${rpcOrigins.join(" ")} ${walletConnect}`,
+  // WalletConnect domain verification runs in an iframe
+  "frame-src https://verify.walletconnect.org https://verify.walletconnect.com",
   "frame-ancestors 'self'",
   "base-uri 'self'",
   "form-action 'self'",

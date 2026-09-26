@@ -98,7 +98,10 @@ export default async function Guide() {
           <li>
             <b>Get a wallet.</b> On a computer, install the{" "}
             <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" className="link">MetaMask</a>{" "}
-            extension. On a phone, install the MetaMask app and open this site inside the app&apos;s browser.
+            extension (Rabby works too). On a phone, install the MetaMask app and open this site inside the
+            app&apos;s browser, or choose <b>WalletConnect</b> under Connect wallet and scan the QR code. The site
+            asks your wallet to switch to {chain} and adds the network if it is missing. Some wallets (Zerion, for
+            example) fail to send testnet transactions, so use MetaMask or Rabby here.
           </li>
           <li>
             <b>Get a little test {gas}{native ? "" : " for fees"}</b> on {chain}:

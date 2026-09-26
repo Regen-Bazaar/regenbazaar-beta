@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useConnect, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
-import { injected } from "wagmi/connectors";
-import { hasInjectedWallet, NO_WALLET_HINT } from "../lib/wallet";
+import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
+import { NO_WALLET_HINT } from "../lib/wallet";
 import { NATIVE, erc20Abi, redeemAbi } from "../lib/chain";
 import { useNetwork } from "./NetworkProvider";
+import { useConnectWallet } from "./useConnectWallet";
 
 type VoucherJson = {
   tokenId: string;
@@ -30,7 +30,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
   const PRIMARY_SALE = net.primarySale;
   const { address, isConnected, chainId } = useAccount();
   const publicClient = usePublicClient({ chainId: chain.id });
-  const { connect } = useConnect();
+  const { connectAny } = useConnectWallet();
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
   const [state, setState] = useState<"idle" | "busy" | "done" | "error">("idle");
@@ -39,11 +39,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
 
   async function buy() {
     if (!isConnected) {
-      if (!hasInjectedWallet()) {
-        setMsg(NO_WALLET_HINT);
-        return;
-      }
-      connect({ connector: injected(), chainId: chain.id });
+      if (!connectAny()) setMsg(NO_WALLET_HINT);
       return;
     }
     setState("busy");

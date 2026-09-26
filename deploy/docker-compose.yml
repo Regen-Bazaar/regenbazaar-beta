@@ -34,6 +34,7 @@ services:
       args:
         NEXT_PUBLIC_NETWORK: ${NETWORK:-arbitrum-sepolia}
         NEXT_PUBLIC_SALE_CURRENCY: ${SALE_CURRENCY:-}
+        NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${WALLETCONNECT_PROJECT_ID:-}
     image: regenbazaar_build:latest
     container_name: regenbazaar_migrate
     environment:
@@ -68,6 +69,7 @@ services:
       args:
         NEXT_PUBLIC_NETWORK: ${NETWORK:-arbitrum-sepolia}
         NEXT_PUBLIC_SALE_CURRENCY: ${SALE_CURRENCY:-}
+        NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${WALLETCONNECT_PROJECT_ID:-}
     image: regenbazaar_web:latest
     container_name: regenbazaar_web
     environment:
@@ -112,6 +114,7 @@ services:
       args:
         NEXT_PUBLIC_NETWORK: ${NETWORK:-arbitrum-sepolia}
         NEXT_PUBLIC_SALE_CURRENCY: ${SALE_CURRENCY:-}
+        NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${WALLETCONNECT_PROJECT_ID:-}
     image: regenbazaar_build:latest
     container_name: regenbazaar_indexer
     command: ["pnpm", "--filter", "indexer", "start"]

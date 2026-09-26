@@ -227,3 +227,8 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   address. wagmi's injected connector adds the network (`wallet_addEthereumChain`, our RPC and explorer) when
   the wallet does not know it. Wallet chain is read from `useAccount().chainId`, not `useChainId()`.
   A network the wallet already has with a broken RPC is not repaired by this; the user edits it in the wallet.
+- **WalletConnect (QR / phone):** wagmi `walletConnect` connector with its QR modal, enabled only when
+  `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is set (build arg from `WALLETCONNECT_PROJECT_ID` in `deploy/.env`).
+  "Connect wallet" offers Browser wallet or WalletConnect; other connect buttons use the extension, or
+  WalletConnect when there is none (`useConnectWallet`). CSP allows the WalletConnect relay, Reown APIs,
+  fonts and the verify iframe. No new dependency: `@walletconnect/ethereum-provider` ships with wagmi.

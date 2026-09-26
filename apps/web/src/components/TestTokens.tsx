@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useConnect, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
-import { injected } from "wagmi/connectors";
+import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { parseUnits } from "viem";
 import { erc20Abi } from "../lib/chain";
-import { hasInjectedWallet, NO_WALLET_HINT } from "../lib/wallet";
+import { NO_WALLET_HINT } from "../lib/wallet";
 import { useNetwork } from "./NetworkProvider";
+import { useConnectWallet } from "./useConnectWallet";
 
 /** Testnet stand-in token only: one banner that lets a demo buyer mint themselves enough to try a purchase. */
 export function TestTokens() {
@@ -15,7 +15,7 @@ export function TestTokens() {
   const SALE_CURRENCY = net.saleCurrency;
   const { address, isConnected, chainId } = useAccount();
   const publicClient = usePublicClient({ chainId: chain.id });
-  const { connect } = useConnect();
+  const { connectAny } = useConnectWallet();
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
   const [msg, setMsg] = useState("");
@@ -25,11 +25,7 @@ export function TestTokens() {
 
   async function getTestTokens() {
     if (!isConnected || !address) {
-      if (!hasInjectedWallet()) {
-        setMsg(NO_WALLET_HINT);
-        return;
-      }
-      connect({ connector: injected(), chainId: chain.id });
+      if (!connectAny()) setMsg(NO_WALLET_HINT);
       return;
     }
     setMsg("");
