@@ -8,6 +8,7 @@ import { getDb } from "../../../lib/db";
 import { BuyButton } from "../../../components/BuyButton";
 import { CopyValue } from "../../../components/CopyValue";
 import { formatUnits } from "viem";
+import { FrameworkTag } from "../../../components/FrameworkTag";
 
 export const dynamic = "force-dynamic";
 
@@ -162,10 +163,10 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
 
           <div className="mt-5 flex flex-wrap gap-1.5">
             {tags.sdg.map((t) => (
-              <span key={t} className="tag">{t}</span>
+              <FrameworkTag key={t} kind="sdg" value={t} />
             ))}
             {tags.ebf.map((t) => (
-              <span key={t} className="tag tag-ebf">EBF {t}</span>
+              <FrameworkTag key={t} kind="ebf" value={t} />
             ))}
           </div>
 

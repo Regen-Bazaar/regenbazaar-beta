@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 import { fileURLToPath } from "node:url";
 import { withSentryConfig } from "@sentry/nextjs";
+import { enabledNetworks } from "./src/lib/networks";
+
+// Browser-side reads (allowance, receipts, balances) go straight to each network's public RPC.
+const rpcOrigins = [...new Set(enabledNetworks().map((n) => new URL(n.chain.rpcUrls.default.http[0]).origin))];
 
 // Permissive enough not to break Next/RSC, strict enough to add real defense.
 // img-src allows https: so externally-hosted impact evidence images render.
@@ -11,7 +15,7 @@ const csp = [
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   // allow the Sentry browser SDK to send events/traces to its ingest endpoint
-  "connect-src 'self' https://*.ingest.us.sentry.io https://*.ingest.sentry.io",
+  `connect-src 'self' https://*.ingest.us.sentry.io https://*.ingest.sentry.io ${rpcOrigins.join(" ")}`,
   "frame-ancestors 'self'",
   "base-uri 'self'",
   "form-action 'self'",

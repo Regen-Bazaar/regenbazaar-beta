@@ -5,6 +5,7 @@ import { useAccount } from "wagmi";
 import { ruleBasedExtract, computeImpactValue, computePrice } from "@rb/impact-engine";
 import { useNetwork } from "../../components/NetworkProvider";
 import type { ComplexityAnswers, PopulationDensity } from "@rb/impact-engine";
+import { FrameworkTag } from "../../components/FrameworkTag";
 
 const DOMAINS = ["environment", "animal_welfare", "education", "poverty", "social", "health"];
 const REGIONS = ["temperate", "urban", "southeast_asia", "amazon", "congo_basin", "coral_reef", "protected_area"];
@@ -307,10 +308,10 @@ export default function Tokenize() {
               <div className="label-mono mb-2">Frameworks</div>
               <div className="flex flex-wrap gap-1.5">
                 {iv.frameworkTags.sdg.map((s) => (
-                  <span key={s} className="tag">{s}</span>
+                  <FrameworkTag key={s} kind="sdg" value={s} />
                 ))}
                 {iv.frameworkTags.ebf.map((e) => (
-                  <span key={e} className="tag tag-ebf">EBF: {e}</span>
+                  <FrameworkTag key={e} kind="ebf" value={e} />
                 ))}
                 {iv.breakdown.length === 0 && <span className="text-sm text-subtle">No recognised actions yet.</span>}
               </div>

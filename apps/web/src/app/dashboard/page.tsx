@@ -2,6 +2,7 @@ import Link from "next/link";
 import { desc, eq, inArray } from "drizzle-orm";
 import { impactSubmissions, organizations } from "@rb/db/schema";
 import { getDb } from "../../lib/db";
+import { FrameworkTag } from "../../components/FrameworkTag";
 
 export const metadata = {
   title: "NGO dashboard",
@@ -74,7 +75,7 @@ export default async function Dashboard() {
                     <span className="text-muted">{s.orgName}</span>
                     {s.domain && <span className="capitalize">{s.domain.replace(/_/g, " ")}</span>}
                     {tags?.sdg.slice(0, 4).map((t) => (
-                      <span key={t} className="tag">{t}</span>
+                      <FrameworkTag key={t} kind="sdg" value={t} link={false} />
                     ))}
                   </div>
                 </div>

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { DEFAULT_NETWORK_KEY, getNetwork, networkByChainId } from "../../lib/networks";
+import { FrameworkTag } from "../../components/FrameworkTag";
 
 type Submission = {
   id: string;
@@ -103,10 +104,10 @@ export default function Verify() {
                   <div className="mt-2 text-muted">{s.description}</div>
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {s.frameworkTags?.sdg.map((t) => (
-                      <span key={t} className="tag">{t}</span>
+                      <FrameworkTag key={t} kind="sdg" value={t} />
                     ))}
                     {s.frameworkTags?.ebf.map((t) => (
-                      <span key={t} className="tag tag-ebf">EBF {t}</span>
+                      <FrameworkTag key={t} kind="ebf" value={t} />
                     ))}
                   </div>
                   <div className="mt-3 font-mono text-sm text-subtle">
