@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useAccount, useReadContracts, useSwitchChain, useWriteContract, usePublicClient } from "wagmi";
 import { NO_WALLET_HINT } from "../lib/wallet";
-import { trwiAbi } from "../lib/chain";
+import { feeOverrides, trwiAbi } from "../lib/chain";
 import { useNetwork } from "./NetworkProvider";
 import { useConnectWallet } from "./useConnectWallet";
 import { ErrorNote } from "./ErrorNote";
@@ -77,6 +77,7 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
         functionName: "retire",
         args: [BigInt(tokenId), amount],
         chainId: chain.id,
+        ...(await feeOverrides(publicClient)),
       });
       await publicClient?.waitForTransactionReceipt({ hash });
       setMsg(`Retired ${amount} edition(s). Tx: ${hash}`);

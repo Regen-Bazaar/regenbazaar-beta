@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { NO_WALLET_HINT } from "../lib/wallet";
-import { NATIVE, erc20Abi, redeemAbi } from "../lib/chain";
+import { NATIVE, erc20Abi, feeOverrides, redeemAbi } from "../lib/chain";
 import { useNetwork } from "./NetworkProvider";
 import { useConnectWallet } from "./useConnectWallet";
 import { ErrorNote } from "./ErrorNote";
@@ -84,6 +84,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
             functionName: "approve",
             args: [PRIMARY_SALE, total],
             chainId: chain.id,
+            ...(await feeOverrides(publicClient)),
           });
           await publicClient.waitForTransactionReceipt({ hash: approveHash });
           setMsg("");
@@ -96,6 +97,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
         args: [v, amount, signature],
         value: v.currency === NATIVE ? total : 0n,
         chainId: chain.id,
+        ...(await feeOverrides(publicClient)),
       });
       setTx(hash);
       setState("done");

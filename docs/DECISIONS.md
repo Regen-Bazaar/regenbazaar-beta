@@ -235,3 +235,7 @@ Append-only record of significant choices, why we made them, and the trade-offs 
 - **Error display:** `ErrorNote` shows one readable line (first line of the wallet/viem error, or a plain
   message for cancelled requests and missing funds); the full text sits under "Details" in a scroll box with a
   copy button. Used by checkout, test tokens, portfolio, tokenize and verify.
+- **Fee headroom on every wallet write:** `feeOverrides()` reads the latest base fee and priority fee from the
+  network RPC and passes `maxFeePerGas = 2 x base + tip`. MetaMask Mobile over WalletConnect proposed a cap
+  below the Arbitrum Sepolia base fee and the node rejected the purchase. Only the used fee is charged. If the
+  read fails, the wallet picks fees as before.

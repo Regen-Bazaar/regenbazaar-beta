@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { parseUnits } from "viem";
-import { erc20Abi } from "../lib/chain";
+import { erc20Abi, feeOverrides } from "../lib/chain";
 import { NO_WALLET_HINT } from "../lib/wallet";
 import { useNetwork } from "./NetworkProvider";
 import { useConnectWallet } from "./useConnectWallet";
@@ -39,6 +39,7 @@ export function TestTokens() {
         functionName: "mint",
         args: [address, parseUnits("100", SALE_CURRENCY.decimals)],
         chainId: chain.id,
+        ...(await feeOverrides(publicClient)),
       });
       setMsg(`Minting 100 ${SALE_CURRENCY.symbol}…`);
       await publicClient?.waitForTransactionReceipt({ hash });

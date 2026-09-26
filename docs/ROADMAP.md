@@ -79,12 +79,15 @@ Also on the site: https://app.regenbazaar.com/roadmap
 - Company portal: buy across many small projects at once, invoices, and exportable impact reports for sustainability teams
 - Secondary market on the existing resale contract, with a capped royalty back to the organisation
 - AI-agent funding: a documented API for software that discovers, evaluates and funds impact
-- Funder recognition based on what you have funded and retired
+- Funder ranks and a public leaderboard, ranked by Impact Value funded and retired rather than money spent, so a rank cannot simply be bought
+- Levels and badges per impact domain and SDG, streaks for regular funding, and a personal impact dashboard showing what your funding achieved
+- Organisation leaderboard by verified impact delivered, so the most effective groups get seen first
 
 **Done when:**
 
 - A person can fund impact with a card on a phone in under two minutes
 - A company can buy a portfolio of impact and download a report for its records
+- Every funder has a rank and badges computed from on-chain purchases and retirements, visible on a public leaderboard
 
 ## Phase 5: Validator network and community (later)
 
