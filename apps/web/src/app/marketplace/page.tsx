@@ -7,6 +7,7 @@ import { TestTokens } from "../../components/TestTokens";
 import { currentNetwork } from "../../lib/network-server";
 import { DEFAULT_NETWORK_KEY, getNetwork } from "../../lib/networks";
 import { formatUnits } from "viem";
+import { FrameworkTag } from "../../components/FrameworkTag";
 
 export const metadata = {
   title: "Marketplace",
@@ -213,10 +214,10 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
                   <div className="mt-1 truncate text-sm text-muted">by {l.orgName}</div>
                   <div className="mb-5 mt-3 flex flex-wrap gap-1.5">
                     {tags?.sdg.slice(0, 3).map((t) => (
-                      <span key={t} className="tag">{t}</span>
+                      <FrameworkTag key={t} kind="sdg" value={t} />
                     ))}
                     {tags?.ebf.slice(0, 1).map((t) => (
-                      <span key={t} className="tag tag-ebf">EBF {t}</span>
+                      <FrameworkTag key={t} kind="ebf" value={t} />
                     ))}
                   </div>
                   <div className="mt-auto grid grid-cols-2 gap-3 border-t border-line pt-4">

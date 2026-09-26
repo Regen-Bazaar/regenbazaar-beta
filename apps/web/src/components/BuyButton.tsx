@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useConnect, useChainId, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
-import { injected } from "wagmi/connectors";
-import { hasInjectedWallet, NO_WALLET_HINT } from "../lib/wallet";
-import { NATIVE, erc20Abi, redeemAbi } from "../lib/chain";
+import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
+import { NO_WALLET_HINT } from "../lib/wallet";
+import { NATIVE, erc20Abi, feeOverrides, redeemAbi } from "../lib/chain";
 import { useNetwork } from "./NetworkProvider";
+import { useConnectWallet } from "./useConnectWallet";
+import { ErrorNote } from "./ErrorNote";
 
 type VoucherJson = {
   tokenId: string;
@@ -28,10 +29,9 @@ export function BuyButton({ listingId }: { listingId: string }) {
   const net = useNetwork();
   const chain = net.chain;
   const PRIMARY_SALE = net.primarySale;
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const publicClient = usePublicClient({ chainId: chain.id });
-  const { connect } = useConnect();
-  const chainId = useChainId();
+  const { connectAny } = useConnectWallet();
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
   const [state, setState] = useState<"idle" | "busy" | "done" | "error">("idle");
@@ -40,11 +40,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
 
   async function buy() {
     if (!isConnected) {
-      if (!hasInjectedWallet()) {
-        setMsg(NO_WALLET_HINT);
-        return;
-      }
-      connect({ connector: injected() });
+      if (!connectAny()) setMsg(NO_WALLET_HINT);
       return;
     }
     setState("busy");
@@ -88,6 +84,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
             functionName: "approve",
             args: [PRIMARY_SALE, total],
             chainId: chain.id,
+            ...(await feeOverrides(publicClient)),
           });
           await publicClient.waitForTransactionReceipt({ hash: approveHash });
           setMsg("");
@@ -100,6 +97,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
         args: [v, amount, signature],
         value: v.currency === NATIVE ? total : 0n,
         chainId: chain.id,
+        ...(await feeOverrides(publicClient)),
       });
       setTx(hash);
       setState("done");
@@ -130,7 +128,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
       >
         {state === "busy" ? "Confirm in wallet…" : isConnected ? "Fund this impact" : "Connect to fund"}
       </button>
-      {msg && <p className={`mt-2 break-words text-xs ${state === "error" ? "text-danger" : "text-subtle"}`}>{msg}</p>}
+      {msg && <ErrorNote text={msg} className={`mt-2 text-xs ${state === "error" ? "text-danger" : "text-subtle"}`} />}
     </div>
   );
 }

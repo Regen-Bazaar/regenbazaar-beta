@@ -134,3 +134,11 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   in headless Chrome: 3 errors in 13 loads before, 1 in 45 loads after. So the `<head>` script was the main
   trigger but not the only one. Server and client body markup are identical apart from the theme icon, which
   points at `<head>`/document-level elements. Next step: reproduce with a non-minified production build.
+
+## 2026-09-26 — Wallets
+- Zerion (Chrome extension) fails with a 404 when confirming testnet transactions on Celo Sepolia and Arbitrum
+  Sepolia; nothing reaches the chain and our server logs no 404. The same transactions simulate fine on the
+  public RPC. The guide tells testers to use MetaMask or Rabby.
+- Over WalletConnect, switching to or adding a testnet depends on the phone wallet; some refuse chains they
+  do not list.
+- The WalletConnect domain must be allowlisted for the project id at cloud.reown.com, or connections fail.

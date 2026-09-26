@@ -6,3 +6,5 @@ export function hasInjectedWallet(): boolean {
 
 export const NO_WALLET_HINT =
   "No wallet found. Install MetaMask (or another browser wallet), or on a phone open this site inside the MetaMask app's browser.";
+
+export const WALLET_TIP = "On testnets use MetaMask or Rabby: some wallets (e.g. Zerion) fail to send testnet transactions.";

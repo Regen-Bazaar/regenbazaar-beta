@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { DEFAULT_NETWORK_KEY, getNetwork, networkByChainId } from "../../lib/networks";
+import { FrameworkTag } from "../../components/FrameworkTag";
+import { ErrorNote } from "../../components/ErrorNote";
 
 type Submission = {
   id: string;
@@ -84,7 +86,7 @@ export default function Verify() {
           <button className="btn btn-secondary btn-sm">Unlock</button>
         </form>
       )}
-      {error && <p className="mt-4 text-danger">{error}</p>}
+      {error && <ErrorNote text={error} className="mt-4 text-danger" />}
 
       {denied ? null : loading ? (
         <p className="mt-10 text-muted">Loading…</p>
@@ -103,10 +105,10 @@ export default function Verify() {
                   <div className="mt-2 text-muted">{s.description}</div>
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {s.frameworkTags?.sdg.map((t) => (
-                      <span key={t} className="tag">{t}</span>
+                      <FrameworkTag key={t} kind="sdg" value={t} />
                     ))}
                     {s.frameworkTags?.ebf.map((t) => (
-                      <span key={t} className="tag tag-ebf">EBF {t}</span>
+                      <FrameworkTag key={t} kind="ebf" value={t} />
                     ))}
                   </div>
                   <div className="mt-3 font-mono text-sm text-subtle">

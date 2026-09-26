@@ -213,3 +213,29 @@ Append-only record of significant choices, why we made them, and the trade-offs 
 - **Project page:** funds in place with `BuyButton` instead of linking to the marketplace.
 - **Home numbers:** read live from the DB (approved reports, total IV, organisations, active listings,
   networks) and labelled as testnet sample data, to avoid reading as traction.
+
+## 2026-09-26 — Demo feedback: RPC in CSP, network menu, framework links
+- **CSP:** `connect-src` now lists the origin of every enabled network's RPC (built from `enabledNetworks()` in
+  `next.config.ts`). Before, the browser could not read ERC-20 allowance or wait for receipts, so USDG checkout on
+  Arbitrum Sepolia and Robinhood failed with "Failed to fetch"; Celo (native CELO) skipped that read. An RPC
+  override in `NEXT_PUBLIC_*_RPC` is picked up at build time, as the headers are baked into the build.
+- **Network menu** closes after a pick (the `<details>` stayed open).
+- **Framework tags:** `FrameworkTag` links SDGs to the UN goal page and EBF tags to `/methodology#aw`, with the full
+  name on hover. Inside a card link (dashboard) it renders as a plain tag with the hover text only.
+- **Wallet follows the site network:** connecting passes the site network's `chainId`; choosing a network in
+  the menu asks the wallet to switch; a wallet on another chain sees "Switch to <network>" instead of its
+  address. wagmi's injected connector adds the network (`wallet_addEthereumChain`, our RPC and explorer) when
+  the wallet does not know it. Wallet chain is read from `useAccount().chainId`, not `useChainId()`.
+  A network the wallet already has with a broken RPC is not repaired by this; the user edits it in the wallet.
+- **WalletConnect (QR / phone):** wagmi `walletConnect` connector with its QR modal, enabled only when
+  `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is set (build arg from `WALLETCONNECT_PROJECT_ID` in `deploy/.env`).
+  "Connect wallet" offers Browser wallet or WalletConnect; other connect buttons use the extension, or
+  WalletConnect when there is none (`useConnectWallet`). CSP allows the WalletConnect relay, Reown APIs,
+  fonts and the verify iframe. No new dependency: `@walletconnect/ethereum-provider` ships with wagmi.
+- **Error display:** `ErrorNote` shows one readable line (first line of the wallet/viem error, or a plain
+  message for cancelled requests and missing funds); the full text sits under "Details" in a scroll box with a
+  copy button. Used by checkout, test tokens, portfolio, tokenize and verify.
+- **Fee headroom on every wallet write:** `feeOverrides()` reads the latest base fee and priority fee from the
+  network RPC and passes `maxFeePerGas = 2 x base + tip`. MetaMask Mobile over WalletConnect proposed a cap
+  below the Arbitrum Sepolia base fee and the node rejected the purchase. Only the used fee is charged. If the
+  read fails, the wallet picks fees as before.

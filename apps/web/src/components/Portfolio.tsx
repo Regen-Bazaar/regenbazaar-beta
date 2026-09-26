@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useAccount, useConnect, useChainId, useReadContracts, useSwitchChain, useWriteContract, usePublicClient } from "wagmi";
-import { injected } from "wagmi/connectors";
-import { hasInjectedWallet, NO_WALLET_HINT } from "../lib/wallet";
-import { trwiAbi } from "../lib/chain";
+import { useAccount, useReadContracts, useSwitchChain, useWriteContract, usePublicClient } from "wagmi";
+import { NO_WALLET_HINT } from "../lib/wallet";
+import { feeOverrides, trwiAbi } from "../lib/chain";
 import { useNetwork } from "./NetworkProvider";
+import { useConnectWallet } from "./useConnectWallet";
+import { ErrorNote } from "./ErrorNote";
 
 export type PortfolioItem = {
   tokenId: string;
@@ -24,9 +25,8 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
   const chain = net.chain;
   const TRWI = net.trwi;
   const EXPLORER = chain.blockExplorers?.default.url ?? "";
-  const { address, isConnected } = useAccount();
-  const { connect } = useConnect();
-  const chainId = useChainId();
+  const { address, isConnected, chainId } = useAccount();
+  const { connectAny } = useConnectWallet();
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient({ chainId: chain.id });
@@ -49,12 +49,12 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
       <div className="card mt-10 max-w-[640px] p-8">
         <p className="text-lg text-muted">Connect the wallet you funded with to see its tRWI and retire editions.</p>
         <button
-          onClick={() => (hasInjectedWallet() ? connect({ connector: injected() }) : setMsg(NO_WALLET_HINT))}
+          onClick={() => connectAny() || setMsg(NO_WALLET_HINT)}
           className="btn btn-primary mt-5"
         >
           Connect wallet to see your tRWI
         </button>
-        {msg && <p className="mt-3 text-sm text-muted">{msg}</p>}
+        {msg && <ErrorNote text={msg} className="mt-3 text-sm text-muted" />}
       </div>
     );
   }
@@ -77,6 +77,7 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
         functionName: "retire",
         args: [BigInt(tokenId), amount],
         chainId: chain.id,
+        ...(await feeOverrides(publicClient)),
       });
       await publicClient?.waitForTransactionReceipt({ hash });
       setMsg(`Retired ${amount} edition(s). Tx: ${hash}`);
@@ -146,7 +147,7 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
           ))}
         </ul>
       )}
-      {msg && <p className="mt-4 break-all text-sm text-muted">{msg}</p>}
+      {msg && <ErrorNote text={msg} className="mt-4 text-sm text-muted" />}
     </div>
   );
 }
