@@ -7,6 +7,7 @@ import { erc20Abi } from "../lib/chain";
 import { NO_WALLET_HINT } from "../lib/wallet";
 import { useNetwork } from "./NetworkProvider";
 import { useConnectWallet } from "./useConnectWallet";
+import { ErrorNote } from "./ErrorNote";
 
 /** Testnet stand-in token only: one banner that lets a demo buyer mint themselves enough to try a purchase. */
 export function TestTokens() {
@@ -58,7 +59,7 @@ export function TestTokens() {
       <button onClick={getTestTokens} disabled={busy} className="btn btn-secondary btn-sm">
         {busy ? "Confirm in wallet…" : `Get 100 test ${SALE_CURRENCY.symbol}`}
       </button>
-      {msg && <p className="w-full break-words text-sm text-muted">{msg}</p>}
+      {msg && <ErrorNote text={msg} className="w-full text-sm text-muted" />}
     </div>
   );
 }

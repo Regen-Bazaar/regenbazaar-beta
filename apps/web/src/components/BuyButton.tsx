@@ -6,6 +6,7 @@ import { NO_WALLET_HINT } from "../lib/wallet";
 import { NATIVE, erc20Abi, redeemAbi } from "../lib/chain";
 import { useNetwork } from "./NetworkProvider";
 import { useConnectWallet } from "./useConnectWallet";
+import { ErrorNote } from "./ErrorNote";
 
 type VoucherJson = {
   tokenId: string;
@@ -125,7 +126,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
       >
         {state === "busy" ? "Confirm in wallet…" : isConnected ? "Fund this impact" : "Connect to fund"}
       </button>
-      {msg && <p className={`mt-2 break-words text-xs ${state === "error" ? "text-danger" : "text-subtle"}`}>{msg}</p>}
+      {msg && <ErrorNote text={msg} className={`mt-2 text-xs ${state === "error" ? "text-danger" : "text-subtle"}`} />}
     </div>
   );
 }

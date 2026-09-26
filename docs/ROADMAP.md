@@ -119,7 +119,7 @@ Also on the site: https://app.regenbazaar.com/roadmap
 ## Exploring (not commitments)
 
 - Outcome-based lending to organisations, tied to measured impact
-- Interoperability with Hypercerts and other open impact standards
+- Interoperability with other on-chain regen platforms and registries (Hypercerts and other open impact standards), so impact tokenized here is recognised and counted there, and never counted twice
 - More networks, only where a stablecoin and real demand exist
 
 _Generated from `apps/web/src/lib/roadmap.ts`; edit there._

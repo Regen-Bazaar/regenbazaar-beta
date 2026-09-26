@@ -6,6 +6,7 @@ import { ruleBasedExtract, computeImpactValue, computePrice } from "@rb/impact-e
 import { useNetwork } from "../../components/NetworkProvider";
 import type { ComplexityAnswers, PopulationDensity } from "@rb/impact-engine";
 import { FrameworkTag } from "../../components/FrameworkTag";
+import { ErrorNote } from "../../components/ErrorNote";
 
 const DOMAINS = ["environment", "animal_welfare", "education", "poverty", "social", "health"];
 const REGIONS = ["temperate", "urban", "southeast_asia", "amazon", "congo_basin", "coral_reef", "protected_area"];
@@ -276,7 +277,7 @@ export default function Tokenize() {
             )}
             {error && (
               <div className="rounded-xl border border-danger/40 bg-danger-tint px-4 py-3 text-danger">
-                Error: {error}
+                <ErrorNote text={`Error: ${error}`} />
               </div>
             )}
           </div>

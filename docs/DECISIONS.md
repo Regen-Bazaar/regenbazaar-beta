@@ -232,3 +232,6 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   "Connect wallet" offers Browser wallet or WalletConnect; other connect buttons use the extension, or
   WalletConnect when there is none (`useConnectWallet`). CSP allows the WalletConnect relay, Reown APIs,
   fonts and the verify iframe. No new dependency: `@walletconnect/ethereum-provider` ships with wagmi.
+- **Error display:** `ErrorNote` shows one readable line (first line of the wallet/viem error, or a plain
+  message for cancelled requests and missing funds); the full text sits under "Details" in a scroll box with a
+  copy button. Used by checkout, test tokens, portfolio, tokenize and verify.

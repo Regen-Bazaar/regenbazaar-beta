@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { DEFAULT_NETWORK_KEY, getNetwork, networkByChainId } from "../../lib/networks";
 import { FrameworkTag } from "../../components/FrameworkTag";
+import { ErrorNote } from "../../components/ErrorNote";
 
 type Submission = {
   id: string;
@@ -85,7 +86,7 @@ export default function Verify() {
           <button className="btn btn-secondary btn-sm">Unlock</button>
         </form>
       )}
-      {error && <p className="mt-4 text-danger">{error}</p>}
+      {error && <ErrorNote text={error} className="mt-4 text-danger" />}
 
       {denied ? null : loading ? (
         <p className="mt-10 text-muted">Loading…</p>

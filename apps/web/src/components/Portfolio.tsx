@@ -7,6 +7,7 @@ import { NO_WALLET_HINT } from "../lib/wallet";
 import { trwiAbi } from "../lib/chain";
 import { useNetwork } from "./NetworkProvider";
 import { useConnectWallet } from "./useConnectWallet";
+import { ErrorNote } from "./ErrorNote";
 
 export type PortfolioItem = {
   tokenId: string;
@@ -53,7 +54,7 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
         >
           Connect wallet to see your tRWI
         </button>
-        {msg && <p className="mt-3 text-sm text-muted">{msg}</p>}
+        {msg && <ErrorNote text={msg} className="mt-3 text-sm text-muted" />}
       </div>
     );
   }
@@ -145,7 +146,7 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
           ))}
         </ul>
       )}
-      {msg && <p className="mt-4 break-all text-sm text-muted">{msg}</p>}
+      {msg && <ErrorNote text={msg} className="mt-4 text-sm text-muted" />}
     </div>
   );
 }
