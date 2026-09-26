@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useTransition } from "react";
+import { useAccount, useSwitchChain } from "wagmi";
 import { NATIVE, enabledNetworks } from "../lib/networks";
 import { setNetworkCookie, useNetwork } from "./NetworkProvider";
 
@@ -11,8 +12,13 @@ export function NetworkSwitcher({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const menu = useRef<HTMLDetailsElement>(null);
+  const { isConnected, chainId } = useAccount();
+  const { switchChain } = useSwitchChain();
   const pick = (key: (typeof current)["key"]) => {
     if (menu.current) menu.current.open = false;
+    // Ask the wallet to follow (adds the network if it is missing); declining keeps the site choice.
+    const target = enabledNetworks().find((n) => n.key === key)!.chain.id;
+    if (isConnected && chainId !== target) switchChain({ chainId: target });
     if (key === current.key) return;
     setNetworkCookie(key);
     start(() => router.refresh());

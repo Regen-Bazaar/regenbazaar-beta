@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useConnect, useChainId, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
+import { useAccount, useConnect, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { hasInjectedWallet, NO_WALLET_HINT } from "../lib/wallet";
 import { NATIVE, erc20Abi, redeemAbi } from "../lib/chain";
@@ -28,10 +28,9 @@ export function BuyButton({ listingId }: { listingId: string }) {
   const net = useNetwork();
   const chain = net.chain;
   const PRIMARY_SALE = net.primarySale;
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const publicClient = usePublicClient({ chainId: chain.id });
   const { connect } = useConnect();
-  const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
   const [state, setState] = useState<"idle" | "busy" | "done" | "error">("idle");
@@ -44,7 +43,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
         setMsg(NO_WALLET_HINT);
         return;
       }
-      connect({ connector: injected() });
+      connect({ connector: injected(), chainId: chain.id });
       return;
     }
     setState("busy");

@@ -1,18 +1,34 @@
 "use client";
 
-import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { useState } from "react";
 import Link from "next/link";
 import { hasInjectedWallet, NO_WALLET_HINT } from "../lib/wallet";
+import { useNetwork } from "./NetworkProvider";
 
 export function ConnectButton() {
-  const { address, isConnected } = useAccount();
+  const net = useNetwork();
+  const { address, isConnected, chainId } = useAccount();
   const { connect, isPending } = useConnect();
+  const { switchChain, isPending: switching } = useSwitchChain();
   const { disconnect } = useDisconnect();
   const [hint, setHint] = useState(false);
 
   if (isConnected && address) {
+    // Wallet on another chain: one click switches, and adds the network to the wallet if it is missing.
+    if (chainId !== net.chain.id) {
+      return (
+        <button
+          onClick={() => switchChain({ chainId: net.chain.id })}
+          disabled={switching}
+          className="btn btn-primary btn-sm"
+          title={`Your wallet is on another network. Switch it to ${net.chain.name}.`}
+        >
+          {switching ? "Confirm in wallet…" : `Switch to ${net.chain.name}`}
+        </button>
+      );
+    }
     return (
       <button
         onClick={() => disconnect()}
@@ -26,7 +42,7 @@ export function ConnectButton() {
   return (
     <div className="relative">
       <button
-        onClick={() => (hasInjectedWallet() ? connect({ connector: injected() }) : setHint((h) => !h))}
+        onClick={() => (hasInjectedWallet() ? connect({ connector: injected(), chainId: net.chain.id }) : setHint((h) => !h))}
         disabled={isPending}
         className="btn btn-primary btn-sm"
       >

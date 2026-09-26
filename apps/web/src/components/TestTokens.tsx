@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useChainId, useConnect, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
+import { useAccount, useConnect, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { parseUnits } from "viem";
 import { erc20Abi } from "../lib/chain";
@@ -13,10 +13,9 @@ export function TestTokens() {
   const net = useNetwork();
   const chain = net.chain;
   const SALE_CURRENCY = net.saleCurrency;
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const publicClient = usePublicClient({ chainId: chain.id });
   const { connect } = useConnect();
-  const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
   const [msg, setMsg] = useState("");
@@ -30,7 +29,7 @@ export function TestTokens() {
         setMsg(NO_WALLET_HINT);
         return;
       }
-      connect({ connector: injected() });
+      connect({ connector: injected(), chainId: chain.id });
       return;
     }
     setMsg("");

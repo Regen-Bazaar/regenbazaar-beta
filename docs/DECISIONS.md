@@ -222,3 +222,8 @@ Append-only record of significant choices, why we made them, and the trade-offs 
 - **Network menu** closes after a pick (the `<details>` stayed open).
 - **Framework tags:** `FrameworkTag` links SDGs to the UN goal page and EBF tags to `/methodology#aw`, with the full
   name on hover. Inside a card link (dashboard) it renders as a plain tag with the hover text only.
+- **Wallet follows the site network:** connecting passes the site network's `chainId`; choosing a network in
+  the menu asks the wallet to switch; a wallet on another chain sees "Switch to <network>" instead of its
+  address. wagmi's injected connector adds the network (`wallet_addEthereumChain`, our RPC and explorer) when
+  the wallet does not know it. Wallet chain is read from `useAccount().chainId`, not `useChainId()`.
+  A network the wallet already has with a broken RPC is not repaired by this; the user edits it in the wallet.

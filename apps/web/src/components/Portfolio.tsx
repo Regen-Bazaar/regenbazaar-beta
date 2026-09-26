@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useAccount, useConnect, useChainId, useReadContracts, useSwitchChain, useWriteContract, usePublicClient } from "wagmi";
+import { useAccount, useConnect, useReadContracts, useSwitchChain, useWriteContract, usePublicClient } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { hasInjectedWallet, NO_WALLET_HINT } from "../lib/wallet";
 import { trwiAbi } from "../lib/chain";
@@ -24,9 +24,8 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
   const chain = net.chain;
   const TRWI = net.trwi;
   const EXPLORER = chain.blockExplorers?.default.url ?? "";
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const { connect } = useConnect();
-  const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient({ chainId: chain.id });
@@ -49,7 +48,7 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
       <div className="card mt-10 max-w-[640px] p-8">
         <p className="text-lg text-muted">Connect the wallet you funded with to see its tRWI and retire editions.</p>
         <button
-          onClick={() => (hasInjectedWallet() ? connect({ connector: injected() }) : setMsg(NO_WALLET_HINT))}
+          onClick={() => (hasInjectedWallet() ? connect({ connector: injected(), chainId: chain.id }) : setMsg(NO_WALLET_HINT))}
           className="btn btn-primary mt-5"
         >
           Connect wallet to see your tRWI
