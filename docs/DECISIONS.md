@@ -269,3 +269,13 @@ Append-only record of significant choices, why we made them, and the trade-offs 
 - **Why:** an unknown complexity answer produced a NaN Impact Value and a 500; metadata of unapproved reports was
   public. The methodology audit (kept outside the repo) led to the v0.2 plan: physical units from public coefficients,
   per-domain scores, proof levels, USD price from IV. Scoring tables and price are unchanged in this commit.
+
+## 2026-09-27 — Partner share in RegenPrimarySale (v2, not deployed)
+- **What:** optional `partner` + `partnerFeeBps` in the signed primary-sale voucher; caps 10% platform, 10% partner,
+  15% combined. Details and tests in `docs/AUDIT.md`.
+- **Why:** partners that verify or tokenize impact (first: DeCleanup) are paid in the same transaction as the creator
+  and the platform, with no manual transfers.
+- **Alternatives:** an on-chain partner registry (rejected: a contract change or admin transaction per partner, more
+  attack surface); paying partners from the platform fee off-chain (rejected: manual, not transparent).
+- **Trade-offs / fragile:** the partner and rate are only as trustworthy as the server signer, same as `feeBps` today.
+  The web still targets v1 until the coordinated redeploy after 2026-10-04; merging this changes nothing live.

@@ -81,3 +81,32 @@ immutable, the fixes require a **fresh full redeploy with split roles** (recomme
 upgrade). The deploy is **gated on explicit approval** — not performed as part of this audit. Recommended
 order: deploy with multisig env set → wire roles → `setCurrencyAllowed` for accepted stablecoins → update
 frontend/signer EIP-712 + addresses → verify on Celoscan → optional `RENOUNCE_DEPLOYER_ADMIN=true`.
+
+## 2026-09-27: RegenPrimarySale v2, partner share
+
+**Change.** The signed voucher gains `address partner` and `uint96 partnerFeeBps`; the EIP-712 domain version
+is `"2"`. `redeem` pays platform fee, partner share and beneficiary remainder in one transaction and emits
+`PartnerPaid` when the partner share is non-zero. No partner registry on-chain: partners and rates live in the
+signed voucher, so a new partner needs no contract change.
+
+**Checks.** `feeBps <= 1000`, `partnerFeeBps <= 1000`, `feeBps + partnerFeeBps <= 1500` (15% owner cap),
+`partner == 0` requires `partnerFeeBps == 0`. Both shares round down; the remainder goes to the beneficiary.
+`_voucherStructHash` concatenates three `abi.encode` chunks (all fields are one word each) to avoid
+stack-too-deep; `test_HashVoucher_MatchesTypedData` checks it against an independent EIP-712 computation.
+
+**Tests added (14):** three-way split in native and ERC-20; no partner pays nothing and emits no `PartnerPaid`;
+15% at the limits passes; partner above 10%, total above 15%, fee without partner all revert; tampered partner
+or partner fee fails the signature; a v1-domain signature fails; a partner that rejects payment reverts the
+whole redeem with no partial payouts; a re-entering partner is blocked; fuzz: the three payouts always sum to
+the price and the beneficiary gets at least 85%. `forge test`: 75 passed.
+
+**Residual risk.** A partner address that cannot receive native currency blocks sales of that listing (the
+server should refuse such partners, or use ERC-20 listings). A partner contract can spend gas in `receive`;
+bounded by the buyer's gas limit, no funds at risk under `nonReentrant`.
+
+**Not deployed.** `RegenPrimarySale` is not upgradeable: v2 is a new deployment. The frontend still signs v1
+vouchers for the live contracts. Must land together with the redeploy: `apps/web/src/lib/onchain.ts`
+(`types.Voucher`, address), `apps/web/src/app/api/listings/[id]/voucher/route.ts`, `apps/web/src/lib/chain.ts`
+(redeem ABI tuple), `apps/web/src/components/BuyButton.tsx`, regenerated `packages/contracts/abis/`. Order:
+deploy v2 → `setCurrencyAllowed` → `MINTER_ROLE` on TRWI → `SIGNER_ROLE` → switch web → test purchase with and
+without partner → revoke `MINTER_ROLE` from v1.
