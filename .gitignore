@@ -31,3 +31,6 @@ generated/
 *.log
 coverage/
 *.tsbuildinfo
+
+# private strategy notes (public repo)
+docs/private/
