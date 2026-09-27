@@ -1,10 +1,12 @@
-# Arbitrum Open House Singapore: Online Buildathon · submission draft v2
+# Arbitrum Open House Singapore: Online Buildathon · submission v3 (submitted 2026-09-27)
 
-> Для Paul (в форму не вставлять): v2 после аудита. Изменения: сводка наверху, PMF-раздел, Robinhood Chain
-> с настоящим USDG, измеренный газ, страница покупателя, путь «посмотреть без кошелька». Поля [?] ждут вас.
+> Для Paul (в форму не вставлять): **подано 27.09.2026** (Paul сказал «да»), проект в Project Gallery:
+> https://www.hackquest.io/projects/Regen-Bazaar. До дедлайна карточку можно править (Edit Project); тексты ниже
+> совпадают с карточкой и формой на 27.09. v3: одна площадка с переключателем сети, видео Loom, защита от
+> повторного листинга, /roadmap, методология v0.1 → план v0.2, кран Paxos на Arbitrum Sepolia снова работает с 26.09.
 > Правила: `tRWI`, без длинных тире, веса platform-assessed, без трекшена, цифры партнёров не используются.
 
-- **Track:** Promising Products
+- **Tracks:** Overall Prize, Promising Products Track, Grants (all three, Paul 25.09)
 - **Deadline:** 2026-10-04 15:59 UTC (23:59 SGT, 22:59 Da Nang)
 
 ---
@@ -16,15 +18,17 @@ Regen Bazaar
 Fund verified real-world impact on-chain, paid in USDG, with provenance anyone can check.
 
 ## At a glance (for judges)
-- **Live, two Arbitrum chains:** https://app.regenbazaar.com (Arbitrum Sepolia) and
-  https://robinhood.regenbazaar.com (Robinhood Chain testnet).
+- **One live app, network switcher:** https://app.regenbazaar.com (Arbitrum Sepolia, Robinhood Chain testnet,
+  plus Celo Sepolia, the original network). The old https://robinhood.regenbazaar.com redirects to it.
+- **Demo video:** https://www.loom.com/share/a69dc479cec34ad3a5499168db8b7d77
 - **Real Paxos USDG purchase on Robinhood Chain testnet**, 97.5% paid straight to the NGO wallet in the same
   transaction: https://explorer.testnet.chain.robinhood.com/tx/0xea4a18d20c2fc3c4ed2a46ef7681129a99b905118745ff2de9ad95609ca2ba77
 - **All contracts source-verified** (Blockscout on both chains, Arbiscan); 61 Foundry tests incl. fuzz;
   OpenZeppelin 5.1.
 - **One purchase = attest-backed lazy mint + stablecoin split to the NGO** in one transaction:
   ~465-518k gas, 0.000022 ETH on Arbitrum Sepolia, 0.0000052 ETH on Robinhood Chain testnet.
-- **No wallet needed to review:** 2-minute video [?] and the proof transactions below.
+- **No double counting:** one report is listed on one network only; listing refuses a report already listed anywhere.
+- **No wallet needed to review:** the video and the proof transactions below.
 
 ## Problem
 Small NGOs and community groups do measurable good (reforestation, cleanups, animal rescue, education) but
@@ -65,12 +69,12 @@ someone funds it, and the NGO is paid in the same transaction.
   SDGs and ecosystem-benefit tags. The LLM only extracts numbers; it never scores. Every score carries its table
   version and a per-factor breakdown; quantities are clamped against gaming; a human validator approves before
   anything is listed. Published at `/methodology`.
-- **Not done yet:** the weights and multipliers are v0.1 seed values set by the platform, not calibrated
-  against external standards, and Impact Value is a relative score, not a carbon or monetary unit. Prices
-  derived from it (IV × 0.5 USDG across 100 editions) are provisional too.
-- **Next milestone:** calibrate the weights with domain experts against established impact frameworks, and
-  express selected actions in physical units (for example tCO₂e for restoration), versioned so that past scores
-  stay auditable.
+- **v0.1 is a starting point:** the weights are seed values set by the platform, and Impact Value is a relative
+  score, not a carbon or monetary unit. Prices derived from it (IV × 0.5 USDG across 100 editions) are
+  provisional too.
+- **Audit done, v0.2 plan ready:** environmental actions in physical units from public coefficients (IPCC,
+  US EPA, IFI grid factors), proof levels for evidence, and scores per impact domain; versioned so past scores
+  stay auditable. Plan published at `/roadmap`.
 
 ## Why on-chain, and why Arbitrum
 - **Provenance anyone can check:** each tRWI collection references an EAS attestation; the sale contract
@@ -97,16 +101,16 @@ someone funds it, and the NGO is paid in the same transaction.
 - **Robinhood Chain testnet: real Paxos USDG** (`0x7E955252E15c84f5768B83c41a71F9eba181802F`) is the sale
   currency. Purchase paid in USDG (1.245 USDG: 1.213875 to the NGO, 0.031125 platform fee): https://explorer.testnet.chain.robinhood.com/tx/0xea4a18d20c2fc3c4ed2a46ef7681129a99b905118745ff2de9ad95609ca2ba77
 - **Arbitrum Sepolia:** Paxos USDG (`0xFFC95faa3d63Cde504a05B567C600B78C0b41892`) is allowlisted in the sale
-  contract. The Paxos testnet faucet has not dispensed on Arbitrum Sepolia since 2026-09-22 (the faucet address
-  `0xcc9644EC26A647de0B9b86f1560d5180232f70a3` has no outgoing USDG transfers there since then, while it keeps
-  dispensing on Robinhood Chain testnet). So the Arbitrum Sepolia demo sells in `tUSDG`, a stand-in with the
-  same interface and decimals, labelled "not Paxos" on-chain and in the UI. Switching it to USDG is one config
-  value; the contract already accepts USDG.
+  contract. The Paxos testnet faucet stopped dispensing on Arbitrum Sepolia from 2026-09-22 to 2026-09-26 (the faucet
+  address `0xcc9644EC26A647de0B9b86f1560d5180232f70a3` had no outgoing USDG transfers there in that window; it
+  resumed on 2026-09-26). So the Arbitrum Sepolia demo sells in `tUSDG`, a stand-in with the
+  same interface and decimals, labelled "not Paxos" on-chain and in the UI. The contract already accepts USDG;
+  switching is one config value.
 
 ## Try it
-- **Without a wallet:** video [?]; proof transactions below; contracts on Blockscout.
-- **With a wallet (Robinhood Chain testnet):** get test ETH and USDG from the Paxos faucet, open
-  Marketplace, "Fund this impact", then **My impact**.
+- **Without a wallet:** video https://www.loom.com/share/a69dc479cec34ad3a5499168db8b7d77; proof transactions below; contracts on Blockscout.
+- **With a wallet (Robinhood Chain testnet):** get test ETH and USDG from the Paxos faucet, pick Robinhood
+  Chain testnet in the network switcher, open Marketplace, "Fund this impact", then **My impact**.
 - **With a wallet (Arbitrum Sepolia):** "Get 100 test tUSDG" in the Marketplace, then "Fund this impact".
 
 ## Contract addresses
@@ -152,9 +156,9 @@ redeem (no separate factory). REBAZ is the platform ERC-20.
 
 ## Built during the buildathon (since 2026-09-14)
 Regen Bazaar existed before the buildathon: the Impact-Value engine, AI extraction, the contract set and its
-June 2026 security/gas self-audit, and a Celo Sepolia deployment. **Not claimed here.** Built for Arbitrum
-during the buildathon, all on branch `feat/arbitrum-buildathon`
-(https://github.com/Regen-Bazaar/regenbazaar-beta/tree/feat/arbitrum-buildathon):
+June 2026 security/gas self-audit, and a Celo Sepolia deployment. **Not claimed here.** Built during the
+buildathon: PR #26 (https://github.com/Regen-Bazaar/regenbazaar-beta/pull/26, branch `feat/arbitrum-buildathon`)
+and follow-ups #27-#39, all merged to `main`:
 
 - Multichain app and indexer (network registry, per-chain listings, config-driven indexer): `00d4f75`,
   `b98bc3f`, `9b6b816`
@@ -165,6 +169,10 @@ during the buildathon, all on branch `feat/arbitrum-buildathon`
 - Robinhood Chain testnet as a second network with real USDG, verified contracts, first USDG sale:
   `4662f5d`, `a64e846`, `a170823`
 - Indexer reliability fix (Ponder schema crash loop): `9b6b816`
+- One app for all networks, Celo Sepolia in the switcher, one report listed on one network only: #29, #31
+- UI redesign (light/dark theme, readable type, phone layout) and demo polish: #32-#36
+- Wallet switches to or adds the site network, WalletConnect, guide with test tokens per network: #37
+- Input validation, verification page with evidence and duplicate hints, roadmap with methodology v0.2: #38, #39
 
 ## Smart contract quality
 - Solidity 0.8.29, OpenZeppelin 5.1 (AccessControl, Pausable, ReentrancyGuard, SafeERC20, UUPS, ERC20Capped),
@@ -182,16 +190,16 @@ during the buildathon, all on branch `feat/arbitrum-buildathon`
 - [ ] GMX, Dune, ZeroDev, Fhenix, Alchemy, AWS
 
 ## Team
-[?]
+Paul Burg (team leader on HackQuest).
 
 ## What's next
 - Embedded wallets and gasless checkout for non-crypto funders.
-- Calibrate Impact-Value weights with domain experts.
+- Methodology v0.2 (physical units, proof levels, per-domain scores), then review by domain experts.
 - Multisig + timelock, external audit, then mainnet (Arbitrum One / Robinhood Chain).
 
 ## HackQuest project card (Project Setup page)
 
-> Для Paul: поля карточки проекта. Кошелёк подключаете вы (для получения приза, сеть Arbitrum). Fundraising status — ваше решение.
+> Для Paul: поля карточки проекта, как сохранены 27.09. Кошелёк 0x7380…21B5 подключён вами (для получения приза, сеть Arbitrum).
 
 - **Name:** Regen Bazaar
 - **Intro** (199/200):
@@ -202,31 +210,73 @@ NGOs turn verified real-world impact into tRWI tokens that anyone can fund in Pa
 
 - **Sector (up to 4):** RWA, AI, DeFi
 - **Tech tags (up to 8):** Solidity, Next, React, Node, Web3
-- **MVP Link:** https://robinhood.regenbazaar.com
+- **MVP Link:** https://app.regenbazaar.com
 - **Project Link:** https://github.com/Regen-Bazaar/regenbazaar-beta
-- **X (Twitter):** [?]
-- **Images (4, 1280x720):** screenshots of home, marketplace, submission detail with on-chain proof, tokenize form
-- **Demo video:** later (optional)
-- **Description:** sections "At a glance", "Problem", "Solution", "Who pays and why", "Methodology status", "Why on-chain", "USDG integration", "Try it" from this document
-- **Progress During Hackathon:**
+- **X (Twitter):** RegenBazaar
+- **Images (max 4, 1280x720):** new design, dark theme: home, marketplace, project page with on-chain proof, tokenize
+- **Demo video:** https://www.loom.com/share/a69dc479cec34ad3a5499168db8b7d77 (Loom, ~5 min)
+- **Description** (as on the card, 27.09):
 
 ```
-Built during the buildathon (branch feat/arbitrum-buildathon, PR https://github.com/Regen-Bazaar/regenbazaar-beta/pull/26):
-- Deployed and source-verified the full contract set on Arbitrum Sepolia (Blockscout + Arbiscan) and Robinhood Chain testnet.
-- USDG checkout: Paxos USDG allowlisted on both chains; real USDG purchases on Robinhood Chain testnet; labelled tUSDG stand-in on Arbitrum Sepolia while the Paxos faucet is not dispensing there.
-- Multichain app and indexer: one network registry, per-chain listings, config-driven Ponder indexer, fix for an indexer crash loop.
-- Buyer "My impact" page (live holdings, Impact Value funded, retire), step-by-step /guide, prices on cards, organisation + payout wallet on submission, no-wallet hints, on-chain proof links.
+Regen Bazaar is a marketplace for tokenized real-world impact (tRWI). Small NGOs and community groups do measurable good (reforestation, cleanups, animal rescue, education) but cannot turn that work into something a funder can buy, hold and verify. Regen Bazaar closes that gap on Arbitrum.
+
+Demo video (5 min): https://www.loom.com/share/a69dc479cec34ad3a5499168db8b7d77
+
+How it works: an NGO describes its work in plain language. An LLM extracts the actions (the report is treated strictly as data and the output is validated). A deterministic, versioned formula computes the Impact Value; the LLM never scores. A validator reviews the evidence and approves; the platform pins metadata and a generated artwork to IPFS and attests the claim on-chain with EAS. Funders buy fractional editions as tRWI (ERC-1155) and pay in Paxos USDG. The token is lazily minted at purchase from a platform-signed EIP-712 voucher, and the NGO is paid in the same transaction.
+
+One live app, one network switcher: https://app.regenbazaar.com runs on Arbitrum Sepolia and Robinhood Chain testnet (plus Celo Sepolia, the original network); the wallet switches to the chosen network. Real Paxos USDG purchase on Robinhood Chain testnet, 97.5% paid straight to the NGO: https://explorer.testnet.chain.robinhood.com/tx/0xea4a18d20c2fc3c4ed2a46ef7681129a99b905118745ff2de9ad95609ca2ba77
+
+No double counting: one impact report is listed on one network only, the one the organisation chose. The listing step refuses a report that is already listed anywhere, and validators see hints when a new report looks like an earlier one.
+
+Who pays: individual funders who want proof of what they funded, companies with CSR budgets that need auditable impact purchases in a regulated-issuer stablecoin, and AI agents (public machine-readable catalogue at /api/impact). Revenue: 2.5% platform fee signed into each voucher, plus a capped royalty back to the NGO on resales.
+
+USDG: Paxos USDG is allowlisted on both Arbitrum chains. The Paxos testnet faucet stopped dispensing on Arbitrum Sepolia from 2026-09-22 to 2026-09-26, so the Arbitrum Sepolia demo sells in tUSDG, a clearly labelled stand-in with the same interface; the contract already accepts USDG and switching is one config value.
+
+Methodology status, stated plainly: v0.1 uses seed weights set by the platform, and Impact Value is a relative score. The audit of v0.1 is done and the v0.2 plan is ready: environmental actions in physical units from public coefficients (IPCC, US EPA, IFI grid factors), proof levels for evidence, and scores per impact domain. Plan on the roadmap: https://app.regenbazaar.com/roadmap
+
+Before Regen Bazaar we ran two single-organisation pilots of this model: Clean Phangan (community beach cleanups, Optimism) and EcoThailand Foundation (mangroves, Celo). Status: beta on testnets, no production users or revenue yet.
+
+Contracts are source-verified (Blockscout on both chains, Arbiscan); 61 Foundry tests; OpenZeppelin 5.1. Guide: https://app.regenbazaar.com/guide
+```
+- **Progress During Hackathon** (as on the card, 27.09):
+
+```
+Built during the buildathon (https://github.com/Regen-Bazaar/regenbazaar-beta, PR #26 and follow-ups #27-#39):
+
+- Deployed and source-verified the full contract set on Arbitrum Sepolia (Blockscout + Arbiscan) and Robinhood Chain testnet (Blockscout).
+- USDG checkout: Paxos USDG allowlisted on both chains; real USDG purchases on Robinhood Chain testnet; labelled tUSDG stand-in on Arbitrum Sepolia, added while the Paxos faucet was not dispensing there.
+- One app with a network switcher (Arbitrum Sepolia, Robinhood Chain testnet, Celo Sepolia); the wallet switches to the chosen network or adds it; WalletConnect for phone wallets. The old robinhood.regenbazaar.com address redirects to it.
+- Multichain indexer: one network registry, per-chain listings, config-driven Ponder indexer, fix for an indexer crash loop.
+- Double-counting guard: one report is listed on one network only; listing refuses a report already listed anywhere; validators see duplicate hints and the evidence on the verification page.
+- Generative tRWI artwork: a deterministic SVG impact card drawn from the impact data, pinned to IPFS as the token image.
+- Buyer 'My impact' page (live holdings, Impact Value funded, retire), step-by-step /guide with test tokens for every network, public /roadmap, prices on cards, on-chain proof links.
+- New interface: light and dark theme, readable type, phone layout.
 - LLM extraction via OpenRouter, model chosen by an eval of 8 low-cost models (no invented numbers, resists prompt injection).
-- Live apps with TLS: app.regenbazaar.com and robinhood.regenbazaar.com.
+- Public-beta safety: LLM content moderation, input validation, rate limits, validator-only approvals, link-only evidence.
+- Methodology: audit of the v0.1 weights done; v0.2 plan (physical units from IPCC, US EPA and IFI factors, proof levels, per-domain scores) published on /roadmap.
+
 Before the buildathon (not claimed): the Impact Value engine, the contract set and its June 2026 self-audit, a Celo Sepolia deployment.
 ```
 
-- **Fundraising Status:** [?]
-- **Deployment details (judges only):** Ecosystem: Arbitrum; Testnet; RegenPrimarySale 0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030, https://sepolia.arbiscan.io/address/0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030 (and Robinhood Chain testnet, same address, https://explorer.testnet.chain.robinhood.com/address/0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030)
+- **Fundraising Status:** Bootstrapped, not raised.
+- **Deployment details (judges only):** Ecosystem: Arbitrum Sepolia; Testnet:
+
+```
+Same addresses on Arbitrum Sepolia (421614) and Robinhood Chain testnet (46630).
+RegenPrimarySale (sale, lazy mint, USDG): 0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030
+tRWI (ERC-1155, UUPS proxy): 0x6F2C6F81DDd35199d2e015710c61CC6D8B5de9da
+RegenMarketplace: 0x3Cd225C24183a7bcE3EefD3C309b82A27f6Be214
+TRWIStaking: 0xB051e3B360A54e6E4808A2A06bEC765D246612B6
+REBAZ (ERC-20): 0x5Ea6AE9758472733144Eb24CCE7f310B21367b92
+EAS: 0x95cD0E3bDbC670e057416D65C89B584a9a24d95d
+Arbiscan: https://sepolia.arbiscan.io/address/0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030#code
+Robinhood explorer: https://explorer.testnet.chain.robinhood.com/address/0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030
+App: https://app.regenbazaar.com (one app, network switcher: Arbitrum Sepolia and Robinhood Chain testnet)
+```
 
 ## HackQuest form fields (each max 300 characters, checked)
 
-> Для Paul: поля формы подачи на HackQuest. Сначала создаётся карточка проекта (название, описание и т.д.), потом эта форма.
+> Для Paul: поля формы подачи на HackQuest, как отправлено 27.09.
 
 **What is your contract address?** (42/300)
 
@@ -234,10 +284,10 @@ Before the buildathon (not claimed): the Impact Value engine, the contract set a
 0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030
 ```
 
-**Link to frontend/UI/website** (173/300)
+**Link to frontend/UI/website** (252/300)
 
 ```
-https://app.regenbazaar.com (Arbitrum Sepolia) | https://robinhood.regenbazaar.com (Robinhood Chain testnet, real Paxos USDG) | How to try: https://app.regenbazaar.com/guide
+https://app.regenbazaar.com (one app, network switcher: Arbitrum Sepolia with tUSDG, Robinhood Chain testnet with real Paxos USDG) | How to try: https://app.regenbazaar.com/guide | Demo video: https://www.loom.com/share/a69dc479cec34ad3a5499168db8b7d77
 ```
 
 **Core Protocol / Smart Contract Addresses** (291/300)
@@ -258,13 +308,13 @@ N/A. No factory or pool: each tRWI collection is registered by RegenPrimarySale 
 tRWI (ERC-1155, UUPS proxy) 0x6F2C6F81DDd35199d2e015710c61CC6D8B5de9da | REBAZ (ERC-20) 0x5Ea6AE9758472733144Eb24CCE7f310B21367b92 | same on Arbitrum Sepolia and Robinhood Chain testnet
 ```
 
-**Which parts of your code were produced during the Buildathon** (261/300)
+**Which parts of your code were produced during the Buildathon** (284/300)
 
 ```
-All on branch feat/arbitrum-buildathon (github.com/Regen-Bazaar/regenbazaar-beta): Arbitrum + Robinhood deploys, multichain app/indexer, USDG checkout, My impact page, LLM extraction via OpenRouter, guide/UX. Pre-existing: scoring engine, contracts, Celo pilot.
+Since 14.09, github.com/Regen-Bazaar/regenbazaar-beta PRs 26-39: Arbitrum + Robinhood deploys, one app with network switcher, multichain indexer, USDG checkout, My impact, duplicate guard, validator evidence view, /roadmap, /guide. Pre-existing: scoring engine, contracts, Celo pilot.
 ```
 
-**Prize tracks:** Promising Products Track [+ Overall Prize, Grants: решение Paul]
+**Prize tracks:** Overall Prize, Promising Products Track, Grants
 
 **Sponsor technologies:** Robinhood Chain, OpenZeppelin, Paxos/USDG
 
