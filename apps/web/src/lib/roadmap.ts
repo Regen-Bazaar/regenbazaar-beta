@@ -97,10 +97,12 @@ export const PHASES: Phase[] = [
       "Proof of control before anyone can edit a profile or change the payout wallet",
       "Payout options for organisations without crypto experience",
       "Organisation dashboard: reports, listings, sales, funds received",
+      "First partner integration: DeCleanup users list bundles of 10 or more verified cleanups, checked against DeCleanup's records on Celo, with a share of each sale going to DeCleanup as the tool that verified them",
     ],
     doneWhen: [
       "A new organisation with no wallet can sign up, submit a report and receive a payout",
       "Every profile change is authorised by the organisation's own members",
+      "A DeCleanup user can list a bundle of verified cleanups, and no cleanup can be sold twice",
     ],
   },
   {
