@@ -26,6 +26,7 @@ const GAS_FAUCETS: Record<string, { name: string; url: string }[]> = {
 const TOC = [
   { id: "look", label: "Just looking" },
   { id: "fund", label: "Fund an impact" },
+  { id: "tokens", label: "Test tokens by network" },
   { id: "tokenize", label: "Tokenize your impact" },
   { id: "words", label: "Words you will see" },
   { id: "real", label: "What is real" },
@@ -98,7 +99,10 @@ export default async function Guide() {
           <li>
             <b>Get a wallet.</b> On a computer, install the{" "}
             <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" className="link">MetaMask</a>{" "}
-            extension. On a phone, install the MetaMask app and open this site inside the app&apos;s browser.
+            extension (Rabby works too). On a phone, install the MetaMask app and open this site inside the
+            app&apos;s browser, or choose <b>WalletConnect</b> under Connect wallet and scan the QR code. The site
+            asks your wallet to switch to {chain} and adds the network if it is missing. Some wallets (Zerion, for
+            example) fail to send testnet transactions, so use MetaMask or Rabby here.
           </li>
           <li>
             <b>Get a little test {gas}{native ? "" : " for fees"}</b> on {chain}:
@@ -127,7 +131,8 @@ export default async function Guide() {
               <>
                 Open the{" "}
                 <a href="https://faucet.paxos.com/" target="_blank" rel="noopener noreferrer" className="link">Paxos faucet</a>,
-                choose <b>{chain}</b> and <b>USDG</b>, and paste your wallet address.
+                choose <b>{chain}</b> and <b>USDG</b>, and paste your wallet address. The Paxos faucet sometimes
+                runs dry; if nothing arrives, try the purchase on Arbitrum Sepolia, where test tokens are one click.
               </>
             )}
           </li>
@@ -144,6 +149,52 @@ export default async function Guide() {
             retire an edition to permanently claim its share of the impact.
           </li>
         </ol>
+      </Section>
+
+      <Section id="tokens" title="Test tokens by network">
+        <p className="text-muted">
+          Each network needs its own test tokens: one for fees (gas) and one to pay with. Tokens on one network are not
+          visible on another. Pick the network in the header first.
+        </p>
+        <div className="mt-4 space-y-3">
+          {enabledNetworks().map((n) => {
+            const c = n.saleCurrency;
+            const g = n.chain.nativeCurrency.symbol;
+            return (
+              <div key={n.key} className={`rounded-xl border p-4 ${n.key === NETWORK.key ? "border-accent" : "border-line"}`}>
+                <div className="font-semibold">
+                  {n.chain.name}
+                  {n.key === NETWORK.key && <span className="ml-2 text-xs font-normal text-accent">selected</span>}
+                </div>
+                <div className="mt-2 text-sm">
+                  <b>Fees ({g}):</b>{" "}
+                  {(GAS_FAUCETS[n.key] ?? []).map((f, i) => (
+                    <span key={f.url}>
+                      {i > 0 && " · "}
+                      <a href={f.url} target="_blank" rel="noopener noreferrer" className="link">{f.name}</a>
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-1 text-sm">
+                  <b>Pay with {c.symbol}:</b>{" "}
+                  {c.address === NATIVE ? (
+                    <>the same {g} from the fee faucet pays for the purchase; nothing else to get.</>
+                  ) : c.testMint ? (
+                    <>click <i>Get 100 test {c.symbol}</i> in the Marketplace (a stand-in for Paxos USDG, one click).</>
+                  ) : (
+                    <>
+                      <a href="https://faucet.paxos.com/" target="_blank" rel="noopener noreferrer" className="link">Paxos faucet</a>
+                      , choose {n.chain.name} and USDG. It is sometimes empty; if so, use Arbitrum Sepolia instead.
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <p className="mt-3 text-sm text-subtle">
+          Easiest start: Arbitrum Sepolia. One faucet claim for fees, then one click for payment tokens.
+        </p>
       </Section>
 
       <Section id="tokenize" title="Tokenize your impact (NGOs)">

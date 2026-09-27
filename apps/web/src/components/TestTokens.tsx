@@ -1,22 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useChainId, useConnect, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
-import { injected } from "wagmi/connectors";
+import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { parseUnits } from "viem";
-import { erc20Abi } from "../lib/chain";
-import { hasInjectedWallet, NO_WALLET_HINT } from "../lib/wallet";
+import { erc20Abi, feeOverrides } from "../lib/chain";
+import { NO_WALLET_HINT } from "../lib/wallet";
 import { useNetwork } from "./NetworkProvider";
+import { useConnectWallet } from "./useConnectWallet";
+import { ErrorNote } from "./ErrorNote";
 
 /** Testnet stand-in token only: one banner that lets a demo buyer mint themselves enough to try a purchase. */
 export function TestTokens() {
   const net = useNetwork();
   const chain = net.chain;
   const SALE_CURRENCY = net.saleCurrency;
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const publicClient = usePublicClient({ chainId: chain.id });
-  const { connect } = useConnect();
-  const chainId = useChainId();
+  const { connectAny } = useConnectWallet();
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
   const [msg, setMsg] = useState("");
@@ -26,11 +26,7 @@ export function TestTokens() {
 
   async function getTestTokens() {
     if (!isConnected || !address) {
-      if (!hasInjectedWallet()) {
-        setMsg(NO_WALLET_HINT);
-        return;
-      }
-      connect({ connector: injected() });
+      if (!connectAny()) setMsg(NO_WALLET_HINT);
       return;
     }
     setMsg("");
@@ -43,6 +39,7 @@ export function TestTokens() {
         functionName: "mint",
         args: [address, parseUnits("100", SALE_CURRENCY.decimals)],
         chainId: chain.id,
+        ...(await feeOverrides(publicClient)),
       });
       setMsg(`Minting 100 ${SALE_CURRENCY.symbol}…`);
       await publicClient?.waitForTransactionReceipt({ hash });
@@ -63,7 +60,7 @@ export function TestTokens() {
       <button onClick={getTestTokens} disabled={busy} className="btn btn-secondary btn-sm">
         {busy ? "Confirm in wallet…" : `Get 100 test ${SALE_CURRENCY.symbol}`}
       </button>
-      {msg && <p className="w-full break-words text-sm text-muted">{msg}</p>}
+      {msg && <ErrorNote text={msg} className="w-full text-sm text-muted" />}
     </div>
   );
 }

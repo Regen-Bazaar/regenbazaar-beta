@@ -62,7 +62,7 @@ async function registerListing(db: DB, net: Network, submissionId: string, reqUr
   });
 
   const metadataURI = await pinJson(meta); // ipfs://<cid>
-  const { uid } = await attestImpact(net, ngo, s.ivValue, metadataURI); // platform attests provenance
+  const { uid, txHash } = await attestImpact(net, ngo, s.ivValue, metadataURI); // platform attests provenance
 
   // assign the next on-chain tokenId off-chain (collection materializes on first redeem)
   const [{ m }] = await db
@@ -92,7 +92,7 @@ async function registerListing(db: DB, net: Network, submissionId: string, reqUr
     active: true,
   });
 
-  return { network: net.key, tokenId, easUid: uid, metadataURI, pricePerEditionWei, existing: false };
+  return { network: net.key, tokenId, easUid: uid, attestTx: txHash, metadataURI, pricePerEditionWei, existing: false };
 }
 
 // POST /api/verifications — validator decision. Approve registers the on-chain-ready listing (lazy mint).
@@ -147,13 +147,14 @@ export async function POST(req: Request) {
   if (onchainEnabled() && net) {
     let result;
     try {
-      result = { ok: true, ...(await registerListing(db, net, submissionId, req.url)) };
+      result = await registerListing(db, net, submissionId, req.url);
     } catch (e) {
-      result = { ok: false, network: net.key, error: e instanceof Error ? e.message.slice(0, 200) : "listing failed" };
+      // Keep it in the queue so the reviewer sees the failure and can retry (re-approving is idempotent).
+      const error = e instanceof Error ? e.message.slice(0, 300) : "listing failed";
+      return NextResponse.json({ error: `Approved, but listing on ${net.chain.name} failed: ${error}` }, { status: 502 });
     }
-    const status = result.ok ? "tokenized" : "verified";
-    await db.update(impactSubmissions).set({ status, updatedAt: new Date() }).where(eq(impactSubmissions.id, submissionId));
-    return NextResponse.json({ ok: true, status, listings: [result] });
+    await db.update(impactSubmissions).set({ status: "tokenized", updatedAt: new Date() }).where(eq(impactSubmissions.id, submissionId));
+    return NextResponse.json({ ok: true, status: "tokenized", listings: [{ ok: true, ...result }] });
   }
   await db.update(impactSubmissions).set({ status: "verified", updatedAt: new Date() }).where(eq(impactSubmissions.id, submissionId));
   return NextResponse.json({ ok: true, status: "verified" });

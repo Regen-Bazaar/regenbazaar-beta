@@ -58,9 +58,19 @@ export async function GET(req: Request) {
     .orderBy(desc(impactSubmissions.createdAt))
     .limit(100);
   if (!admin) return NextResponse.json(rows);
-  // Validators also get double-counting hints against everything already submitted.
+  // Validators also get double-counting hints against everything already submitted, and who gets paid.
   const all = await db.select().from(impactSubmissions).orderBy(desc(impactSubmissions.createdAt)).limit(2000);
-  return NextResponse.json(rows.map((r) => ({ ...r, possibleDuplicates: findDuplicates(r, all) })));
+  const orgIds = [...new Set(rows.map((r) => r.orgId))];
+  const orgs = orgIds.length
+    ? await db
+        .select({ id: organizations.id, name: organizations.name, wallet: organizations.walletAddress, verified: organizations.verified })
+        .from(organizations)
+        .where(inArray(organizations.id, orgIds))
+    : [];
+  const orgById = new Map(orgs.map((o) => [o.id, o]));
+  return NextResponse.json(
+    rows.map((r) => ({ ...r, org: orgById.get(r.orgId) ?? null, possibleDuplicates: findDuplicates(r, all) })),
+  );
 }
 
 // POST /api/submissions — extract -> deterministically score -> persist into the verification queue.

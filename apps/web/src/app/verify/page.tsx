@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { DEFAULT_NETWORK_KEY, getNetwork, networkByChainId } from "../../lib/networks";
+import Link from "next/link";
+import { DEFAULT_NETWORK_KEY, getNetwork, networkByChainId, type Network } from "../../lib/networks";
+import { FrameworkTag } from "../../components/FrameworkTag";
+import { ErrorNote } from "../../components/ErrorNote";
 
 type Submission = {
   id: string;
@@ -13,7 +16,22 @@ type Submission = {
   frameworkTags: { sdg: string[]; ebf: string[] } | null;
   extractedActions: { actionType: string; quantity: number; unit: string }[] | null;
   possibleDuplicates?: { id: string; title: string; status: string; reason: string }[];
+  mediaUris: string[] | null;
+  context: { regionCode?: string; periodStart?: string; periodEnd?: string } | null;
+  org: { name: string; wallet: string; verified: boolean } | null;
 };
+
+type Approved = {
+  sub: Submission;
+  net: Network | undefined;
+  tokenId?: string;
+  easUid?: string;
+  attestTx?: string;
+  existing?: boolean;
+};
+
+const netOf = (s: Submission) => (s.chainId == null ? getNetwork(DEFAULT_NETWORK_KEY) : networkByChainId(s.chainId));
+const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 
 export default function Verify() {
   const [subs, setSubs] = useState<Submission[]>([]);
@@ -23,6 +41,7 @@ export default function Verify() {
   const [token, setToken] = useState("");
   const [denied, setDenied] = useState(false);
   const [error, setError] = useState("");
+  const [approved, setApproved] = useState<Approved[]>([]);
 
   useEffect(() => {
     try {
@@ -50,7 +69,13 @@ export default function Verify() {
       headers: { "content-type": "application/json", "x-admin-token": token },
       body: JSON.stringify({ submissionId: id, decision, note: notes[id]?.trim() || undefined }),
     });
-    if (!res.ok) setError((await res.json().catch(() => ({}))).error ?? "failed");
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) setError(body.error ?? "failed");
+    else if (decision === "approve") {
+      const sub = subs.find((x) => x.id === id)!;
+      const l = body.listings?.[0] ?? {};
+      setApproved((a) => [{ sub, net: netOf(sub), tokenId: l.tokenId, easUid: l.easUid, attestTx: l.attestTx, existing: l.existing }, ...a]);
+    }
     setBusy(null);
     await load();
   }
@@ -84,11 +109,37 @@ export default function Verify() {
           <button className="btn btn-secondary btn-sm">Unlock</button>
         </form>
       )}
-      {error && <p className="mt-4 text-danger">{error}</p>}
+      {denied && token && <p className="mt-2 text-sm text-danger">Wrong access code.</p>}
+      {error && <ErrorNote text={error} className="mt-4 text-danger" />}
+
+      {approved.map((a) => {
+        const explorer = a.net?.chain.blockExplorers?.default.url ?? "";
+        return (
+          <div key={a.sub.id} className="card mt-6 border-ok/40 bg-ok-tint p-6">
+            <div className="label-mono !text-ok">Approved{a.existing ? " (already listed)" : ""}</div>
+            <div className="mt-1 text-xl font-semibold leading-snug">{a.sub.title}</div>
+            <p className="mt-1 text-muted">
+              Attested on-chain and listed on <b>{a.net?.chain.name ?? "its network"}</b>
+              {a.tokenId && <> as tRWI #{a.tokenId}</>}, 100 editions.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link href={`/submission/${a.sub.id}`} className="btn btn-primary btn-sm">
+                View listing
+              </Link>
+              {a.attestTx && explorer && (
+                <a href={`${explorer}/tx/${a.attestTx}`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
+                  Attestation transaction ↗
+                </a>
+              )}
+            </div>
+            {a.easUid && <div className="mt-3 break-all font-mono text-xs text-subtle">EAS UID {a.easUid}</div>}
+          </div>
+        );
+      })}
 
       {denied ? null : loading ? (
         <p className="mt-10 text-muted">Loading…</p>
-      ) : subs.length === 0 ? (
+      ) : subs.length === 0 && approved.length > 0 ? null : subs.length === 0 ? (
         <p className="card mt-10 p-8 text-muted">Nothing pending. Submit one from the tokenize wizard.</p>
       ) : (
         <div className="mt-10 grid gap-5 2xl:grid-cols-2">
@@ -98,15 +149,15 @@ export default function Verify() {
                 <div className="min-w-0">
                   <div className="text-xl font-semibold leading-snug">{s.title}</div>
                   <div className="mt-1 text-sm text-accent">
-                    Lists on {(s.chainId == null ? getNetwork(DEFAULT_NETWORK_KEY) : networkByChainId(s.chainId))?.chain.name ?? `chain ${s.chainId}`}
+                    Lists on {netOf(s)?.chain.name ?? `chain ${s.chainId}`}
                   </div>
                   <div className="mt-2 text-muted">{s.description}</div>
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {s.frameworkTags?.sdg.map((t) => (
-                      <span key={t} className="tag">{t}</span>
+                      <FrameworkTag key={t} kind="sdg" value={t} />
                     ))}
                     {s.frameworkTags?.ebf.map((t) => (
-                      <span key={t} className="tag tag-ebf">EBF {t}</span>
+                      <FrameworkTag key={t} kind="ebf" value={t} />
                     ))}
                   </div>
                   <div className="mt-3 font-mono text-sm text-subtle">
@@ -117,6 +168,62 @@ export default function Verify() {
                   <div className="label-mono">Impact Value</div>
                   <div className="font-display text-3xl text-accent">{Number(s.ivValue ?? 0).toLocaleString()}</div>
                 </div>
+              </div>
+              <dl className="mt-4 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+                <div>
+                  <dt className="inline text-subtle">Organisation: </dt>
+                  <dd className="inline">
+                    {s.org?.name ?? "unknown"}
+                    {s.org && !s.org.verified && <span className="text-subtle"> (not verified)</span>}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="inline text-subtle">Payout wallet: </dt>
+                  <dd className="inline font-mono">
+                    {s.org?.wallet ? (
+                      <a
+                        href={`${netOf(s)?.chain.blockExplorers?.default.url ?? ""}/address/${s.org.wallet}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="link"
+                        title={s.org.wallet}
+                      >
+                        {short(s.org.wallet)}
+                      </a>
+                    ) : (
+                      "none"
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="inline text-subtle">Period: </dt>
+                  <dd className="inline">
+                    {s.context?.periodStart ?? "?"} to {s.context?.periodEnd ?? "?"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="inline text-subtle">Region: </dt>
+                  <dd className="inline">{s.context?.regionCode?.replace(/_/g, " ") ?? "not given"}</dd>
+                </div>
+              </dl>
+              <div className="mt-3 text-sm">
+                <span className="text-subtle">Evidence: </span>
+                {(s.mediaUris ?? []).length === 0 ? (
+                  <span className="text-danger">none attached</span>
+                ) : (
+                  (s.mediaUris ?? []).map((u, i) => (
+                    <span key={u}>
+                      {i > 0 && " · "}
+                      <a href={u} target="_blank" rel="noopener noreferrer nofollow ugc" className="link">
+                        link {i + 1}
+                      </a>
+                    </span>
+                  ))
+                )}
+                {" · "}
+                <a href={`/submission/${s.id}`} target="_blank" rel="noopener noreferrer" className="link">
+                  Open full report ↗
+                </a>
               </div>
               {(s.possibleDuplicates ?? []).length > 0 && (
                 <div className="mt-4 rounded-xl border border-line-strong bg-accent-tint p-4 text-sm text-muted">
@@ -146,7 +253,7 @@ export default function Verify() {
                   disabled={busy === s.id}
                   className="btn btn-sm bg-green text-paper hover:bg-green-soft disabled:opacity-50"
                 >
-                  Approve & attest
+                  {busy === s.id ? "Attesting on-chain…" : "Approve & attest"}
                 </button>
                 <button
                   onClick={() => decide(s.id, "reject")}

@@ -82,3 +82,23 @@ export const trwiAbi = [
     outputs: [],
   },
 ] as const;
+
+/**
+ * EIP-1559 fees read from the network right before sending, with 2x headroom on the base fee. Some wallets
+ * (MetaMask Mobile over WalletConnect) suggest a fee cap below the current base fee on Arbitrum Sepolia, and
+ * the node rejects it. Unused headroom is not charged. Empty = let the wallet decide.
+ */
+export async function feeOverrides(client: {
+  getBlock: () => Promise<{ baseFeePerGas: bigint | null }>;
+  estimateMaxPriorityFeePerGas: () => Promise<bigint>;
+} | undefined): Promise<{ maxFeePerGas?: bigint; maxPriorityFeePerGas?: bigint }> {
+  try {
+    if (!client) return {};
+    const { baseFeePerGas } = await client.getBlock();
+    if (baseFeePerGas == null) return {};
+    const tip = await client.estimateMaxPriorityFeePerGas().catch(() => 0n);
+    return { maxFeePerGas: baseFeePerGas * 2n + tip, maxPriorityFeePerGas: tip };
+  } catch {
+    return {};
+  }
+}
