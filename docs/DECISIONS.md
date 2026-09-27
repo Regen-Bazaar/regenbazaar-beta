@@ -239,3 +239,12 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   network RPC and passes `maxFeePerGas = 2 x base + tip`. MetaMask Mobile over WalletConnect proposed a cap
   below the Arbitrum Sepolia base fee and the node rejected the purchase. Only the used fee is charged. If the
   read fails, the wallet picks fees as before.
+
+## 2026-09-27 — Verification page for reviewers and the demo
+- `/verify` cards show organisation (and whether it is verified), payout wallet, period, region, evidence links
+  (or "none attached") and a link to the full report. The queue API adds `org` for validators only.
+- After approval the card becomes a green "Approved" panel with the network, token id, EAS UID, a link to the
+  attestation transaction and to the listing. A wrong access code now says so.
+- Approve failures are no longer silent: if pinning, attestation or listing fails, the API returns 502 with the
+  reason and the report stays `pending_verification`, so it can be retried (re-approval is idempotent). Before,
+  it was marked `verified` with no listing and dropped out of the queue.
