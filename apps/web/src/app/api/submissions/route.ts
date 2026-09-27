@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { processSubmission, createDeepSeekExtractor, moderate } from "@rb/pipeline";
+import { processSubmission, createDeepSeekExtractor, moderate, parseContext, parseDomain } from "@rb/pipeline";
 import { impactSubmissions, organizations } from "@rb/db/schema";
 import { desc, eq, inArray, sql } from "drizzle-orm";
 import { getAddress, isAddress } from "viem";
@@ -102,6 +102,11 @@ export async function POST(req: Request) {
   if (payoutWallet && !orgName) {
     return NextResponse.json({ error: "organisation name is required with a payout wallet" }, { status: 422 });
   }
+  // Domain and scoring context must match the engine's tables; unknown values used to crash scoring (500).
+  const domain = parseDomain(body.domain);
+  if (!domain.ok) return NextResponse.json({ error: domain.error }, { status: 422 });
+  const context = parseContext(body.context);
+  if (!context.ok) return NextResponse.json({ error: context.error }, { status: 422 });
 
   // Evidence links: plain http(s) URLs only (rendered as links, never embedded).
   const mediaUris = Array.isArray(body.mediaUris)
@@ -132,8 +137,8 @@ export async function POST(req: Request) {
         orgId,
         title,
         description,
-        domain: body.domain as never,
-        context: body.context as never,
+        domain: domain.value,
+        context: context.value,
         mediaUris,
         chainId,
       },

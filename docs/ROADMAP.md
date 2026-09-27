@@ -38,21 +38,26 @@ Also on the site: https://app.regenbazaar.com/roadmap
 - Testers from outside the team complete a submission and a purchase without help
 - Feedback is collected, answered and turned into fixes
 
-## Phase 2: Trust: methodology and verification (next, grant-fundable)
+## Phase 2: Trust: methodology v0.2 and proof of impact (now, grant-fundable)
 
 **Goal:** Make the Impact Value a number a funder can rely on, and make double counting hard.
 
-- Calibrate scoring weights with domain experts against established impact standards
-- Express selected actions in physical units (for example tCO₂e for restoration), with versioned scoring so past scores stay auditable
-- Required evidence: dated, geotagged photos, with an AI check that evidence matches the report
+- Methodology v0.2 for community groups and small organisations: environmental actions in physical units from public coefficients (IPCC default tables, US EPA WARM, IFI grid emission factors, peer-reviewed mangrove rates); social, education and health actions defined by IRIS+ metrics
+- A written rationale for every scoring weight, with its source or marked as a platform estimate, and a sensitivity test of how rankings change when weights move
+- Scores per impact domain (environment, animal welfare, education, poverty, social, health), with the overall Impact Value kept for pricing and rewards
+- Proof of impact: links to public posts and reports, dated and geotagged photos, a second-party witness; an AI check flags mismatches and a person sets the proof level
+- Ecosystem sensitivity from the location of the work, using open data (ecoregions, coral reef and mangrove maps, forest change)
+- Price in US dollars derived from the Impact Value, the proof level and the difficulty of the work
+- Versioned scoring, so past reports keep the score of the version that produced them
 - Similarity checks across all reports, and checks against other impact registries so the same work is not sold twice
 - Revocation: withdraw the on-chain attestation and delist a claim that turns out to be false
-- An accredited third-party verification tier for buyers who need it
+- Review of the weights by independent domain experts, with an open comment period
 
 **Done when:**
 
-- Every scoring weight cites a source or is marked as an expert estimate, published on the methodology page
-- No listing goes live without evidence, and duplicate checks run on every submission
+- Every scoring weight has a published rationale and cites a source or is marked as a platform estimate
+- Every listing shows its proof level, and no listing goes live without at least one public proof of the work
+- Duplicate checks run on every submission
 
 ## Phase 3: Organisations: onboarding without crypto (next, grant-fundable)
 
