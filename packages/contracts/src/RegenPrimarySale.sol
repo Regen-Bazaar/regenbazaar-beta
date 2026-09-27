@@ -33,6 +33,9 @@ interface ITRWI {
 ///         fee (`feeBps`) is part of the SIGNED voucher, so the buyer/NGO split can't be changed after
 ///         signing. Vouchers carry a `deadline` and a per-tokenId `nonce` so the platform can reprice/delist
 ///         by bumping the nonce. Payment currency must be NATIVE or on the admin allowlist.
+///         v2 adds an optional partner share (`partner`, `partnerFeeBps`), also signed: the tool or platform
+///         that verified/tokenized the impact is paid in the same transaction. No partner registry lives
+///         on-chain, so onboarding a partner needs no contract change. EIP-712 domain version "2".
 contract RegenPrimarySale is AccessControl, ReentrancyGuard, Pausable, EIP712 {
     using SafeERC20 for IERC20;
 
@@ -40,11 +43,13 @@ contract RegenPrimarySale is AccessControl, ReentrancyGuard, Pausable, EIP712 {
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     address public constant NATIVE = address(0);
-    uint96 public constant MAX_FEE_BPS = 1000; // 10%
+    uint96 public constant MAX_FEE_BPS = 1000; // 10%, platform
+    uint96 public constant MAX_PARTNER_FEE_BPS = 1000; // 10%, partner
+    uint96 public constant MAX_TOTAL_FEE_BPS = 1500; // 15%, platform + partner
     uint96 internal constant BPS = 10_000;
 
     bytes32 private constant VOUCHER_TYPEHASH = keccak256(
-        "Voucher(uint256 tokenId,address creator,uint256 totalIV,uint256 maxEditions,uint256 pricePerEdition,address currency,address beneficiary,bytes32 easUID,string metadataURI,uint96 royaltyBps,uint96 feeBps,uint256 nonce,uint256 deadline)"
+        "Voucher(uint256 tokenId,address creator,uint256 totalIV,uint256 maxEditions,uint256 pricePerEdition,address currency,address beneficiary,bytes32 easUID,string metadataURI,uint96 royaltyBps,uint96 feeBps,address partner,uint96 partnerFeeBps,uint256 nonce,uint256 deadline)"
     );
 
     ITRWI public immutable trwi;
@@ -69,6 +74,8 @@ contract RegenPrimarySale is AccessControl, ReentrancyGuard, Pausable, EIP712 {
         string metadataURI;
         uint96 royaltyBps;
         uint96 feeBps; // platform fee for this sale, signed (<= MAX_FEE_BPS)
+        address partner; // optional partner payout; address(0) = none
+        uint96 partnerFeeBps; // partner share, signed (<= MAX_PARTNER_FEE_BPS; 0 when no partner)
         uint256 nonce;
         uint256 deadline;
     }
@@ -76,6 +83,7 @@ contract RegenPrimarySale is AccessControl, ReentrancyGuard, Pausable, EIP712 {
     event Sold(
         uint256 indexed tokenId, address indexed buyer, uint256 amount, uint256 total, address currency
     );
+    event PartnerPaid(uint256 indexed tokenId, address indexed partner, uint256 amount, address currency);
     event NonceBumped(uint256 indexed tokenId, uint256 newNonce);
     event FeeRecipientUpdated(address feeRecipient);
     event CurrencyAllowed(address indexed currency, bool allowed);
@@ -88,7 +96,7 @@ contract RegenPrimarySale is AccessControl, ReentrancyGuard, Pausable, EIP712 {
     error TransferFailed();
     error BadCurrency();
 
-    constructor(address admin, address trwi_, address feeRecipient_) EIP712("RegenPrimarySale", "1") {
+    constructor(address admin, address trwi_, address feeRecipient_) EIP712("RegenPrimarySale", "2") {
         if (admin == address(0) || trwi_ == address(0) || feeRecipient_ == address(0)) revert BadParams();
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
         _grantRole(ADMIN_ROLE, admin);
@@ -96,7 +104,7 @@ contract RegenPrimarySale is AccessControl, ReentrancyGuard, Pausable, EIP712 {
         feeRecipient = feeRecipient_;
     }
 
-    /// @notice Redeem a platform-signed voucher: pay, split fee + beneficiary, lazily mint to the buyer.
+    /// @notice Redeem a platform-signed voucher: pay, split fee + partner + beneficiary, lazily mint to the buyer.
     function redeem(Voucher calldata v, uint256 amount, bytes calldata sig)
         external
         payable
@@ -104,7 +112,9 @@ contract RegenPrimarySale is AccessControl, ReentrancyGuard, Pausable, EIP712 {
         whenNotPaused
     {
         if (amount == 0) revert BadParams();
-        if (v.feeBps > MAX_FEE_BPS) revert BadParams();
+        if (v.feeBps > MAX_FEE_BPS || v.partnerFeeBps > MAX_PARTNER_FEE_BPS) revert BadParams();
+        if (uint256(v.feeBps) + v.partnerFeeBps > MAX_TOTAL_FEE_BPS) revert BadParams();
+        if (v.partner == address(0) && v.partnerFeeBps != 0) revert BadParams();
         if (block.timestamp > v.deadline) revert Expired();
         if (v.nonce != currentNonce[v.tokenId]) revert StaleVoucher();
         if (v.currency != NATIVE && !allowedCurrency[v.currency]) revert BadCurrency();
@@ -120,9 +130,15 @@ contract RegenPrimarySale is AccessControl, ReentrancyGuard, Pausable, EIP712 {
             IERC20(v.currency).safeTransferFrom(msg.sender, address(this), total);
         }
 
+        // Both shares round down, so any remainder goes to the beneficiary.
         uint256 fee = (total * v.feeBps) / BPS;
+        uint256 partnerFee = (total * v.partnerFeeBps) / BPS;
         _pay(v.currency, feeRecipient, fee);
-        _pay(v.currency, v.beneficiary, total - fee);
+        if (partnerFee != 0) {
+            _pay(v.currency, v.partner, partnerFee);
+            emit PartnerPaid(v.tokenId, v.partner, partnerFee, v.currency);
+        }
+        _pay(v.currency, v.beneficiary, total - fee - partnerFee);
 
         trwi.mint(
             ITRWI.MintParams({
@@ -173,22 +189,17 @@ contract RegenPrimarySale is AccessControl, ReentrancyGuard, Pausable, EIP712 {
     }
 
     function _voucherStructHash(Voucher calldata v) internal pure returns (bytes32) {
+        // Every field encodes to one 32-byte word, so concatenating chunks equals a single abi.encode;
+        // split only to avoid stack-too-deep with 15 fields.
         return keccak256(
-            abi.encode(
-                VOUCHER_TYPEHASH,
-                v.tokenId,
-                v.creator,
-                v.totalIV,
-                v.maxEditions,
-                v.pricePerEdition,
-                v.currency,
-                v.beneficiary,
-                v.easUID,
-                keccak256(bytes(v.metadataURI)),
-                v.royaltyBps,
-                v.feeBps,
-                v.nonce,
-                v.deadline
+            bytes.concat(
+                abi.encode(
+                    VOUCHER_TYPEHASH, v.tokenId, v.creator, v.totalIV, v.maxEditions, v.pricePerEdition
+                ),
+                abi.encode(
+                        v.currency, v.beneficiary, v.easUID, keccak256(bytes(v.metadataURI)), v.royaltyBps
+                    ),
+                abi.encode(v.feeBps, v.partner, v.partnerFeeBps, v.nonce, v.deadline)
             )
         );
     }

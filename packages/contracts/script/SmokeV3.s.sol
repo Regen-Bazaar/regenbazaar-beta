@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Script, console2} from "forge-std/Script.sol";
-import {IEAS, AttestationRequest, AttestationRequestData} from "@ethereum-attestation-service/eas-contracts/IEAS.sol";
-import {RegenPrimarySale} from "../src/RegenPrimarySale.sol";
-import {TRWI} from "../src/TRWI.sol";
+import { Script, console2 } from "forge-std/Script.sol";
+import {
+    IEAS,
+    AttestationRequest,
+    AttestationRequestData
+} from "@ethereum-attestation-service/eas-contracts/IEAS.sol";
+import { RegenPrimarySale } from "../src/RegenPrimarySale.sol";
+import { TRWI } from "../src/TRWI.sol";
 
 /// @notice Two-phase live smoke for the v3 deployment (sidesteps forge's collect-then-broadcast UID problem).
 ///         Phase 1 (SMOKE_EAS_UID unset): attest, log the real on-chain UID.
@@ -56,13 +60,15 @@ contract SmokeV3 is Script {
             metadataURI: URI,
             royaltyBps: 500,
             feeBps: 250,
+            partner: address(0), // v2 voucher: no partner (SALE must point at a v2 RegenPrimarySale)
+            partnerFeeBps: 0,
             nonce: 0,
             deadline: block.timestamp + 1 hours
         });
 
         (uint8 yv, bytes32 r, bytes32 s) = vm.sign(pk, SALE.hashVoucher(v));
         vm.startBroadcast(pk);
-        SALE.redeem{value: 0.001 ether}(v, 2, abi.encodePacked(r, s, yv));
+        SALE.redeem{ value: 0.001 ether }(v, 2, abi.encodePacked(r, s, yv));
         vm.stopBroadcast();
 
         uint256 bal = TRWI_.balanceOf(me, TOKEN_ID);
