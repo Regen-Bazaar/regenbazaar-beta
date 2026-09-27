@@ -248,3 +248,24 @@ Append-only record of significant choices, why we made them, and the trade-offs 
 - Approve failures are no longer silent: if pinning, attestation or listing fails, the API returns 502 with the
   reason and the report stays `pending_verification`, so it can be retried (re-approval is idempotent). Before,
   it was marked `verified` with no listing and dropped out of the queue.
+
+## 2026-09-27 — Roadmap: verification levels, contribution statements, mainnet compliance
+- **What:** Added to `apps/web/src/lib/roadmap.ts` (and regenerated `docs/ROADMAP.md`): a verification level in every
+  attestation, dated follow-up monitoring, an on-chain contribution statement on retirement, funding/contribution
+  wording instead of offsetting (EU Directive 2024/825, applies 27.09.2026), downloadable contribution history, opt-in
+  ranks weighted by verification level, and for mainnet: participant-responsibility terms, wallet sanctions
+  screening, and checkout only in natively issued regulated stablecoins. Proof-only (non-transferable) collections
+  went to "Exploring".
+- **Why:** These serve the retail marketplace now and keep later options open. Background research is kept
+  outside the repo.
+
+## 2026-09-27 — Submission input validation; roadmap trust phase becomes methodology v0.2
+- **What:** `POST /api/submissions` validates `domain` and `context` against the engine tables (`parseDomain`,
+  `parseContext` in `@rb/pipeline`) and returns 422 on unknown values; unknown context keys are dropped.
+  `GET /api/submissions/<id>/metadata` returns 404 for pending or rejected reports unless the caller is a validator.
+  The roadmap trust phase is now "methodology v0.2 and proof of impact" (status now), merged with the verification
+  level, follow-up monitoring, contribution statement and green-claims items above; "verification level" and
+  "proof level" are one concept, named proof level.
+- **Why:** an unknown complexity answer produced a NaN Impact Value and a 500; metadata of unapproved reports was
+  public. The methodology audit (kept outside the repo) led to the v0.2 plan: physical units from public coefficients,
+  per-domain scores, proof levels, USD price from IV. Scoring tables and price are unchanged in this commit.

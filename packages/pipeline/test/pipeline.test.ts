@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createTestDb } from "@rb/db/testing";
 import * as schema from "@rb/db/schema";
-import { processSubmission, sanitizeActions, createDeepSeekExtractor } from "../src/index.ts";
+import { processSubmission, sanitizeActions, createDeepSeekExtractor, parseContext, parseDomain } from "../src/index.ts";
 
 test("processSubmission: extract -> score -> persist into verification queue", async () => {
   const { db } = await createTestDb();
@@ -70,4 +70,49 @@ test("sanitizeActions filters non-arrays and invalid entries", () => {
   assert.deepEqual(sanitizeActions([{ actionType: "a", quantity: 3, unit: "u" }]), [
     { actionType: "a", quantity: 3, unit: "u" },
   ]);
+});
+
+test("parseDomain: accepts the enum, rejects anything else", () => {
+  assert.deepEqual(parseDomain("animal_welfare"), { ok: true, value: "animal_welfare" });
+  assert.deepEqual(parseDomain(undefined), { ok: true, value: undefined });
+  assert.equal(parseDomain("space").ok, false);
+  assert.equal(parseDomain(42).ok, false);
+});
+
+test("parseContext: known values pass through, unknown values are rejected before scoring", () => {
+  const complexity = {
+    technicalExpertise: "medium",
+    resourceIntensity: "low",
+    projectScale: "city",
+    regulatory: "low",
+    environmentalConditions: "easy",
+  };
+  const ok = parseContext({
+    regionCode: "coral_reef",
+    populationDensity: "high",
+    complexity,
+    periodStart: "2025-01-01",
+    periodEnd: "2025-06-30",
+    injected: "<script>",
+  });
+  assert.ok(ok.ok);
+  assert.deepEqual(ok.value, {
+    regionCode: "coral_reef",
+    populationDensity: "high",
+    complexity,
+    periodStart: "2025-01-01",
+    periodEnd: "2025-06-30",
+  }); // unknown keys are dropped
+  assert.deepEqual(parseContext(undefined), { ok: true, value: {} });
+
+  // Each of these used to reach the formula: NaN IV (complexity) or a silent 1.0 (region).
+  assert.equal(parseContext({ complexity: { ...complexity, regulatory: "extreme" } }).ok, false);
+  assert.equal(parseContext({ complexity: { technicalExpertise: "high" } }).ok, false);
+  assert.equal(parseContext({ regionCode: "Amazon" }).ok, false);
+  assert.equal(parseContext({ regionCode: "__proto__" }).ok, false);
+  assert.equal(parseContext({ populationDensity: "huge" }).ok, false);
+  assert.equal(parseContext({ periodStart: "01/02/2025" }).ok, false);
+  assert.equal(parseContext({ periodStart: "2025-06-01", periodEnd: "2025-01-01" }).ok, false);
+  assert.equal(parseContext("string").ok, false);
+  assert.equal(parseContext([1]).ok, false);
 });

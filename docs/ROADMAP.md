@@ -38,21 +38,32 @@ Also on the site: https://app.regenbazaar.com/roadmap
 - Testers from outside the team complete a submission and a purchase without help
 - Feedback is collected, answered and turned into fixes
 
-## Phase 2: Trust: methodology and verification (next, grant-fundable)
+## Phase 2: Trust: methodology v0.2 and proof of impact (now, grant-fundable)
 
 **Goal:** Make the Impact Value a number a funder can rely on, and make double counting hard.
 
-- Calibrate scoring weights with domain experts against established impact standards
-- Express selected actions in physical units (for example tCO₂e for restoration), with versioned scoring so past scores stay auditable
-- Required evidence: dated, geotagged photos, with an AI check that evidence matches the report
+- Methodology v0.2 for community groups and small organisations: environmental actions in physical units from public coefficients (IPCC default tables, US EPA WARM, IFI grid emission factors, peer-reviewed mangrove rates); social, education and health actions defined by IRIS+ metrics
+- A written rationale for every scoring weight, with its source or marked as a platform estimate, and a sensitivity test of how rankings change when weights move
+- Scores per impact domain (environment, animal welfare, education, poverty, social, health), with the overall Impact Value kept for pricing and rewards
+- Proof of impact: links to public posts and reports, dated and geotagged photos, a second-party witness; an AI check flags mismatches and a person sets the proof level
+- Ecosystem sensitivity from the location of the work, using open data (ecoregions, coral reef and mangrove maps, forest change)
+- Price in US dollars derived from the Impact Value, the proof level and the difficulty of the work
+- Versioned scoring, so past reports keep the score of the version that produced them
 - Similarity checks across all reports, and checks against other impact registries so the same work is not sold twice
 - Revocation: withdraw the on-chain attestation and delist a claim that turns out to be false
+- Review of the weights by independent domain experts, with an open comment period
 - An accredited third-party verification tier for buyers who need it
+- Every attestation states its proof level (from self-reported to independently verified), who verified it, the evidence used and when it is re-checked
+- Follow-up monitoring: a dated re-check of the same site (for example survival after 12 and 36 months), attested and linked to the original report
+- Retiring a tRWI records an on-chain contribution statement: who retired it, how much Impact Value, which project
+- Wording across the site says what was funded and contributed, never offsetting or carbon neutrality, in line with EU consumer rules on green claims (Directive 2024/825)
 
 **Done when:**
 
-- Every scoring weight cites a source or is marked as an expert estimate, published on the methodology page
-- No listing goes live without evidence, and duplicate checks run on every submission
+- Every scoring weight has a published rationale and cites a source or is marked as a platform estimate
+- Every listing shows its proof level, and no listing goes live without at least one public proof of the work
+- Every retirement produces a contribution statement
+- Duplicate checks run on every submission
 
 ## Phase 3: Organisations: onboarding without crypto (next, grant-fundable)
 
@@ -75,11 +86,11 @@ Also on the site: https://app.regenbazaar.com/roadmap
 **Goal:** Make funding impact as easy as a card payment, for individuals, companies and software.
 
 - Mobile wallets without the in-app browser, gasless checkout, and card payment for people without crypto
-- Shareable impact certificates and a full history of what you funded
+- Shareable impact certificates and a full history of what you funded, downloadable as CSV or PDF with links to each attestation
 - Company portal: buy across many small projects at once, invoices, and exportable impact reports for sustainability teams
 - Secondary market on the existing resale contract, with a capped royalty back to the organisation
 - AI-agent funding: a documented API for software that discovers, evaluates and funds impact
-- Funder ranks and a public leaderboard, ranked by Impact Value funded and retired rather than money spent, so a rank cannot simply be bought
+- Funder ranks and a public leaderboard, ranked by Impact Value funded and retired rather than money spent, so a rank cannot simply be bought; weighted by proof level, and joining is opt-in
 - Levels and badges per impact domain and SDG, streaks for regular funding, and a personal impact dashboard showing what your funding achieved
 - Organisation leaderboard by verified impact delivered, so the most effective groups get seen first
 
@@ -112,6 +123,9 @@ Also on the site: https://app.regenbazaar.com/roadmap
 - External security audit of the contracts
 - Admin roles held by a multisig with a timelock; separate operating keys
 - Legal review of the tRWI model; terms of use and privacy policy
+- Terms that make each organisation and funder responsible for their own country's rules on foreign funding, tax and reporting; organisations confirm at sign-up that they may receive foreign funds, including in stablecoins
+- Sanctions screening of organisation and funder wallets
+- Checkout only in regulated stablecoins issued natively on each network (for example USDC, and euro stablecoins such as EURe or EURAU), never bridged copies
 - Launch with pilot partners first, with their consent
 
 **Done when:**
@@ -124,5 +138,6 @@ Also on the site: https://app.regenbazaar.com/roadmap
 - Outcome-based lending to organisations, tied to measured impact
 - Interoperability with other on-chain regen platforms and registries (Hypercerts and other open impact standards), so impact tokenized here is recognised and counted there, and never counted twice
 - More networks, only where a stablecoin and real demand exist
+- Proof-only collections: shares that can be retired but not resold, for funders who want a record rather than a tradable token
 
 _Generated from `apps/web/src/lib/roadmap.ts`; edit there._
