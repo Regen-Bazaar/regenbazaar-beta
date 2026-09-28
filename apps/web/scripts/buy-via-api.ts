@@ -14,8 +14,13 @@ console.log("voucher from app:", j.chainId, j.contract, "currency", v.currency, 
 const pk = process.env.PK!; const account = privateKeyToAccount((pk.startsWith("0x") ? pk : `0x${pk}`) as Hex);
 const chain = NETWORK.chain; const wallet = createWalletClient({ account, chain, transport: http() }); const pub = createPublicClient({ chain, transport: http() });
 const amount = 2n; const total = voucher.pricePerEdition * amount;
-const a = await wallet.writeContract({ address: v.currency, abi: erc20Abi, functionName: "approve", args: [j.contract, total] });
-await pub.waitForTransactionReceipt({ hash: a });
-const h = await wallet.writeContract({ address: j.contract, abi: redeemAbi, functionName: "redeem", args: [voucher, amount, j.signature] });
+// Native currency (CELO on Celo Sepolia) is sent as value; ERC-20 (USDG) needs an approval first.
+const native = /^0x0{40}$/i.test(v.currency);
+if (!native) {
+  const a = await wallet.writeContract({ address: v.currency, abi: erc20Abi, functionName: "approve", args: [j.contract, total] });
+  await pub.waitForTransactionReceipt({ hash: a });
+  console.log("approve", a);
+}
+const h = await wallet.writeContract({ address: j.contract, abi: redeemAbi, functionName: "redeem", args: [voucher, amount, j.signature], value: native ? total : 0n });
 const r = await pub.waitForTransactionReceipt({ hash: h });
-console.log("approve", a); console.log("redeem", h, r.status);
+console.log("redeem", h, r.status);
