@@ -25,6 +25,7 @@ import { DEFAULT_NETWORK_KEY, ENABLED_NETWORKS, getNetwork, networkByChainId, us
 import type { DB } from "@rb/db";
 import { isAdmin } from "../../../lib/admin";
 import { cardHeadline } from "../../../lib/impact-view";
+import { siteUrl } from "../../../lib/site";
 
 export const runtime = "nodejs";
 
@@ -34,7 +35,7 @@ type Hex = `0x${string}`;
 
 // On approve (v2 lazy mint): pin metadata -> EAS attest (platform) -> register an off-chain primary
 // LISTING (no mint; the buyer lazily mints on redeem via a signed voucher). Returns the listing refs.
-async function registerListing(db: DB, net: Network, submissionId: string, reqUrl: string) {
+async function registerListing(db: DB, net: Network, submissionId: string) {
   // One report, one listing: if this impact is already listed on ANY network, never list it again
   // (re-approving is idempotent and a report is never mirrored onto a second chain).
   const [existing] = await db.select().from(listings).where(eq(listings.submissionId, submissionId)).limit(1);
@@ -78,7 +79,7 @@ async function registerListing(db: DB, net: Network, submissionId: string, reqUr
     periodStart: c.periodStart ?? null,
     periodEnd: c.periodEnd ?? null,
     tablesVersion: s.tablesVersion ?? "",
-    externalUrl: new URL(`/submission/${s.id}`, reqUrl).toString(),
+    externalUrl: siteUrl(`/submission/${s.id}`),
     methodologyVersion: s.methodologyVersion ?? null,
     domainScores,
     proofLevel,
@@ -217,7 +218,7 @@ export async function POST(req: Request) {
   if (onchainEnabled() && net) {
     let result;
     try {
-      result = await registerListing(db, net, submissionId, req.url);
+      result = await registerListing(db, net, submissionId);
     } catch (e) {
       // Keep it in the queue so the reviewer sees the failure and can retry (re-approving is idempotent).
       const error = e instanceof Error ? e.message.slice(0, 300) : "listing failed";

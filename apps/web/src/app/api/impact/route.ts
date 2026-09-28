@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { desc, inArray } from "drizzle-orm";
 import { impactSubmissions } from "@rb/db/schema";
 import { getDb } from "../../../lib/db";
+import { siteUrl } from "../../../lib/site";
 
 export const runtime = "nodejs";
 
@@ -43,7 +44,7 @@ export async function GET(req: Request) {
             assessment: "platform-assessed (beta)",
             thirdPartyCertified: false,
           },
-    detail: new URL(`/submission/${r.id}`, req.url).toString(),
+    detail: siteUrl(`/submission/${r.id}`),
   }));
 
   return NextResponse.json({ count: items.length, items });

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "../lib/site";
 import type { ReactNode } from "react";
 import localFont from "next/font/local";
 import { Footer } from "../components/Footer";
@@ -27,7 +28,7 @@ const DESCRIPTION =
   "We turn verified real-world impact into a tradable asset class, for NGOs to tokenize impact and for funders to back it. Testnet beta.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://app.regenbazaar.com"),
+  metadataBase: new URL(SITE_URL),
   title: { default: "Regen Bazaar", template: "%s · Regen Bazaar" },
   description: DESCRIPTION,
   applicationName: "Regen Bazaar",
