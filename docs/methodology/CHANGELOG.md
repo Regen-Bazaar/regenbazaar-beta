@@ -21,3 +21,4 @@ v0.1 and v0.2 numbers are on different scales and should not be compared directl
 | Volunteers | 0.05 each | 0, shown as context | an input, not an outcome |
 | Schools | 50 per school | 0.1 per m² of classroom space | IRIS+ unit |
 | Scope | all 34 actions scored | 22 community actions scored; 12 that need capital, a licence or professionals kept aside (score 0) | the Community layer is for work volunteers can do |
+| Price | IV × 0.5 in the sale currency | (volunteer hours × value of an hour + money spent) × P, in USD | impact is measured, cost is declared and evidenced; no cross-domain exchange rate needed |

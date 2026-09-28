@@ -10,7 +10,9 @@ import {
   computeImpactValue,
   computeImpactValueV02,
   ruleBasedExtract,
+  COST_CATEGORIES,
   type ComplexityAnswers,
+  type CostDeclaration,
   type Ecosystem,
   type ExtractedAction,
   type ExtractedActionV02,
@@ -47,6 +49,7 @@ export interface SubmissionInput {
   // Actions as checked and corrected by the submitter (form step 2). v0.2 scores these; the AI's own
   // reading is stored next to them so a validator sees every edit.
   declaredActions?: unknown;
+  cost?: CostDeclaration | null; // what the work took (validated by parseCost); drives the price
 }
 
 export interface SubmissionLocation {
@@ -219,6 +222,38 @@ export function parseRegistry(raw: unknown): Parsed<RegistryDeclaration | undefi
   return { ok: true, value: out };
 }
 
+const CURRENCY = /^[A-Z]{3}$/;
+const MAX_AMOUNT = 10_000_000;
+
+/** What the work took: volunteer hours at a declared hourly value, and money spent by category. */
+export function parseCost(raw: unknown): Parsed<CostDeclaration | undefined> {
+  if (raw === undefined || raw === null) return { ok: true, value: undefined };
+  if (typeof raw !== "object" || Array.isArray(raw)) return { ok: false, error: "cost must be an object" };
+  const c = raw as Record<string, unknown>;
+  const currency = typeof c.currency === "string" ? c.currency.toUpperCase() : "";
+  if (!CURRENCY.test(currency)) return { ok: false, error: "cost.currency must be a 3-letter currency code" };
+  const num = (v: unknown, name: string): Parsed<number> => {
+    if (v === undefined || v === null || v === "") return { ok: true, value: 0 };
+    if (typeof v !== "number" || !Number.isFinite(v) || v < 0 || v > MAX_AMOUNT) {
+      return { ok: false, error: `cost.${name} must be a number from 0 to ${MAX_AMOUNT}` };
+    }
+    return { ok: true, value: v };
+  };
+  const hours = num(c.volunteerHours, "volunteerHours");
+  if (!hours.ok) return hours;
+  const hourly = num(c.hourlyValue, "hourlyValue");
+  if (!hourly.ok) return hourly;
+  const spentRaw = (c.spent ?? {}) as Record<string, unknown>;
+  if (typeof spentRaw !== "object" || Array.isArray(spentRaw)) return { ok: false, error: "cost.spent must be an object" };
+  const spent: CostDeclaration["spent"] = {};
+  for (const k of COST_CATEGORIES) {
+    const v = num(spentRaw[k], `spent.${k}`);
+    if (!v.ok) return v;
+    if (v.value > 0) spent[k] = v.value;
+  }
+  return { ok: true, value: { currency, volunteerHours: hours.value, hourlyValue: hourly.value, spent } };
+}
+
 const MANGROVE_FORMS = ["tree", "shrub"];
 
 /**
@@ -349,6 +384,7 @@ export async function processSubmission(db: DB, input: SubmissionInput, opts: Pr
     ctx.aiActions = aiActions;
     ctx.submitterEdited = submitterEdited;
   }
+  const withCost = input.cost ? { ...ctx, cost: input.cost } : ctx;
   if (!ctx.ecosystem && input.location?.ecosystem) ctx.ecosystem = input.location.ecosystem;
   if (input.registry) ctx.registry = input.registry;
   const iv = computeImpactValueV02(actions, ctx);
@@ -362,7 +398,7 @@ export async function processSubmission(db: DB, input: SubmissionInput, opts: Pr
       domain: input.domain ?? iv.primaryDomain ?? undefined,
       status: "pending_verification",
       extractedActions: actions,
-      context: ctx,
+      context: withCost,
       ivResult: iv,
       ivValue: iv.impactValue.toFixed(4),
       tablesVersion: iv.tablesVersion,

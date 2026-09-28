@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { IVResultV02, ProofFlag, ProofLevel } from "@rb/impact-engine";
-import { PROOF_REQUIREMENTS } from "@rb/impact-engine";
+import { COST_CATEGORIES, PROOF_REQUIREMENTS, costToUsd, labourCheck, type CostDeclaration } from "@rb/impact-engine";
 import { DomainScores } from "../../components/ImpactBadges";
 import { fmt } from "../../lib/impact-view";
 
@@ -22,6 +22,7 @@ export type SubmissionV02 = {
     periodEnd?: string;
     aiActions?: Action[];
     submitterEdited?: boolean;
+    cost?: CostDeclaration;
   } | null;
   location: { lat: number; lon: number; ecosystem?: string } | null;
   proofLinks: string[] | null;
@@ -191,6 +192,8 @@ export function ReviewV02({
         </div>
       </dl>
 
+      <CostPanel cost={c.cost} country={c.country} />
+
       <div>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="label-mono">Proof links and AI flags</div>
@@ -281,6 +284,34 @@ export function ReviewV02({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function CostPanel({ cost, country }: { cost?: CostDeclaration; country?: string }) {
+  if (!cost) return <p className="text-sm text-subtle">No cost declared: priced by the IV rule.</p>;
+  const usd = costToUsd(cost);
+  const check = labourCheck(cost, country);
+  const warn = check.ratio !== null && (check.ratio > 3 || check.ratio < 1);
+  return (
+    <div className="rounded-xl bg-raised p-4 text-sm">
+      <div className="label-mono mb-2">What it took (sets the price)</div>
+      <div>
+        {fmt(cost.volunteerHours, 1)} volunteer hours × {fmt(cost.hourlyValue, 2)} {cost.currency}
+        {usd ? ` = $${fmt(usd.labourUsd, 2)}` : ""}
+      </div>
+      <div className={`mt-1 ${warn ? "text-accent" : "text-subtle"}`}>
+        {check.reference
+          ? `Minimum wage in ${country}: ${fmt(check.reference.hourly, 2)} ${check.reference.currency}/h${check.ratio !== null ? `; declared ${check.ratio}× (${check.note})` : ` (${check.note})`}`
+          : `No minimum wage reference (${check.note})`}
+      </div>
+      <div className="mt-2">
+        {COST_CATEGORIES.filter((k) => cost.spent[k]).map((k) => `${k} ${fmt(cost.spent[k]!, 2)}`).join(" · ") || "no money spent"}{" "}
+        {cost.currency}
+        {usd ? ` = $${fmt(usd.spentUsd, 2)}` : ""}
+      </div>
+      <div className="mt-2 font-semibold">{usd ? `Total ≈ $${fmt(usd.totalUsd, 2)}; price = total × proof level` : `No exchange rate for ${cost.currency}`}</div>
+      <p className="mt-1 text-xs text-subtle">The minimum wage is a reference, not a limit. Ask the group if something looks off.</p>
     </div>
   );
 }

@@ -6,6 +6,8 @@ import {
   computeImpactValueV02,
   computePrice,
   computePriceV02,
+  priceFromCost,
+  type CostDeclaration,
   type ComplexityAnswers,
   isListable,
   parseProofLevel,
@@ -99,9 +101,15 @@ async function registerListing(db: DB, net: Network, submissionId: string) {
   const { address: currency, decimals } = net.saleCurrency;
   // v0.2 (D4): price in USD = IV × rate × P × C, settled in the sale currency at its USD value.
   // v0.1 reports keep the v0.1 rule (IV × rate in the sale currency).
-  const priceV02 = v02
-    ? computePriceV02(Number(s.ivValue), proofLevel, (s.context as { complexity?: ComplexityAnswers } | null)?.complexity, MAX_EDITIONS)
-    : null;
+  // Price from the declared cost when the report has one (decision 2026-09-28); otherwise the IV-based rule.
+  const ctx = (s.context ?? {}) as { complexity?: ComplexityAnswers; cost?: CostDeclaration };
+  const fromCost = v02 && ctx.cost ? priceFromCost(ctx.cost, proofLevel, MAX_EDITIONS) : null;
+  if (v02 && ctx.cost && proofLevel && !fromCost) throw new Error(`no exchange rate for cost currency ${ctx.cost.currency}`);
+  const priceV02 = fromCost
+    ? { totalUsd: fromCost.totalUsd, perEditionUsd: fromCost.perEditionUsd, modelVersion: fromCost.modelVersion }
+    : v02
+      ? computePriceV02(Number(s.ivValue), proofLevel, ctx.complexity, MAX_EDITIONS)
+      : null;
   if (v02 && !priceV02) throw new Error("a v0.2 report needs a proof level P1–P4 before it is priced");
   const perEdition = priceV02 ? priceV02.perEditionUsd / usdPerUnit(net.saleCurrency) : computePrice(Number(s.ivValue), MAX_EDITIONS).pricePerEdition;
   // Prices are rounded to 4 decimals; toFixed(18) would expose binary float noise (0.369 -> 0.368999999999999995),

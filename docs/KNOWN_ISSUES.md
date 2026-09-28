@@ -167,3 +167,6 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
 - **Token metadata links (fixed 2026-09-28):** metadata pinned before this date has `external_url` pointing at
   `http://0.0.0.0:3000/...` (the server's bind address). IPFS content is immutable, so those tokens keep it;
   the report is still found by its title, EAS UID and the in-metadata data. New listings use `PUBLIC_SITE_URL`.
+- **Cost-based price tables are dated** (`cost-v02.ts`, FX as of 2026-09-28, minimum wages checked 2026-09-28,
+  details in `docs/methodology/minimum-wages.md`). India's figure is an advisory national floor from secondary
+  sources; Laos may have raised its rate in 2026; Cambodia has only a garment-sector rate. Refresh before mainnet.
