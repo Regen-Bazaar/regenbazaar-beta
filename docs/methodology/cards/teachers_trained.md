@@ -12,8 +12,8 @@ Methodology v0.2, Community layer. Domain: education. Part of Regen Bazaar's own
 | Calculation | teachers × 0.5. |
 | Status | assumption (needs check). Source: v0.1 value |
 | Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
-| Sensitivity (±50%) | unstable (ranking moves at −50%: 4, at +50%: 2) |
-| Five Dimensions rubric | depth 2, duration 3, vulnerability 2 → product 12; rubric-implied weight 0.345 (0.69× current) |
+| Sensitivity (±50%) | unstable (ranking moves at −50%: 2, at +50%: 2) |
+| Five Dimensions rubric | depth 2, duration 3, vulnerability 2 → product 12; rubric-implied weight 0.355 (0.71× current) |
 | Proof that fits | P2 training photos; P3 school or education office letter; P4 certificate list. |
 | SDG tags (contributes to) | SDG-4 |
 | IRIS+ metric IDs (definitions, cited with attribution to the GIIN) | PI2998, PI1902 |

@@ -56,7 +56,8 @@ export type FlagCode =
   | "gate_iucn"
   | "review_overlap"
   | "clamped"
-  | "invalid_quantity";
+  | "invalid_quantity"
+  | "out_of_scope";
 
 export interface ScoreFlag {
   code: FlagCode;

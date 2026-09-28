@@ -140,7 +140,7 @@ export function computeImpactValueV02(
     } else {
       rows.set(a.actionType, {
         actionType: a.actionType, w, lines: 1, quantity: qty, units, sUnits: units * s, ha,
-        aw: w.aw.value, awStatus: w.aw.status, awSource: w.aw.source, zeroed: false,
+        aw: w.aw.value, awStatus: w.aw.status, awSource: w.aw.source, zeroed: !!w.parked,
         shrub: a.mangroveForm === "shrub", measured,
       });
     }
@@ -174,12 +174,18 @@ export function computeImpactValueV02(
     mangroves.awSource = MANGROVE_RATE_SHRUB.source;
   }
 
-  if (has("co2_offset_ton") && !ctx.registry?.serial) {
-    rows.get("co2_offset_ton")!.zeroed = true;
-    flag("registry_required", "tCO2e counts only with a registry serial of retired units", "co2_offset_ton");
+  // Actions outside the Community layer (need capital, a licence or professionals) stay in the table but score 0.
+  for (const r of rows.values()) {
+    if (r.w.parked) flag("out_of_scope", `not scored in the Community layer: ${r.w.parked}`, r.actionType);
   }
-  if (has("co2_offset_ton")) {
-    for (const t of [...TREE_ROWS, "hectares_restored"]) zero(t, "registry carbon already claimed; this row is evidence only");
+  // Work already registered with a carbon standard: its carbon is claimed there, so here it is evidence only.
+  if (ctx.registry?.serial) {
+    for (const t of [...TREE_ROWS, "hectares_restored"]) {
+      if (has(t)) {
+        rows.get(t)!.zeroed = true;
+        flag("registry_required", "carbon of registered work is claimed in that registry; this row is evidence only", t);
+      }
+    }
   }
   if (has("hectares_restored")) {
     const area = rows.get("hectares_restored")!;

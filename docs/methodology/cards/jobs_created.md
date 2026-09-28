@@ -2,6 +2,8 @@
 
 Methodology v0.2, Community layer. Domain: poverty. Part of Regen Bazaar's own relative index; not a certification.
 
+**Parked:** employment needs a funded enterprise. Kept in the table; scores 0 in the Community layer.
+
 | Field | Value |
 |---|---|
 | Definition and unit | Full-time equivalent jobs. IRIS+ PI3687 Jobs Created (FTE), PI9465 Job Placements. |
@@ -12,8 +14,7 @@ Methodology v0.2, Community layer. Domain: poverty. Part of Regen Bazaar's own r
 | Calculation | FTE × 1.5. |
 | Status | assumption (needs check). Source: v0.1 value; full-time equivalents |
 | Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
-| Sensitivity (±50%) | unstable (ranking moves at −50%: 2, at +50%: 2) |
-| Five Dimensions rubric | depth 3, duration 3, vulnerability 2 → product 18; rubric-implied weight 0.752 (0.50× current) |
+| Sensitivity (±50%) | not in the sample set |
 | Proof that fits | P3 employer letter; P4 payroll record. |
 | SDG tags (contributes to) | SDG-1, SDG-8 |
 | IRIS+ metric IDs (definitions, cited with attribution to the GIIN) | PI3687, PI9465 |

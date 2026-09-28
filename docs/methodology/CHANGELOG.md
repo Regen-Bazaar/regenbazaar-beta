@@ -20,3 +20,4 @@ v0.1 and v0.2 numbers are on different scales and should not be compared directl
 | Duplicates in one report | not handled | merge lines; area vs trees; registry carbon; workshops vs participants; meals vs families | the same work counted once |
 | Volunteers | 0.05 each | 0, shown as context | an input, not an outcome |
 | Schools | 50 per school | 0.1 per m² of classroom space | IRIS+ unit |
+| Scope | all 34 actions scored | 22 community actions scored; 12 that need capital, a licence or professionals kept aside (score 0) | the Community layer is for work volunteers can do |

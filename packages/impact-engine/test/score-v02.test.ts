@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { computeImpactValueV02 } from "../src/score-v02.ts";
 import { scoreImpact } from "../src/scoring.ts";
 import { computeImpactValue } from "../src/score.ts";
-import { ACTION_WEIGHTS_V02, DOMAIN_K, TABLES_VERSION_V02, areaFactor } from "../src/tables-v02.ts";
+import { ACTION_WEIGHTS_V02, DOMAIN_K, TABLES_VERSION_V02, areaFactor, isCommunityAction } from "../src/tables-v02.ts";
 import { ACTION_WEIGHTS } from "../src/tables.ts";
 import { normaliseQuantity } from "../src/units.ts";
 import type { ComplexityAnswers } from "../src/types.ts";
@@ -140,28 +140,33 @@ test("units: an impossible unit scores 0 and is flagged", () => {
   assert.ok(codes(r).includes("unit_mismatch"));
 });
 
-test("schools are scored by classroom space; a bare school count asks for m²", () => {
-  const count = computeImpactValueV02([{ actionType: "schools_built", quantity: 2, unit: "schools" }]);
-  assert.equal(count.impactValue, 0);
-  assert.ok(codes(count).includes("needs_area"));
-  const area = computeImpactValueV02([{ actionType: "schools_built", quantity: 400, unit: "m2" }]);
-  assert.equal(area.impactValue, 40);
+test("parked actions (need capital, a licence or professionals) stay in the table but score 0", () => {
+  const parked = Object.entries(ACTION_WEIGHTS_V02).filter(([, w]) => w.parked).map(([k]) => k).sort();
+  assert.deepEqual(parked, [
+    "clean_water_access_people", "co2_offset_ton", "jobs_created", "mental_health_sessions", "microloans_issued",
+    "patients_treated", "people_housed", "renewable_energy_kwh", "scholarships_granted", "schools_built",
+    "vaccinations_administered", "water_purified_liters",
+  ]);
+  for (const k of parked) assert.equal(isCommunityAction(k), false, k);
+  assert.equal(isCommunityAction("waste_collected_kg"), true);
+  const r = computeImpactValueV02([
+    { actionType: "vaccinations_administered", quantity: 100, unit: "doses" },
+    { actionType: "schools_built", quantity: 400, unit: "m2" },
+    { actionType: "students_taught", quantity: 10, unit: "students" },
+  ]);
+  assert.equal(r.impactValue, 2);
+  assert.equal(r.flags.filter((f) => f.code === "out_of_scope").length, 2);
+  assert.equal(r.breakdown.find((b) => b.actionType === "schools_built")!.raw, 0);
 });
 
-test("water: litres → person-days with the Gold Standard adult cap and 5% default deduction", () => {
-  const r = computeImpactValueV02([{ actionType: "water_purified_liters", quantity: 55_000, unit: "liters" }]);
-  assert.equal(r.breakdown[0].units, 9500); // 55000 / 5.5 × 0.95
-  assert.equal(r.impactValue, Math.round(9500 * 0.0055 * 1e4) / 1e4);
-});
-
-test("renewable energy: country grid factor; unknown country uses the lowest factor and is flagged", () => {
-  const th = computeImpactValueV02([{ actionType: "renewable_energy_kwh", quantity: 10_000, unit: "kWh" }], { country: "TH" });
-  assert.equal(th.impactValue, 4.13);
-  const vn = computeImpactValueV02([{ actionType: "renewable_energy_kwh", quantity: 10, unit: "MWh" }], { country: "vn" });
-  assert.equal(vn.impactValue, 4.93);
+test("parked conversions still compute units for the record (water person-days, grid factor)", () => {
+  const w = computeImpactValueV02([{ actionType: "water_purified_liters", quantity: 55_000, unit: "liters" }]);
+  assert.equal(w.breakdown[0].units, 9500); // 55000 / 5.5 × 0.95
+  const e = computeImpactValueV02([{ actionType: "renewable_energy_kwh", quantity: 10, unit: "MWh" }], { country: "vn" });
+  assert.equal(e.breakdown[0].units, 4.93);
   const xx = computeImpactValueV02([{ actionType: "renewable_energy_kwh", quantity: 10_000, unit: "kWh" }]);
-  assert.equal(xx.impactValue, 4.13);
   assert.ok(codes(xx).includes("needs_country"));
+  assert.equal(w.impactValue + e.impactValue, 0);
 });
 
 test("coral: survival 0.65 from Boström-Einarsson 2020", () => {
@@ -183,19 +188,16 @@ test("double count: area row wins over the tree count of the same planting", () 
   assert.equal(r.impactValue, alone.impactValue);
 });
 
-test("double count: tCO2e needs a registry serial; with one, tree carbon becomes evidence", () => {
-  const noSerial = computeImpactValueV02([{ actionType: "co2_offset_ton", quantity: 50, unit: "tCO2e" }]);
-  assert.equal(noSerial.impactValue, 0);
-  assert.ok(codes(noSerial).includes("registry_required"));
-  const serial = computeImpactValueV02(
-    [
-      { actionType: "co2_offset_ton", quantity: 50, unit: "tCO2e" },
-      { actionType: "trees_planted", quantity: 1000, unit: "trees", areaHa: 1 },
-    ],
-    { registry: { standard: "verra", serial: "VCS-123" } },
-  );
-  assert.equal(serial.impactValue, 50);
-  assert.ok(codes(serial).includes("double_count"));
+test("double count: work registered with a carbon standard scores no carbon here", () => {
+  const trees = [{ actionType: "trees_planted", quantity: 1000, unit: "trees", areaHa: 1 }];
+  const free = computeImpactValueV02(trees);
+  assert.ok(free.impactValue > 0);
+  const registered = computeImpactValueV02(trees, { registry: { standard: "verra", serial: "VCS-123" } });
+  assert.equal(registered.impactValue, 0);
+  assert.ok(codes(registered).includes("registry_required"));
+  const co2 = computeImpactValueV02([{ actionType: "co2_offset_ton", quantity: 50, unit: "tCO2e" }]);
+  assert.equal(co2.impactValue, 0);
+  assert.ok(codes(co2).includes("out_of_scope"));
 });
 
 test("double count: recycled plastic adds only carbon when collection is also reported", () => {
@@ -227,14 +229,9 @@ test("double count: meals and family support for the same families keep the high
   assert.equal(r.impactValue, 20);
 });
 
-test("overlap and gate flags do not change the score", () => {
-  const r = computeImpactValueV02([
-    { actionType: "patients_treated", quantity: 10, unit: "patients" },
-    { actionType: "vaccinations_administered", quantity: 10, unit: "vaccinations" },
-    { actionType: "wildlife_released", quantity: 2, unit: "animals" },
-  ]);
-  assert.equal(r.impactValue, 2 + 0.5 + 1.6);
-  assert.ok(codes(r).includes("review_overlap"));
+test("gate flags do not change the score", () => {
+  const r = computeImpactValueV02([{ actionType: "wildlife_released", quantity: 2, unit: "animals" }]);
+  assert.equal(r.impactValue, 1.6);
   assert.ok(codes(r).includes("gate_iucn"));
 });
 

@@ -2,6 +2,8 @@
 
 Methodology v0.2, Community layer. Domain: environment. Part of Regen Bazaar's own relative index; not a certification.
 
+**Parked:** treatment systems need capital investment. Kept in the table; scores 0 in the Community layer.
+
 | Field | Value |
 |---|---|
 | Definition and unit | Litres of safe drinking water supplied, converted to person-days of drinking water. Service definition: WHO/UNICEF JMP "safely managed" (SDG 6.1.1). |
@@ -13,7 +15,6 @@ Methodology v0.2, Community layer. Domain: environment. Part of Regen Bazaar's o
 | Status | assumption (needs check). Source: v0.1 scale (0.001/L × 5.5 L); needs check |
 | Multipliers | SM (area factor): no, 1.0. ESM: yes, 1.0–1.3. Domain coefficient k: 1.0, pending cost survey |
 | Sensitivity (±50%) | not in the sample set |
-| Five Dimensions rubric | depth 2, duration 1, vulnerability 3 → product 6; rubric-implied weight 0.171 (31.09× current) |
 | Proof that fits | P2 photos of the system in use; P3 school or community confirmation; P4 water quality test (E. coli). |
 | SDG tags (contributes to) | SDG-6 |
 | IRIS+ metric IDs (definitions, cited with attribution to the GIIN) | PI2822 |

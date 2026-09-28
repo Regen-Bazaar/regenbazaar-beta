@@ -20,14 +20,13 @@ const SAMPLES: Sample[] = [
   { name: "Mangroves 1.2 ha", actions: [{ actionType: "mangroves_planted", quantity: 3000, unit: "trees", areaHa: 1.2 }], ctx: { esm: 1.3 } },
   { name: "Forest 0.4 ha", actions: [{ actionType: "trees_planted", quantity: 600, unit: "trees", areaHa: 0.4 }] },
   { name: "Coral 150 fragments", actions: [{ actionType: "coral_planted", quantity: 150, unit: "fragments" }] },
-  { name: "Solar 20 MWh (TH)", actions: [{ actionType: "renewable_energy_kwh", quantity: 20, unit: "MWh" }], ctx: { country: "TH" } },
   { name: "Dog CNVR 40 + treated 60", actions: [{ actionType: "animals_sterilized", quantity: 40, unit: "animals" }, { actionType: "animals_treated", quantity: 60, unit: "animals" }] },
   { name: "Shelter: 15 rescued, 8 adopted", actions: [{ actionType: "animals_rescued", quantity: 15, unit: "animals" }, { actionType: "animals_adopted", quantity: 8, unit: "animals" }] },
   { name: "English class 30 kids", actions: [{ actionType: "students_taught", quantity: 30, unit: "students" }] },
   { name: "Teacher training 12", actions: [{ actionType: "teachers_trained", quantity: 12, unit: "teachers" }, { actionType: "books_distributed", quantity: 200, unit: "books" }] },
   { name: "Food bank 1500 meals", actions: [{ actionType: "meals_provided", quantity: 1500, unit: "meals" }] },
-  { name: "Microloans 10 + 2 jobs", actions: [{ actionType: "microloans_issued", quantity: 10, unit: "loans" }, { actionType: "jobs_created", quantity: 2, unit: "jobs" }] },
-  { name: "Health camp 120 patients", actions: [{ actionType: "patients_treated", quantity: 120, unit: "patients" }, { actionType: "medical_kits_distributed", quantity: 50, unit: "kits" }] },
+  { name: "Families supported 40", actions: [{ actionType: "families_supported", quantity: 40, unit: "families" }] },
+  { name: "First-aid kits 150", actions: [{ actionType: "medical_kits_distributed", quantity: 150, unit: "kits" }] },
   { name: "Women's training 25", actions: [{ actionType: "women_empowered", quantity: 25, unit: "women" }, { actionType: "community_events_held", quantity: 3, unit: "events" }] },
 ];
 
@@ -48,7 +47,7 @@ const baseIv = new Map(SAMPLES.map((s) => [s.name, computeImpactValueV02(s.actio
 
 const rows: string[] = [];
 for (const [key, w] of Object.entries(ACTION_WEIGHTS_V02)) {
-  if (!used.has(key) || w.aw.value === 0) continue;
+  if (!used.has(key) || w.aw.value === 0 || w.parked) continue;
   const original = w.aw.value;
   const out: number[] = [];
   for (const f of [0.5, 1.5]) {

@@ -2,6 +2,8 @@
 
 Methodology v0.2, Community layer. Domain: health. Part of Regen Bazaar's own relative index; not a certification.
 
+**Parked:** needs licensed medical professionals. Kept in the table; scores 0 in the Community layer.
+
 | Field | Value |
 |---|---|
 | Definition and unit | Patients completing treatment. IRIS+ PI5060 Patients Completing Treatment. |
@@ -12,8 +14,7 @@ Methodology v0.2, Community layer. Domain: health. Part of Regen Bazaar's own re
 | Calculation | patients × 0.2. With vaccinations or kits in the same report, a `review_overlap` flag goes to the validator. |
 | Status | assumption (needs check). Source: v0.1 value |
 | Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
-| Sensitivity (±50%) | unstable (ranking moves at −50%: 4, at +50%: 3) |
-| Five Dimensions rubric | depth 2, duration 2, vulnerability 3 → product 12; rubric-implied weight 0.146 (0.73× current) |
+| Sensitivity (±50%) | not in the sample set |
 | Proof that fits | P2 photos; P3 clinic or health office letter; P4 patient register. |
 | SDG tags (contributes to) | SDG-3 |
 | IRIS+ metric IDs (definitions, cited with attribution to the GIIN) | PI5060 |

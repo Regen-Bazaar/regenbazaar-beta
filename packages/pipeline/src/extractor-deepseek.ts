@@ -7,11 +7,12 @@
 // the report is wrapped as data and the system prompt tells the model to ignore instructions inside it.
 
 import OpenAI from "openai";
-import { ACTION_WEIGHTS } from "@rb/impact-engine";
+import { ACTION_WEIGHTS_V02, isCommunityAction } from "@rb/impact-engine";
 import type { LLMExtractor, ExtractedAction } from "@rb/impact-engine";
 
-// Constrain the model to the engine's canonical action keys so its output scores correctly.
-const CANONICAL_KEYS = Object.keys(ACTION_WEIGHTS).join(", ");
+// Constrain the model to the Community-layer action keys so its output scores correctly (parked actions,
+// which need capital or professionals, are not offered).
+const CANONICAL_KEYS = Object.keys(ACTION_WEIGHTS_V02).filter(isCommunityAction).join(", ");
 
 const SYSTEM =
   "You extract structured real-world impact actions from an NGO's free-text report across ALL domains " +

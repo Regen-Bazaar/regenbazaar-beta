@@ -2,6 +2,8 @@
 
 Methodology v0.2, Community layer. Domain: poverty. Part of Regen Bazaar's own relative index; not a certification.
 
+**Parked:** a regulated financial service. Kept in the table; scores 0 in the Community layer.
+
 | Field | Value |
 |---|---|
 | Definition and unit | Loans disbursed. IRIS+ PI8381 Number of Loans Disbursed. |
@@ -12,8 +14,7 @@ Methodology v0.2, Community layer. Domain: poverty. Part of Regen Bazaar's own r
 | Calculation | loans × 0.5. |
 | Status | assumption (needs check). Source: v0.1 value |
 | Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
-| Sensitivity (±50%) | unstable (ranking moves at −50%: 3, at +50%: 3) |
-| Five Dimensions rubric | depth 2, duration 2, vulnerability 2 → product 8; rubric-implied weight 0.334 (0.67× current) |
+| Sensitivity (±50%) | not in the sample set |
 | Proof that fits | P3 partner confirmation; P4 loan register. |
 | SDG tags (contributes to) | SDG-1, SDG-8 |
 | IRIS+ metric IDs (definitions, cited with attribution to the GIIN) | PI8381 |

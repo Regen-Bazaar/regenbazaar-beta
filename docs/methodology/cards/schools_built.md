@@ -2,6 +2,8 @@
 
 Methodology v0.2, Community layer. Domain: education. Part of Regen Bazaar's own relative index; not a certification.
 
+**Parked:** construction needs capital investment. Kept in the table; scores 0 in the Community layer.
+
 | Field | Value |
 |---|---|
 | Definition and unit | New or improved classroom space in m². IRIS+ PI7268 Classroom Space. A bare count of schools is flagged `needs_area`. |
@@ -13,7 +15,6 @@ Methodology v0.2, Community layer. Domain: education. Part of Regen Bazaar's own
 | Status | assumption (needs check). Source: v0.1 value 50 per school ÷ assumed 500 m² of classroom space |
 | Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
 | Sensitivity (±50%) | not in the sample set |
-| Five Dimensions rubric | depth 2, duration 3, vulnerability 2 → product 12; rubric-implied weight 0.345 (3.45× current) |
 | Proof that fits | P2 photos before and after; P3 education office letter; P4 building permit or handover record. |
 | SDG tags (contributes to) | SDG-4, SDG-9 |
 | IRIS+ metric IDs (definitions, cited with attribution to the GIIN) | PI7268 |

@@ -13,7 +13,7 @@ Methodology v0.2, Community layer. Domain: education. Part of Regen Bazaar's own
 | Status | assumption (needs check). Source: v0.1 value; 0 when participants are counted |
 | Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
 | Sensitivity (±50%) | not in the sample set |
-| Five Dimensions rubric | depth 1, duration 1, vulnerability 2 → product 2; rubric-implied weight 0.058 (1.16× current) |
+| Five Dimensions rubric | depth 1, duration 1, vulnerability 2 → product 2; rubric-implied weight 0.059 (1.18× current) |
 | Proof that fits | P2 photos; P3 host confirmation. |
 | SDG tags (contributes to) | SDG-4 |
 | v0.1 value | 0.05 per workshops |

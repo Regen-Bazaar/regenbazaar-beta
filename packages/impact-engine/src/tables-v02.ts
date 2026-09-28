@@ -49,6 +49,7 @@ export interface ActionWeightV02 {
   sdg: string[];
   ebf?: string[];
   iris?: string[]; // IRIS+ metric IDs used as the unit definition (cited with attribution)
+  parked?: string; // not a community action (needs capital, a licence or professionals): kept, scores 0
 }
 
 // ---- Environment anchors ----
@@ -96,6 +97,7 @@ export const ACTION_WEIGHTS_V02: Record<string, ActionWeightV02> = {
   co2_offset_ton: {
     domain: "environment", inputUnit: "tCO2e", scoredUnit: "tCO2e", conversion: "none",
     aw: S(1.0, "anchor: 1 point = 1 tCO2e; only with a registry serial"), carbon: true,
+    parked: "registry carbon belongs to the corporate layer",
     sdg: ["SDG-13"], ebf: ["carbon"],
   },
   hectares_restored: {
@@ -106,11 +108,13 @@ export const ACTION_WEIGHTS_V02: Record<string, ActionWeightV02> = {
   water_purified_liters: {
     domain: "environment", inputUnit: "liters", scoredUnit: "person-days", conversion: "liters_to_person_days",
     aw: A(0.0055, "v0.1 scale (0.001/L × 5.5 L); needs check"),
+    parked: "treatment systems need capital investment",
     sdg: ["SDG-6"], ebf: ["water"], iris: ["PI2822"],
   },
   renewable_energy_kwh: {
     domain: "environment", inputUnit: "kWh", scoredUnit: "tCO2e", conversion: "kwh_to_tco2e",
     aw: S(1.0, "anchor: 1 point = 1 tCO2e avoided"), carbon: true,
+    parked: "installations need capital investment",
     sdg: ["SDG-7", "SDG-13"], ebf: ["carbon", "air"],
   },
   // animal welfare: no published relative weights exist (audit 3.5); definitions per WOAH Ch. 7.7 / ICAM
@@ -122,32 +126,39 @@ export const ACTION_WEIGHTS_V02: Record<string, ActionWeightV02> = {
   // education
   students_taught: { domain: "education", inputUnit: "students", scoredUnit: "students", conversion: "none", aw: A(0.2, "v0.1 value"), sdg: ["SDG-4"], iris: ["PI2389"] },
   workshops_held: { domain: "education", inputUnit: "workshops", scoredUnit: "workshops", conversion: "none", aw: A(0.05, "v0.1 value; 0 when participants are counted"), sdg: ["SDG-4"] },
-  scholarships_granted: { domain: "education", inputUnit: "scholarships", scoredUnit: "scholarships", conversion: "none", aw: A(1.0, "v0.1 value"), sdg: ["SDG-4"], iris: ["PI4509", "PI3499"] },
+  scholarships_granted: { domain: "education", inputUnit: "scholarships", scoredUnit: "scholarships", conversion: "none", aw: A(1.0, "v0.1 value"), parked: "a funded programme, not volunteer work", sdg: ["SDG-4"], iris: ["PI4509", "PI3499"] },
   teachers_trained: { domain: "education", inputUnit: "teachers", scoredUnit: "teachers", conversion: "none", aw: A(0.5, "v0.1 value"), sdg: ["SDG-4"], iris: ["PI2998", "PI1902"] },
   books_distributed: { domain: "education", inputUnit: "books", scoredUnit: "books", conversion: "none", aw: A(0.02, "v0.1 value"), sdg: ["SDG-4"], iris: ["PI5736"] },
   schools_built: {
     domain: "education", inputUnit: "m2", scoredUnit: "m²", conversion: "m2",
     aw: A(0.1, "v0.1 value 50 per school ÷ assumed 500 m² of classroom space"),
+    parked: "construction needs capital investment",
     sdg: ["SDG-4", "SDG-9"], iris: ["PI7268"],
   },
   // poverty
   meals_provided: { domain: "poverty", inputUnit: "meals", scoredUnit: "meals", conversion: "none", aw: A(0.02, "v0.1 value"), sdg: ["SDG-1", "SDG-2"], iris: ["PI6971"] },
-  people_housed: { domain: "poverty", inputUnit: "people", scoredUnit: "people", conversion: "none", aw: A(1.0, "v0.1 value"), sdg: ["SDG-1"], iris: ["PI2491", "PI5965"] },
-  microloans_issued: { domain: "poverty", inputUnit: "loans", scoredUnit: "loans", conversion: "none", aw: A(0.5, "v0.1 value"), sdg: ["SDG-1", "SDG-8"], iris: ["PI8381"] },
-  jobs_created: { domain: "poverty", inputUnit: "jobs", scoredUnit: "FTE", conversion: "none", aw: A(1.5, "v0.1 value; full-time equivalents"), sdg: ["SDG-1", "SDG-8"], iris: ["PI3687", "PI9465"] },
+  people_housed: { domain: "poverty", inputUnit: "people", scoredUnit: "people", conversion: "none", aw: A(1.0, "v0.1 value"), parked: "housing needs capital investment", sdg: ["SDG-1"], iris: ["PI2491", "PI5965"] },
+  microloans_issued: { domain: "poverty", inputUnit: "loans", scoredUnit: "loans", conversion: "none", aw: A(0.5, "v0.1 value"), parked: "a regulated financial service", sdg: ["SDG-1", "SDG-8"], iris: ["PI8381"] },
+  jobs_created: { domain: "poverty", inputUnit: "jobs", scoredUnit: "FTE", conversion: "none", aw: A(1.5, "v0.1 value; full-time equivalents"), parked: "employment needs a funded enterprise", sdg: ["SDG-1", "SDG-8"], iris: ["PI3687", "PI9465"] },
   families_supported: { domain: "poverty", inputUnit: "families", scoredUnit: "families", conversion: "none", aw: A(0.4, "v0.1 value"), sdg: ["SDG-1"], iris: ["PI7954", "PI1583"] },
-  clean_water_access_people: { domain: "poverty", inputUnit: "people", scoredUnit: "people", conversion: "none", aw: A(0.3, "v0.1 value; JMP safely managed"), sdg: ["SDG-6", "SDG-1"], iris: ["PI2822"] },
+  clean_water_access_people: { domain: "poverty", inputUnit: "people", scoredUnit: "people", conversion: "none", aw: A(0.3, "v0.1 value; JMP safely managed"), parked: "infrastructure needs capital investment", sdg: ["SDG-6", "SDG-1"], iris: ["PI2822"] },
   // social
   people_trained: { domain: "social", inputUnit: "people", scoredUnit: "people", conversion: "none", aw: A(0.1, "v0.1 value"), sdg: ["SDG-8"], iris: ["PI2998"] },
   volunteers_mobilized: { domain: "social", inputUnit: "volunteers", scoredUnit: "volunteers", conversion: "none", aw: S(0, "input, not outcome (IRIS+ OI1166); shown as context"), sdg: ["SDG-17"], iris: ["OI1166"] },
   women_empowered: { domain: "social", inputUnit: "women", scoredUnit: "women", conversion: "none", aw: A(0.3, "v0.1 value; too vague, to be split"), sdg: ["SDG-5", "SDG-8"], iris: ["PI8330"] },
   community_events_held: { domain: "social", inputUnit: "events", scoredUnit: "events", conversion: "none", aw: A(0.1, "v0.1 value"), sdg: ["SDG-11"] },
   // health
-  patients_treated: { domain: "health", inputUnit: "patients", scoredUnit: "patients", conversion: "none", aw: A(0.2, "v0.1 value"), sdg: ["SDG-3"], iris: ["PI5060"] },
-  vaccinations_administered: { domain: "health", inputUnit: "vaccinations", scoredUnit: "vaccinations", conversion: "none", aw: A(0.05, "v0.1 value; likely underweighted"), sdg: ["SDG-3"] },
+  patients_treated: { domain: "health", inputUnit: "patients", scoredUnit: "patients", conversion: "none", aw: A(0.2, "v0.1 value"), parked: "needs licensed medical professionals", sdg: ["SDG-3"], iris: ["PI5060"] },
+  vaccinations_administered: { domain: "health", inputUnit: "vaccinations", scoredUnit: "vaccinations", conversion: "none", aw: A(0.05, "v0.1 value; likely underweighted"), parked: "needs licensed medical professionals", sdg: ["SDG-3"] },
   medical_kits_distributed: { domain: "health", inputUnit: "kits", scoredUnit: "kits", conversion: "none", aw: A(0.1, "v0.1 value"), sdg: ["SDG-3"] },
-  mental_health_sessions: { domain: "health", inputUnit: "sessions", scoredUnit: "sessions", conversion: "none", aw: A(0.15, "v0.1 value"), sdg: ["SDG-3"] },
+  mental_health_sessions: { domain: "health", inputUnit: "sessions", scoredUnit: "sessions", conversion: "none", aw: A(0.15, "v0.1 value"), parked: "needs licensed professionals", sdg: ["SDG-3"] },
 };
+
+/** Actions a community group can deliver without capital, a licence or professionals (the Community layer). */
+export function isCommunityAction(actionType: string): boolean {
+  const w = ACTION_WEIGHTS_V02[actionType];
+  return !!w && !w.parked;
+}
 
 /** k: published domain coefficients that turn domain scores into one IV. All 1.0 until the cost survey (D6). */
 export const DOMAIN_K: Record<ImpactDomain, SourcedValue> = {

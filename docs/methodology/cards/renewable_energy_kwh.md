@@ -2,6 +2,8 @@
 
 Methodology v0.2, Community layer. Domain: environment. Part of Regen Bazaar's own relative index; not a certification.
 
+**Parked:** installations need capital investment. Kept in the table; scores 0 in the Community layer.
+
 | Field | Value |
 |---|---|
 | Definition and unit | kWh of solar or wind electricity generated, converted to tCO2e avoided with the country grid factor. |
@@ -12,7 +14,7 @@ Methodology v0.2, Community layer. Domain: environment. Part of Regen Bazaar's o
 | Calculation | kWh × grid factor × 1.0 × ESM. |
 | Status | sourced. Source: anchor: 1 point = 1 tCO2e avoided |
 | Multipliers | SM (area factor): no, 1.0. ESM: yes, 1.0–1.3. Domain coefficient k: 1.0, pending cost survey |
-| Sensitivity (±50%) | unstable (ranking moves at −50%: 4, at +50%: 3) |
+| Sensitivity (±50%) | not in the sample set |
 | Proof that fits | P2 photos of the installation and meter; P4 inverter or meter export. |
 | SDG tags (contributes to) | SDG-7, SDG-13 |
 | v0.1 value | 0.002 per kWh |

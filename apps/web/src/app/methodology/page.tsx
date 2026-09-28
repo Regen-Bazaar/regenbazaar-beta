@@ -5,7 +5,6 @@ import {
   DOMAIN_K,
   ESM_MAX,
   ESM_MIN,
-  GRID_FACTORS,
   MAX_ACTION_QUANTITY_V02,
   MAX_CREDITED_YEARS,
   PRICE_RATE_PER_IV,
@@ -13,7 +12,6 @@ import {
   PROOF_REQUIREMENTS,
   TABLES_VERSION,
   TABLES_VERSION_V02,
-  WATER_LITERS_PER_PERSON_DAY,
   type ImpactDomain,
   type ProofLevel,
   type SourceStatus,
@@ -83,7 +81,10 @@ const DATA_LAYERS: [string, string, string][] = [
 
 export default function Methodology() {
   const byDomain = new Map<ImpactDomain, [string, (typeof ACTION_WEIGHTS_V02)[string]][]>();
-  for (const [k, w] of Object.entries(ACTION_WEIGHTS_V02)) byDomain.set(w.domain, [...(byDomain.get(w.domain) ?? []), [k, w]]);
+  for (const [k, w] of Object.entries(ACTION_WEIGHTS_V02)) {
+    if (!w.parked) byDomain.set(w.domain, [...(byDomain.get(w.domain) ?? []), [k, w]]);
+  }
+  const parked = Object.entries(ACTION_WEIGHTS_V02).filter(([, w]) => w.parked);
 
   return (
     <main className="page-wrap py-10 md:py-14">
@@ -156,9 +157,6 @@ export default function Methodology() {
                       ["Hectares restored", `hectares per monitored year (at most ${MAX_CREDITED_YEARS} years)`],
                       ["Tonnes, grams, pounds", "kg"],
                       ["m², acres, rai", "ha (1 rai = 0.16 ha)"],
-                      ["Litres of drinking water", `person-days: ${WATER_LITERS_PER_PERSON_DAY.value} L per adult per day, 5% deduction on defaults`],
-                      ["kWh of solar or wind", `tCO₂e with the country grid factor (${Object.keys(GRID_FACTORS).join(", ")}; lowest factor otherwise)`],
-                      ["Schools", "m² of classroom space"],
                     ].map(([a, b]) => (
                       <tr key={a} className="border-b border-line last:border-0">
                         <td className="px-4 py-2 text-fg">{a}</td>
@@ -178,7 +176,7 @@ export default function Methodology() {
                 <span className="text-ok">sourced</span> (a cited table), <span className="text-accent">derived</span> (our
                 arithmetic on a cited table), <span className="text-subtle">assumption</span> (needs checking).
               </p>
-              {DOMAIN_KEYS.map((d) => (
+              {DOMAIN_KEYS.filter((d) => byDomain.has(d)).map((d) => (
                 <div key={d} className="mt-4">
                   <div className="label-mono mb-2 !text-accent">{DOMAIN_LABEL[d]}</div>
                   <div className="overflow-x-auto rounded-xl border border-line bg-surface">
@@ -202,6 +200,21 @@ export default function Methodology() {
                 </div>
               ))}
             </Section>
+
+            <details className="rounded-xl border border-line bg-surface p-4 text-sm text-muted">
+              <summary className="cursor-pointer text-fg">Kept aside: actions outside the Community layer</summary>
+              <p className="mt-2">
+                These need capital, a licence or professionals, so volunteers cannot deliver them for free. They stay in
+                the tables for a later layer and score 0 today.
+              </p>
+              <ul className="mt-2 ml-5 list-disc">
+                {parked.map(([k, w]) => (
+                  <li key={k}>
+                    <span className="capitalize">{k.replace(/_/g, " ")}</span>: {w.parked}
+                  </li>
+                ))}
+              </ul>
+            </details>
 
             <Section id="multipliers" title="SM, ESM and S">
               <p>
@@ -269,7 +282,7 @@ export default function Methodology() {
               <ul className="ml-4 list-disc space-y-1">
                 <li>Lines of the same action are added up before scoring, so splitting a report changes nothing.</li>
                 <li>Area and tree count of one planting: the area counts, the count is evidence.</li>
-                <li>tCO₂e counts only with a registry serial number; then tree and area rows of that report are evidence.</li>
+                <li>Work already registered with a carbon standard (declared serial number) scores no carbon here, so it is not claimed twice.</li>
                 <li>Recycled plastic adds only its carbon benefit when collection is also reported.</li>
                 <li>Workshops score 0 when participants are counted; meals and family support for the same families count once.</li>
                 <li>Volunteers are an input and score 0. Wildlife releases need justification and monitoring (IUCN/SSC 2013).</li>

@@ -17,30 +17,20 @@ Rows at more than 2× or under 0.5× the current weight go to experts first.
 
 | Action | Domain | Depth × duration × vulnerability | Current weight | Rubric-implied | Ratio |
 |---|---|---|---|---|---|
-| coral_planted | environment | 2 × 2 × 2 = 8 | 0.4 | 0.228 | 0.57× |
-| waste_collected_kg | environment | 1 × 1 × 2 = 2 | 0.05 | 0.057 | 1.14× |
-| water_purified_liters | environment | 2 × 1 × 3 = 6 | 0.0055 | 0.171 | 31.09× |
+| coral_planted | environment | 2 × 2 × 2 = 8 | 0.4 | 0.36 | 0.90× |
+| waste_collected_kg | environment | 1 × 1 × 2 = 2 | 0.05 | 0.09 | 1.80× |
 | animals_rescued | animal welfare | 2 × 2 × 3 = 12 | 0.5 | 0.343 | 0.69× |
 | animals_sterilized | animal welfare | 2 × 3 × 2 = 12 | 0.3 | 0.343 | 1.14× |
 | animals_treated | animal welfare | 2 × 1 × 3 = 6 | 0.2 | 0.171 | 0.85× |
 | animals_adopted | animal welfare | 3 × 3 × 3 = 27 | 0.6 | 0.771 | 1.29× |
 | wildlife_released | animal welfare | 3 × 3 × 3 = 27 | 0.8 | 0.771 | 0.96× |
-| students_taught | education | 2 × 2 × 2 = 8 | 0.2 | 0.23 | 1.15× |
-| workshops_held | education | 1 × 1 × 2 = 2 | 0.05 | 0.058 | 1.16× |
-| scholarships_granted | education | 3 × 3 × 3 = 27 | 1 | 0.777 | 0.78× |
-| teachers_trained | education | 2 × 3 × 2 = 12 | 0.5 | 0.345 | 0.69× |
-| books_distributed | education | 1 × 2 × 2 = 4 | 0.02 | 0.115 | 5.75× |
-| schools_built | education | 2 × 3 × 2 = 12 | 0.1 | 0.345 | 3.45× |
-| meals_provided | poverty | 1 × 1 × 3 = 3 | 0.02 | 0.125 | 6.25× |
-| people_housed | poverty | 3 × 3 × 3 = 27 | 1 | 1.129 | 1.13× |
-| microloans_issued | poverty | 2 × 2 × 2 = 8 | 0.5 | 0.334 | 0.67× |
-| jobs_created | poverty | 3 × 3 × 2 = 18 | 1.5 | 0.752 | 0.50× |
-| families_supported | poverty | 2 × 1 × 3 = 6 | 0.4 | 0.251 | 0.63× |
-| clean_water_access_people | poverty | 3 × 3 × 3 = 27 | 0.3 | 1.129 | 3.76× |
+| students_taught | education | 2 × 2 × 2 = 8 | 0.2 | 0.237 | 1.18× |
+| workshops_held | education | 1 × 1 × 2 = 2 | 0.05 | 0.059 | 1.18× |
+| teachers_trained | education | 2 × 3 × 2 = 12 | 0.5 | 0.355 | 0.71× |
+| books_distributed | education | 1 × 2 × 2 = 4 | 0.02 | 0.118 | 5.90× |
+| meals_provided | poverty | 1 × 1 × 3 = 3 | 0.02 | 0.14 | 7.00× |
+| families_supported | poverty | 2 × 1 × 3 = 6 | 0.4 | 0.28 | 0.70× |
 | people_trained | social | 2 × 2 × 2 = 8 | 0.1 | 0.19 | 1.90× |
 | women_empowered | social | 2 × 2 × 3 = 12 | 0.3 | 0.286 | 0.95× |
 | community_events_held | social | 1 × 1 × 1 = 1 | 0.1 | 0.024 | 0.24× |
-| patients_treated | health | 2 × 2 × 3 = 12 | 0.2 | 0.146 | 0.73× |
-| vaccinations_administered | health | 2 × 3 × 3 = 18 | 0.05 | 0.22 | 4.40× |
-| medical_kits_distributed | health | 1 × 1 × 3 = 3 | 0.1 | 0.037 | 0.37× |
-| mental_health_sessions | health | 2 × 2 × 2 = 8 | 0.15 | 0.098 | 0.65× |
+| medical_kits_distributed | health | 1 × 1 × 3 = 3 | 0.1 | 0.1 | 1.00× |

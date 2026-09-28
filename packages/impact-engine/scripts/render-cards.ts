@@ -17,7 +17,7 @@ for (const line of readFileSync(out + "/sensitivity.md", "utf8").split("\n")) {
 // Five Dimensions rubric: implied weight within a domain ∝ depth × duration × vulnerability.
 const byDomain = new Map<string, string[]>();
 for (const [k, w] of Object.entries(ACTION_WEIGHTS_V02)) {
-  if (!CARDS[k].rubric) continue;
+  if (!CARDS[k].rubric || w.parked) continue;
   byDomain.set(w.domain, [...(byDomain.get(w.domain) ?? []), k]);
 }
 const implied = new Map<string, number>();
@@ -41,6 +41,7 @@ for (const [k, w] of Object.entries(ACTION_WEIGHTS_V02)) {
     `# ${c.title} (\`${k}\`)`,
     "",
     `Methodology v0.2, Community layer. Domain: ${w.domain.replace("_", " ")}. Part of Regen Bazaar's own relative index; not a certification.`,
+    ...(w.parked ? ["", `**Parked:** ${w.parked}. Kept in the table; scores 0 in the Community layer.`] : []),
     "",
     "| Field | Value |",
     "|---|---|",
@@ -54,7 +55,7 @@ for (const [k, w] of Object.entries(ACTION_WEIGHTS_V02)) {
     ...(w.s ? [`| Survival factor S | ${w.s.value}, ${statusLabel[w.s.status]}. Source: ${w.s.source} |`] : []),
     `| Multipliers | SM (area factor): ${w.areaFactor ? "yes" : "no, 1.0"}. ESM: ${w.domain === "environment" ? "yes, 1.0–1.3" : "no, 1.0"}. Domain coefficient k: 1.0, pending cost survey |`,
     `| Sensitivity (±50%) | ${sens.get(k) ?? "not in the sample set"} |`,
-    ...(r ? [`| Five Dimensions rubric | depth ${r[0]}, duration ${r[1]}, vulnerability ${r[2]} → product ${r[0] * r[1] * r[2]}; rubric-implied weight ${imp} (${ratio!.toFixed(2)}× current) |`] : []),
+    ...(r && !w.parked ? [`| Five Dimensions rubric | depth ${r[0]}, duration ${r[1]}, vulnerability ${r[2]} → product ${r[0] * r[1] * r[2]}; rubric-implied weight ${imp} (${ratio!.toFixed(2)}× current) |`] : []),
     `| Proof that fits | ${c.evidence} |`,
     `| SDG tags (contributes to) | ${w.sdg.join(", ")} |`,
     ...(w.iris ? [`| IRIS+ metric IDs (definitions, cited with attribution to the GIIN) | ${w.iris.join(", ")} |`] : []),
@@ -66,8 +67,8 @@ for (const [k, w] of Object.entries(ACTION_WEIGHTS_V02)) {
     "",
   ].join("\n");
   writeFileSync(`${out}/cards/${k}.md`, md);
-  index.push(`| [${c.title}](${k}.md) | ${w.domain.replace("_", " ")} | ${w.aw.value} per ${w.scoredUnit} | ${w.aw.status} |`);
-  if (r) rubricRows.push(`| ${k} | ${w.domain.replace("_", " ")} | ${r.join(" × ")} = ${r[0] * r[1] * r[2]} | ${w.aw.value} | ${imp} | ${ratio!.toFixed(2)}× |`);
+  index.push(`| [${c.title}](${k}.md) | ${w.domain.replace("_", " ")} | ${w.aw.value} per ${w.scoredUnit} | ${w.parked ? "parked" : w.aw.status} |`);
+  if (r && !w.parked) rubricRows.push(`| ${k} | ${w.domain.replace("_", " ")} | ${r.join(" × ")} = ${r[0] * r[1] * r[2]} | ${w.aw.value} | ${imp} | ${ratio!.toFixed(2)}× |`);
 }
 
 writeFileSync(out + "/cards/README.md", [

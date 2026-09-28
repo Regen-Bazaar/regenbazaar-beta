@@ -2,6 +2,8 @@
 
 Methodology v0.2, Community layer. Domain: environment. Part of Regen Bazaar's own relative index; not a certification.
 
+**Parked:** registry carbon belongs to the corporate layer. Kept in the table; scores 0 in the Community layer.
+
 | Field | Value |
 |---|---|
 | Definition and unit | Tonnes of CO2e issued or retired in a recognised registry (Verra, Gold Standard, Plan Vivo), identified by serial number. |

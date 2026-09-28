@@ -27,6 +27,7 @@ export default async function Card({ params }: { params: Promise<{ action: strin
   const c = CARDS_V02[action];
   const v1 = ACTION_WEIGHTS[action];
   const rows: [string, React.ReactNode][] = [
+    ...(w.parked ? ([["Parked", `${w.parked}. Kept in the table; scores 0 in the Community layer.`]] as [string, string][]) : []),
     ["Definition and unit", c.definition],
     ["Scored unit", `${w.scoredUnit} (input: ${w.inputUnit})`],
     ["What the weight represents", c.represents],

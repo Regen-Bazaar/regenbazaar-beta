@@ -6,7 +6,8 @@ import {
   ACTION_WEIGHTS_V02,
   GRID_FACTORS,
   computeImpactValueV02,
-  ruleBasedExtract,
+  isCommunityAction,
+  ruleBasedExtract as extractAll,
   type ComplexityAnswers,
   type Ecosystem,
   type ExtractedActionV02,
@@ -35,6 +36,8 @@ const COMPLEXITY: { key: keyof ComplexityAnswers; label: string; options: string
   { key: "environmentalConditions", label: "Working conditions", options: ["easy", "moderate", "challenging"] },
 ];
 const AREA_ACTIONS = ["trees_planted", "mangroves_planted"];
+// Only Community-layer actions are offered; parked ones (need capital or professionals) are not scored.
+const ruleBasedExtract = (text: string) => extractAll(text).filter((a) => isCommunityAction(a.actionType));
 const SURVIVAL_ACTIONS = ["trees_planted", "mangroves_planted", "coral_planted"];
 
 const EXAMPLE = {
