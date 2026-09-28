@@ -147,9 +147,10 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
 - **Provisional numbers.** All six domain coefficients k are 1.0 and most non-environment weights are labelled
   assumptions until the cost survey with pilot groups (D6) and the expert round. The ±50% sensitivity test
   (`docs/methodology/sensitivity.md`) shows most assumption weights change the ranking of sample reports.
-- **Price still v0.1 logic.** Listings are priced IV × 0.5 in the network's sale currency. The planned USD price
-  (IV × rate × P × C) and a stablecoin on Celo wait for the owner's decision (D4). v0.2 IVs are on a different
-  scale, so prices of new listings shift; staking rewards also scale with IV.
+- **USD price rate is provisional** ($1 per IV point, `price-v02.ts`) until the cost survey. v0.2 listings store
+  `price_usd`; v0.1 listings keep IV × 0.5 in the sale currency, so the two are not directly comparable. On Celo
+  Sepolia test CELO is counted as $1 (`usdPerUnit` in `lib/networks.ts`); mainnet needs a stablecoin there.
+  Staking rewards scale with IV, so the v0.2 scale must be reviewed before mainnet.
 - **Tree counts without area score no carbon.** The form asks for the planted area; the rule-based fallback
   extractor cannot read areas from text, only the LLM can.
 - **Default mangrove survival 0.72 is a proxy** (Bourgeois 2024 biomass ratio), replaced by measured survival.

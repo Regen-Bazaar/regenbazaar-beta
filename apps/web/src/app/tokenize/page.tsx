@@ -6,6 +6,7 @@ import {
   ACTION_WEIGHTS_V02,
   GRID_FACTORS,
   computeImpactValueV02,
+  computePriceV02,
   isCommunityAction,
   ruleBasedExtract as extractAll,
   type ComplexityAnswers,
@@ -566,8 +567,19 @@ export default function Tokenize() {
               </div>
               <div className="rounded-xl bg-raised p-4">
                 <div className="label-mono">Price</div>
-                <div className="mt-1 text-xl font-semibold">after review</div>
-                <div className="text-xs text-subtle">from IV and proof level</div>
+                {(() => {
+                  const est = computePriceV02(
+                    iv.impactValue,
+                    expectedP === "P0" ? "P1" : expectedP,
+                    complexityCount === COMPLEXITY.length ? (complexity as ComplexityAnswers) : undefined,
+                  );
+                  return (
+                    <>
+                      <div className="mt-1 text-xl font-semibold">≈ ${fmt(est?.totalUsd ?? 0, 2)}</div>
+                      <div className="text-xs text-subtle">estimate; final after review (IV × rate × proof × complexity)</div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
             <div className="mt-5 text-sm text-subtle">

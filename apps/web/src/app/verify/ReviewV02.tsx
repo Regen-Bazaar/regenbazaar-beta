@@ -159,6 +159,28 @@ export function ReviewV02({
               "no coordinates"
             )}
             {c.adjacentToHabitat ? " · joins existing habitat" : ""}
+            {s.location && (
+              <span className="block text-xs">
+                Check on:{" "}
+                <a
+                  href={`https://www.google.com/maps/@?api=1&map_action=map&center=${s.location.lat},${s.location.lon}&zoom=16&basemap=satellite`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link"
+                >
+                  satellite
+                </a>
+                {" · "}
+                <a href="https://www.globalmangrovewatch.org/" target="_blank" rel="noopener noreferrer" className="link">
+                  Global Mangrove Watch
+                </a>
+                {" · "}
+                <a href="https://allencoralatlas.org/atlas/" target="_blank" rel="noopener noreferrer" className="link">
+                  Allen Coral Atlas
+                </a>{" "}
+                (paste the coordinates)
+              </span>
+            )}
           </dd>
         </div>
         <div>

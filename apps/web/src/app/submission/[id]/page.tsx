@@ -276,6 +276,14 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
                 </dl>
                 {listing.active ? (
                   <div className="!mt-5 border-t border-line pt-5">
+                    {listing.priceUsd != null && (
+                      <div className="mb-2 flex items-baseline justify-between gap-3 text-sm text-muted">
+                        <span>Price (all {listing.maxEditions} editions)</span>
+                        <span>
+                          ${Number(listing.priceUsd).toLocaleString("en-US", { maximumFractionDigits: 2 })} · IV × rate × proof × complexity
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="label-mono">Per edition</span>
                       <span className="text-xl font-semibold">

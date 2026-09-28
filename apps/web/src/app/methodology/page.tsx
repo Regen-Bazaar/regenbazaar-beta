@@ -8,6 +8,7 @@ import {
   MAX_ACTION_QUANTITY_V02,
   MAX_CREDITED_YEARS,
   PRICE_RATE_PER_IV,
+  PRICE_RATE_USD_PER_IV,
   PROOF_FACTORS,
   PROOF_REQUIREMENTS,
   TABLES_VERSION,
@@ -225,7 +226,7 @@ export default function Methodology() {
               </p>
               <p>
                 <b>ESM, environmental sensitivity</b> ({ESM_MIN} to {ESM_MAX}, environment only): suggested from open maps
-                at the site coordinates, confirmed by a validator. Until confirmed, 1.0.
+                a validator checks the site coordinates on open maps (mangroves, reefs, forest) and sets it. Until then, 1.0.
               </p>
               <p>
                 <b>S, survival</b>: coral ×{ACTION_WEIGHTS_V02.coral_planted.s!.value} (Boström-Einarsson et al. 2020);
@@ -267,14 +268,16 @@ export default function Methodology() {
 
             <Section id="price" title="Price">
               <p>
-                Planned for v0.2: <span className="font-mono text-fg">price (USD) = IV × rate × P × C</span>, split across
-                editions, where C is the complexity of the work (five questions, 1.0 to 1.4). Complexity moved here from
-                the impact score because difficulty is a cost, not an outcome.
+                <span className="font-mono text-fg">price (USD) = IV × rate × P × C</span>, split across editions. The rate is
+                ${PRICE_RATE_USD_PER_IV.value} per IV point for now, to be calibrated with a cost survey of pilot groups. P is
+                the proof level factor; C is the complexity of the work (five questions, 1.0 to 1.4), moved here from the
+                impact score because difficulty is a cost, not an outcome.
               </p>
               <p>
-                Today, on the test networks, the listing price is IV × {PRICE_RATE_PER_IV} in the network&apos;s sale
-                currency, split over 100 editions. The switch to USD pricing needs the owner&apos;s approval and will be
-                announced here.
+                First sales settle in a dollar stablecoin (USDG) at that price, so an organisation knows what it receives.
+                Resale on the secondary market is free. On the Celo test network the price is paid in test CELO, counted as
+                $1; a stablecoin replaces it before mainnet. Reports scored with v0.1 keep their v0.1 price (IV ×{" "}
+                {PRICE_RATE_PER_IV} in the sale currency).
               </p>
             </Section>
 
@@ -322,7 +325,7 @@ export default function Methodology() {
                   </li>
                 ))}
               </ul>
-              <p>Open map layers used for the environmental sensitivity suggestion:</p>
+              <p>Open maps validators use to check the site (an automatic lookup is planned):</p>
               <ul className="ml-4 list-disc space-y-1">
                 {DATA_LAYERS.map(([name, licence, href]) => (
                   <li key={name}>

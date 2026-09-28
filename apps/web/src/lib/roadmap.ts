@@ -35,6 +35,7 @@ export const DONE: { text: string; proof?: string }[] = [
   { text: "AI extraction of plain-language reports, deterministic published scoring formula, on-chain EAS attestations", proof: "https://app.regenbazaar.com/methodology" },
   { text: "Methodology v0.2 (Community layer): physical units from public coefficients, a published card with source status for every weight, scores per impact domain, double-counting rules, and a sensitivity test", proof: "https://app.regenbazaar.com/methodology" },
   { text: "Proof levels P0 to P4 set by a validator; proof links fetched safely on the server, saved as a dated snapshot and checked for dates, numbers and place" },
+  { text: "Prices in US dollars from the Impact Value, the proof level and the difficulty of the work, paid in a dollar stablecoin on Arbitrum Sepolia and Robinhood Chain testnet" },
   { text: "Generated artwork for every tRWI, pinned to IPFS as the token image" },
   { text: "Funder page with holdings and retirement; step-by-step guide", proof: "https://app.regenbazaar.com/guide" },
   { text: "Public-beta safety: content moderation, rate limits, reviewer-only approvals, duplicate hints for reviewers" },
@@ -65,8 +66,8 @@ export const PHASES: Phase[] = [
     items: [
       "Cost survey with 5 to 10 pilot groups (a cleanup, a sterilisation, a lesson) to set the domain coefficients and the price rate",
       "Dated and geotagged photos read on upload, and a second-party witness flow, as evidence for proof levels P2 and P3",
-      "Ecosystem sensitivity from the location of the work, using open data (ecoregions, coral reef and mangrove maps, forest change)",
-      "Price in US dollars derived from the Impact Value, the proof level and the difficulty of the work",
+      "Automatic ecosystem sensitivity at the site coordinates, read on demand from open global maps (ESA WorldCover land cover including mangroves, Allen Coral Atlas reefs, Global Forest Watch data) with no local copy of the maps; today a validator checks the site on the maps by hand",
+      "Calibrated price rate in US dollars from the pilot cost survey; a dollar stablecoin checkout on Celo before mainnet",
       "Versioned scoring, so past reports keep the score of the version that produced them",
       "Similarity checks across all reports, and checks against other impact registries so the same work is not sold twice",
       "Revocation: withdraw the on-chain attestation and delist a claim that turns out to be false",

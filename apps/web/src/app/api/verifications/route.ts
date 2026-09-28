@@ -5,6 +5,8 @@ import {
   clampEsm,
   computeImpactValueV02,
   computePrice,
+  computePriceV02,
+  type ComplexityAnswers,
   isListable,
   parseProofLevel,
   type DomainScoreV02,
@@ -19,7 +21,7 @@ import { parseUnits } from "viem";
 import { getDb } from "../../../lib/db";
 import { pinFile, pinJson } from "../../../lib/ipfs";
 import { onchainEnabled, attestImpact, ivToWei } from "../../../lib/onchain";
-import { DEFAULT_NETWORK_KEY, ENABLED_NETWORKS, getNetwork, networkByChainId, type Network } from "../../../lib/networks";
+import { DEFAULT_NETWORK_KEY, ENABLED_NETWORKS, getNetwork, networkByChainId, usdPerUnit, type Network } from "../../../lib/networks";
 import type { DB } from "@rb/db";
 import { isAdmin } from "../../../lib/admin";
 import { cardHeadline } from "../../../lib/impact-view";
@@ -93,11 +95,17 @@ async function registerListing(db: DB, net: Network, submissionId: string, reqUr
     .where(eq(listings.chainId, net.chain.id));
   const tokenId = (BigInt(m ?? "0") + 1n).toString();
 
-  const price = computePrice(Number(s.ivValue), MAX_EDITIONS);
   const { address: currency, decimals } = net.saleCurrency;
-  // computePrice rounds to 4 decimals; toFixed(18) would expose binary float noise (0.369 -> 0.368999999999999995),
+  // v0.2 (D4): price in USD = IV × rate × P × C, settled in the sale currency at its USD value.
+  // v0.1 reports keep the v0.1 rule (IV × rate in the sale currency).
+  const priceV02 = v02
+    ? computePriceV02(Number(s.ivValue), proofLevel, (s.context as { complexity?: ComplexityAnswers } | null)?.complexity, MAX_EDITIONS)
+    : null;
+  if (v02 && !priceV02) throw new Error("a v0.2 report needs a proof level P1–P4 before it is priced");
+  const perEdition = priceV02 ? priceV02.perEditionUsd / usdPerUnit(net.saleCurrency) : computePrice(Number(s.ivValue), MAX_EDITIONS).pricePerEdition;
+  // Prices are rounded to 4 decimals; toFixed(18) would expose binary float noise (0.369 -> 0.368999999999999995),
   // so cap at 6 decimals: exact for the rounded price, unchanged for 6-decimal USDG.
-  const pricePerEditionWei = parseUnits(price.pricePerEdition.toFixed(Math.min(decimals, 6)), decimals).toString();
+  const pricePerEditionWei = parseUnits(perEdition.toFixed(Math.min(decimals, 6)), decimals).toString();
 
   await db.insert(listings).values({
     submissionId,
@@ -110,6 +118,8 @@ async function registerListing(db: DB, net: Network, submissionId: string, reqUr
     beneficiary: ngo,
     easUid: uid,
     metadataUri: metadataURI,
+    priceUsd: priceV02 ? priceV02.totalUsd.toFixed(4) : null,
+    priceModelVersion: priceV02 ? priceV02.modelVersion : null,
     nonce: 0,
     active: true,
   });

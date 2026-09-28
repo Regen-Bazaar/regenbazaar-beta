@@ -317,3 +317,18 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   Layer data lives outside the image (large, licence attribution per layer).
 - **Trade-offs / fragile:** price and currency unchanged until D4; token metadata `regen-bazaar/trwi-2` for v0.2
   reports publishes the country, never coordinates; no photo EXIF reading yet; ESM suggestions need the extracts.
+
+## 2026-09-28 — Community scope, USD price (D4), manual map check, deploy before 04.10
+- **Scope:** 12 actions that need capital, a licence or professionals are parked (`parked` in `tables-v02.ts`):
+  kept in the tables and cards, score 0 with `out_of_scope`, not offered to the extractor or the form. Registered
+  carbon work scores no carbon here. Owner: community groups do not do these for free.
+- **Price (D4 approved):** `price-v02.ts`, USD = IV × rate × P × C; rate $1 per point provisional until the cost
+  survey. First sales settle in USDG at that price; test CELO counted as $1 on Celo Sepolia until a stablecoin is
+  added before mainnet. Listings store `price_usd` and `price_model_version`. Alternative (native token) rejected
+  for primary sales: NGO revenue would follow the token price; trading lives on the secondary market.
+- **Maps:** validators check the site on satellite, Global Mangrove Watch and Allen Coral Atlas links. Local
+  extracts rejected (global coverage would need gigabytes and would not update); an on-demand lookup from open
+  global maps (ESA WorldCover as cloud-optimized GeoTIFF, Allen Coral Atlas, Global Forest Watch data) is on the
+  roadmap. The GeoJSON loader stays as an optional path (`ESM_LAYERS_DIR`).
+- **Rubric:** not used to set weights; kept as a documented cross-check (see the owner discussion of 2026-09-28).
+- **Deploy:** owner approved deploying v0.2 before the Arbitrum deadline, after a check on a server copy.

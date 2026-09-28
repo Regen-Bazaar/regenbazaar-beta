@@ -25,6 +25,7 @@ const SORTS = [
   ["", "Impact Value"],
   ["score", "Domain score"],
   ["price", "Price per edition"],
+  ["value", "IV per $100"],
 ] as const;
 
 function hrefWith(current: Search, patch: Partial<Search>): string {
@@ -56,6 +57,7 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
       id: listings.id,
       pricePerEdition: listings.pricePerEdition,
       maxEditions: listings.maxEditions,
+      priceUsd: listings.priceUsd,
     })
     .from(listings)
     .where(and(eq(listings.active, true), eq(listings.chainId, NETWORK.chain.id)));
@@ -92,7 +94,13 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
     }
     return true;
   });
-  if (sp.sort === "score") {
+  const ivPer100 = (r: (typeof rows)[number]) => {
+    const usd = Number(listingBySubmission.get(r.id)?.priceUsd ?? 0);
+    return usd > 0 ? (Number(r.ivValue ?? 0) / usd) * 100 : -1;
+  };
+  if (sp.sort === "value") {
+    rows.sort((a, b) => ivPer100(b) - ivPer100(a));
+  } else if (sp.sort === "score") {
     rows.sort((a, b) => (impactView(b).primary?.score ?? 0) - (impactView(a).primary?.score ?? 0));
   } else if (sp.sort === "price") {
     const price = (id: string) => {
@@ -280,7 +288,10 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
                       <div className="text-xl font-semibold">
                         {listing ? (
                           <>
-                            {Number(formatUnits(BigInt(listing.pricePerEdition), NETWORK.saleCurrency.decimals)).toLocaleString("en-US", { maximumFractionDigits: 6 })}{" "}
+                            {listing.priceUsd != null && <span>${(Number(listing.priceUsd) / listing.maxEditions).toLocaleString("en-US", { maximumFractionDigits: 4 })} </span>}
+                            <span className={listing.priceUsd != null ? "text-sm font-normal text-muted" : ""}>
+                              {Number(formatUnits(BigInt(listing.pricePerEdition), NETWORK.saleCurrency.decimals)).toLocaleString("en-US", { maximumFractionDigits: 6 })}
+                            </span>{" "}
                             <span className="text-base font-normal text-muted">{NETWORK.saleCurrency.symbol}</span>
                           </>
                         ) : (
