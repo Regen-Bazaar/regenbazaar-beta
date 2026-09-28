@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { headline, impactView } from "../../lib/impact-view";
 import { impactSubmissions, listings } from "@rb/db/schema";
 import { getDb } from "../../lib/db";
 import { currentNetwork } from "../../lib/network-server";
@@ -26,6 +27,9 @@ export default async function PortfolioPage() {
       title: impactSubmissions.title,
       domain: impactSubmissions.domain,
       ivValue: impactSubmissions.ivValue,
+      methodologyVersion: impactSubmissions.methodologyVersion,
+      domainScores: impactSubmissions.domainScores,
+      proofLevel: impactSubmissions.proofLevel,
     })
     .from(listings)
     .innerJoin(impactSubmissions, eq(listings.submissionId, impactSubmissions.id))
@@ -40,6 +44,12 @@ export default async function PortfolioPage() {
     title: r.title,
     domain: r.domain,
     totalIV: Number(r.ivValue ?? 0),
+    ...(() => {
+      const v = impactView(r);
+      if (v.version !== "v0.2") return {};
+      const h = headline(v);
+      return { headline: `${h.label} ${h.value}${h.sub ? ` · ${h.sub}` : ""}`, proofLevel: v.proofLevel };
+    })(),
   }));
 
   return (

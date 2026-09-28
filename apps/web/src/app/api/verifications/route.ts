@@ -1,15 +1,30 @@
 import { NextResponse } from "next/server";
 import { verifications, impactSubmissions, organizations, listings } from "@rb/db/schema";
 import { buildTokenMetadata, renderImpactCard } from "@rb/pipeline";
-import { computePrice, type ExtractedAction, type FrameworkTags } from "@rb/impact-engine";
+import {
+  clampEsm,
+  computeImpactValueV02,
+  computePrice,
+  computePriceV02,
+  type ComplexityAnswers,
+  isListable,
+  parseProofLevel,
+  type DomainScoreV02,
+  type ExtractedAction,
+  type ExtractedActionV02,
+  type FrameworkTags,
+  type ImpactContextV02,
+  type ProofLevel,
+} from "@rb/impact-engine";
 import { eq, sql } from "drizzle-orm";
 import { parseUnits } from "viem";
 import { getDb } from "../../../lib/db";
 import { pinFile, pinJson } from "../../../lib/ipfs";
 import { onchainEnabled, attestImpact, ivToWei } from "../../../lib/onchain";
-import { DEFAULT_NETWORK_KEY, ENABLED_NETWORKS, getNetwork, networkByChainId, type Network } from "../../../lib/networks";
+import { DEFAULT_NETWORK_KEY, ENABLED_NETWORKS, getNetwork, networkByChainId, usdPerUnit, type Network } from "../../../lib/networks";
 import type { DB } from "@rb/db";
 import { isAdmin } from "../../../lib/admin";
+import { cardHeadline } from "../../../lib/impact-view";
 
 export const runtime = "nodejs";
 
@@ -33,7 +48,10 @@ async function registerListing(db: DB, net: Network, submissionId: string, reqUr
   if (!org) throw new Error("org not found");
   const ngo = org.walletAddress as Hex;
 
-  const c = (s.context ?? {}) as { regionCode?: string; periodStart?: string; periodEnd?: string };
+  const c = (s.context ?? {}) as { regionCode?: string; country?: string; periodStart?: string; periodEnd?: string };
+  const v02 = s.methodologyVersion === "v0.2";
+  const domainScores = v02 ? ((s.domainScores ?? []) as DomainScoreV02[]) : [];
+  const proofLevel = v02 ? (parseProofLevel(s.proofLevel) ?? null) : null;
   // Generative artwork (deterministic from the impact data), pinned so the token image outlives our site.
   const card = renderImpactCard({
     seed: s.id,
@@ -44,6 +62,8 @@ async function registerListing(db: DB, net: Network, submissionId: string, reqUr
     sdgs: (s.frameworkTags as FrameworkTags | null)?.sdg ?? [],
     periodStart: c.periodStart ?? null,
     periodEnd: c.periodEnd ?? null,
+    headline: cardHeadline(s),
+    proofLevel,
   });
   const imageUri = await pinFile(card, "trwi.svg", "image/svg+xml");
   const meta = buildTokenMetadata({
@@ -54,11 +74,15 @@ async function registerListing(db: DB, net: Network, submissionId: string, reqUr
     frameworks: s.frameworkTags as FrameworkTags | null,
     impactValue: Number(s.ivValue),
     editions: MAX_EDITIONS,
-    regionCode: c.regionCode ?? null,
+    regionCode: c.regionCode ?? c.country ?? null, // coarse only: v0.2 publishes the country, never coordinates
     periodStart: c.periodStart ?? null,
     periodEnd: c.periodEnd ?? null,
     tablesVersion: s.tablesVersion ?? "",
     externalUrl: new URL(`/submission/${s.id}`, reqUrl).toString(),
+    methodologyVersion: s.methodologyVersion ?? null,
+    domainScores,
+    proofLevel,
+    iris: ((s.frameworkTags as { iris?: string[] } | null)?.iris ?? []),
   });
 
   const metadataURI = await pinJson(meta); // ipfs://<cid>
@@ -71,11 +95,17 @@ async function registerListing(db: DB, net: Network, submissionId: string, reqUr
     .where(eq(listings.chainId, net.chain.id));
   const tokenId = (BigInt(m ?? "0") + 1n).toString();
 
-  const price = computePrice(Number(s.ivValue), MAX_EDITIONS);
   const { address: currency, decimals } = net.saleCurrency;
-  // computePrice rounds to 4 decimals; toFixed(18) would expose binary float noise (0.369 -> 0.368999999999999995),
+  // v0.2 (D4): price in USD = IV × rate × P × C, settled in the sale currency at its USD value.
+  // v0.1 reports keep the v0.1 rule (IV × rate in the sale currency).
+  const priceV02 = v02
+    ? computePriceV02(Number(s.ivValue), proofLevel, (s.context as { complexity?: ComplexityAnswers } | null)?.complexity, MAX_EDITIONS)
+    : null;
+  if (v02 && !priceV02) throw new Error("a v0.2 report needs a proof level P1–P4 before it is priced");
+  const perEdition = priceV02 ? priceV02.perEditionUsd / usdPerUnit(net.saleCurrency) : computePrice(Number(s.ivValue), MAX_EDITIONS).pricePerEdition;
+  // Prices are rounded to 4 decimals; toFixed(18) would expose binary float noise (0.369 -> 0.368999999999999995),
   // so cap at 6 decimals: exact for the rounded price, unchanged for 6-decimal USDG.
-  const pricePerEditionWei = parseUnits(price.pricePerEdition.toFixed(Math.min(decimals, 6)), decimals).toString();
+  const pricePerEditionWei = parseUnits(perEdition.toFixed(Math.min(decimals, 6)), decimals).toString();
 
   await db.insert(listings).values({
     submissionId,
@@ -88,6 +118,8 @@ async function registerListing(db: DB, net: Network, submissionId: string, reqUr
     beneficiary: ngo,
     easUid: uid,
     metadataUri: metadataURI,
+    priceUsd: priceV02 ? priceV02.totalUsd.toFixed(4) : null,
+    priceModelVersion: priceV02 ? priceV02.modelVersion : null,
     nonce: 0,
     active: true,
   });
@@ -113,7 +145,45 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "submissionId and a valid decision are required" }, { status: 422 });
   }
 
+  // v0.2 review fields: the proof level is set here and only here (never by the submitter or the AI);
+  // ESM is the validator's confirmation of the open-data suggestion, clamped to 1.0..1.3.
+  const proofLevel: ProofLevel | null = body.proofLevel === undefined || body.proofLevel === null ? null : parseProofLevel(body.proofLevel);
+  if (body.proofLevel !== undefined && body.proofLevel !== null && !proofLevel) {
+    return NextResponse.json({ error: "proofLevel must be one of P0, P1, P2, P3, P4" }, { status: 422 });
+  }
+  let esm: number | null = null;
+  if (body.esm !== undefined && body.esm !== null) {
+    if (typeof body.esm !== "number" || !Number.isFinite(body.esm) || body.esm < 1 || body.esm > 1.3) {
+      return NextResponse.json({ error: "esm must be a number from 1.0 to 1.3" }, { status: 422 });
+    }
+    esm = clampEsm(body.esm);
+  }
+
   const db = await getDb();
+  const [target] = await db.select().from(impactSubmissions).where(eq(impactSubmissions.id, submissionId)).limit(1);
+  if (!target) return NextResponse.json({ error: "submission not found" }, { status: 404 });
+  const isV02 = target.methodologyVersion === "v0.2";
+  if (decision === "approve" && isV02 && !isListable(proofLevel ?? parseProofLevel(target.proofLevel))) {
+    return NextResponse.json({ error: "set a proof level P1–P4 before approving (P0 is not listed)" }, { status: 422 });
+  }
+  if (isV02 && (proofLevel || esm !== null)) {
+    const patch: Partial<typeof impactSubmissions.$inferInsert> = { updatedAt: new Date() };
+    if (proofLevel) patch.proofLevel = proofLevel;
+    if (esm !== null) {
+      // Rescore with the confirmed ESM; the formula and tables stay v0.2, only the context changes.
+      const ctx = { ...((target.context ?? {}) as ImpactContextV02), esm };
+      const iv = computeImpactValueV02((target.extractedActions ?? []) as ExtractedActionV02[], ctx);
+      Object.assign(patch, {
+        context: ctx,
+        ivResult: iv,
+        ivValue: iv.impactValue.toFixed(4),
+        domainScores: iv.domainScores,
+        frameworkTags: iv.frameworkTags,
+      });
+    }
+    await db.update(impactSubmissions).set(patch).where(eq(impactSubmissions.id, submissionId));
+  }
+
   // The ONE network this report is listed on: the one chosen at submission (legacy rows without a network ->
   // default). Resolved before the decision is recorded so a refused approval leaves no trace.
   let net: Network | undefined;

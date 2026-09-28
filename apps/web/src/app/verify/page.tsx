@@ -5,6 +5,8 @@ import Link from "next/link";
 import { DEFAULT_NETWORK_KEY, getNetwork, networkByChainId, type Network } from "../../lib/networks";
 import { FrameworkTag } from "../../components/FrameworkTag";
 import { ErrorNote } from "../../components/ErrorNote";
+import { ReviewV02, type ReviewChoice, type SubmissionV02 } from "./ReviewV02";
+import { fmt, headline, impactView } from "../../lib/impact-view";
 
 type Submission = {
   id: string;
@@ -19,7 +21,10 @@ type Submission = {
   mediaUris: string[] | null;
   context: { regionCode?: string; periodStart?: string; periodEnd?: string } | null;
   org: { name: string; wallet: string; verified: boolean } | null;
-};
+  methodologyVersion: string | null;
+  domainScores: unknown;
+  tablesVersion: string | null;
+} & Omit<SubmissionV02, "id" | "extractedActions" | "context">;
 
 type Approved = {
   sub: Submission;
@@ -42,6 +47,7 @@ export default function Verify() {
   const [denied, setDenied] = useState(false);
   const [error, setError] = useState("");
   const [approved, setApproved] = useState<Approved[]>([]);
+  const [choices, setChoices] = useState<Record<string, ReviewChoice>>({});
 
   useEffect(() => {
     try {
@@ -61,13 +67,20 @@ export default function Verify() {
     void load();
   }, [load]);
 
-  async function decide(id: string, decision: "approve" | "reject") {
+  async function decide(id: string, decision: "approve" | "reject" | "request_info") {
     setBusy(id);
     setError("");
+    const c = choices[id];
     const res = await fetch("/api/verifications", {
       method: "POST",
       headers: { "content-type": "application/json", "x-admin-token": token },
-      body: JSON.stringify({ submissionId: id, decision, note: notes[id]?.trim() || undefined }),
+      body: JSON.stringify({
+        submissionId: id,
+        decision,
+        note: notes[id]?.trim() || undefined,
+        proofLevel: c?.proofLevel || undefined,
+        esm: c?.esm ? Number(c.esm) : undefined,
+      }),
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) setError(body.error ?? "failed");
@@ -165,8 +178,18 @@ export default function Verify() {
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className="label-mono">Impact Value</div>
-                  <div className="font-display text-3xl text-accent">{Number(s.ivValue ?? 0).toLocaleString()}</div>
+                  {(() => {
+                    const v = impactView(s);
+                    const h = headline(v);
+                    return (
+                      <>
+                        <div className="label-mono">{h.label}</div>
+                        <div className="font-display text-3xl text-accent">{h.value}</div>
+                        <div className="text-xs text-subtle">{h.sub}</div>
+                        {v.version === "v0.2" && <div className="text-xs text-subtle">IV {fmt(v.iv)} · v0.2</div>}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
               <dl className="mt-4 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
@@ -240,6 +263,14 @@ export default function Verify() {
                   </ul>
                 </div>
               )}
+              {s.methodologyVersion === "v0.2" && (
+                <ReviewV02
+                  s={s as unknown as SubmissionV02}
+                  token={token}
+                  choice={choices[s.id] ?? { proofLevel: "", esm: "" }}
+                  onChoice={(c) => setChoices((m) => ({ ...m, [s.id]: c }))}
+                />
+              )}
               <textarea
                 value={notes[s.id] ?? ""}
                 onChange={(e) => setNotes((n) => ({ ...n, [s.id]: e.target.value }))}
@@ -255,6 +286,15 @@ export default function Verify() {
                 >
                   {busy === s.id ? "Attesting on-chain…" : "Approve & attest"}
                 </button>
+                {s.methodologyVersion === "v0.2" && (
+                  <button
+                    onClick={() => decide(s.id, "request_info")}
+                    disabled={busy === s.id}
+                    className="btn btn-secondary btn-sm"
+                  >
+                    Request more proof
+                  </button>
+                )}
                 <button
                   onClick={() => decide(s.id, "reject")}
                   disabled={busy === s.id}

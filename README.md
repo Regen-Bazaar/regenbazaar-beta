@@ -12,7 +12,7 @@
 > Public beta on testnets. The same v3 contracts run on **Celo Sepolia** (where Regen Bazaar started),
 > **Arbitrum Sepolia** and **Robinhood Chain testnet**, and the site's network switcher offers all three. Each impact
 > report is listed on one network only, the one chosen when it was submitted.
-> Impact Value weights are v0.1, platform-assessed, not third-party certified. No real funds.
+> Impact Value is Regen Bazaar's own relative index (methodology v0.2, Community layer), not a certification. No real funds.
 
 Marketplace for **tokenized real-world impact (tRWI)**: NGOs across the full impact spectrum
 (environment, animal welfare, education, poverty, social, health) report impact, a custom AI engine
@@ -51,9 +51,11 @@ docs/         ARCHITECTURE.md · DECISIONS.md · KNOWN_ISSUES.md.
 - **Chain = source of truth** for ownership/sales/stakes (indexed into Postgres). **Postgres** = off-chain
   data (profiles, submissions, verification queue, AI outputs) + the on-chain read-cache.
 - **AI Impact-Value engine** (custom): LLM extraction of NGO free text → deterministic, versioned,
-  auditable scoring `IV = Σ(AW·SM·TBV·ESM·PIM·ACDM)`. The LLM never scores; a human confirms before mint.
-  Methodology is published in-app at `/methodology`.
-- **tRWI** = ERC-1155 with fractional editions (Impact Value split across editions; retire to claim offset),
+  auditable scoring (methodology v0.2): `domain score = Σ units × AW × SM × ESM × S`, `IV = Σ domain score × k`.
+  Quantities are converted to physical units first; every weight has a justification card with its source
+  (`docs/methodology/`). The LLM never scores; a validator sets the proof level (P0–P4) and confirms before
+  mint. Reports scored before v0.2 keep their v0.1 score. Methodology is published in-app at `/methodology`.
+- **tRWI** = ERC-1155 with fractional editions (Impact Value split across editions; retire to record your contribution),
   EAS-attestation-gated mint, ERC-2981 royalties.
 - **Onboarding** (later): ERC-4337 smart accounts + gasless paymaster (EntryPoint v0.6/0.7/0.8 live on Celo Sepolia).
 - **Storage** (later): Cloudflare R2 + CDN primary, self-hosted IPFS (kubo) backup.

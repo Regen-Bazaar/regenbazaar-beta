@@ -142,3 +142,25 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
 - Over WalletConnect, switching to or adding a testnet depends on the phone wallet; some refuse chains they
   do not list.
 - The WalletConnect domain must be allowlisted for the project id at cloud.reown.com, or connections fail.
+
+## 2026-09-28 — Methodology v0.2 (branch feat/methodology-v02, not deployed)
+- **Provisional numbers.** All six domain coefficients k are 1.0 and most non-environment weights are labelled
+  assumptions until the cost survey with pilot groups (D6) and the expert round. The ±50% sensitivity test
+  (`docs/methodology/sensitivity.md`) shows most assumption weights change the ranking of sample reports.
+- **USD price rate is provisional** ($1 per IV point, `price-v02.ts`) until the cost survey. v0.2 listings store
+  `price_usd`; v0.1 listings keep IV × 0.5 in the sale currency, so the two are not directly comparable. On Celo
+  Sepolia test CELO is counted as $1 (`usdPerUnit` in `lib/networks.ts`); mainnet needs a stablecoin there.
+  Staking rewards scale with IV, so the v0.2 scale must be reviewed before mainnet.
+- **Tree counts without area score no carbon.** The form asks for the planted area; the rule-based fallback
+  extractor cannot read areas from text, only the LLM can.
+- **Default mangrove survival 0.72 is a proxy** (Bourgeois 2024 biomass ratio), replaced by measured survival.
+- **ESM suggestions need layer data.** Without `ESM_LAYERS_DIR` (manifest + GeoJSON extracts) validators set ESM
+  by hand. The extracts are not in the repo; see `docs/methodology/esm-layers.md`. Point-in-polygon runs in
+  memory, so large layers must be clipped to pilot regions.
+- **Proof checks:** Facebook, Instagram and X often need a login, so fetched pages return little text; the
+  form asks for a screenshot link. Photo EXIF (date, GPS) is not read yet: media are links, not uploads.
+  Duplicate detection compares exact snapshot hashes only, so a re-encoded photo is not caught.
+- **Country list** in the form covers the eight countries with grid factors; others submit without a country.
+- **Report page shows pending reports by direct link** (existing behaviour, unchanged by v0.2).
+- **Deploy order:** migration 0004 (additive) before the new web build; `methodology_version` stays empty for
+  old rows, which the app reads as v0.1.

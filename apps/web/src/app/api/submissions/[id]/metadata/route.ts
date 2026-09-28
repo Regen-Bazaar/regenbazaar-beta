@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { impactSubmissions } from "@rb/db/schema";
 import { buildTokenMetadata } from "@rb/pipeline";
-import type { ExtractedAction, FrameworkTags } from "@rb/impact-engine";
+import { parseProofLevel, type DomainScoreV02, type ExtractedAction, type FrameworkTags } from "@rb/impact-engine";
 import { getDb } from "../../../../../lib/db";
 import { isAdmin } from "../../../../../lib/admin";
 
@@ -22,7 +22,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 
-  const c = (s.context ?? {}) as { regionCode?: string; periodStart?: string; periodEnd?: string };
+  const c = (s.context ?? {}) as { regionCode?: string; country?: string; periodStart?: string; periodEnd?: string };
   const meta = buildTokenMetadata({
     title: s.title,
     domain: s.domain,
@@ -30,12 +30,16 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
     frameworks: s.frameworkTags as FrameworkTags | null,
     impactValue: Number(s.ivValue ?? 0),
     editions: 100, // chosen at mint; preview uses a representative value
-    regionCode: c.regionCode ?? null,
+    regionCode: c.regionCode ?? c.country ?? null, // coarse only: v0.2 publishes the country, never coordinates
     periodStart: c.periodStart ?? null,
     periodEnd: c.periodEnd ?? null,
     tablesVersion: s.tablesVersion ?? "",
     easUID: null, // set once the EAS attestation exists (at mint)
     externalUrl: new URL(`/submission/${s.id}`, req.url).toString(),
+    methodologyVersion: s.methodologyVersion ?? null,
+    domainScores: (s.domainScores ?? []) as DomainScoreV02[],
+    proofLevel: parseProofLevel(s.proofLevel),
+    iris: (s.frameworkTags as { iris?: string[] } | null)?.iris ?? [],
   });
 
   return NextResponse.json(meta);

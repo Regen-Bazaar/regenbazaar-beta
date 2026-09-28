@@ -8,7 +8,7 @@
 // Shape is ERC-1155 / OpenSea-compatible (name/description/image/attributes) plus a machine-readable
 // `properties` block for AI-agent buyers.
 
-import type { ExtractedAction, FrameworkTags } from "@rb/impact-engine";
+import type { DomainScoreV02, ExtractedAction, FrameworkTags, ProofLevel } from "@rb/impact-engine";
 
 export interface TokenMetadataInput {
   title: string;
@@ -24,6 +24,11 @@ export interface TokenMetadataInput {
   easUID?: string | null;
   imageUri?: string | null; // ipfs://… set at mint
   externalUrl?: string | null; // optional human link back to the detail page (NOT the source of truth)
+  // v0.2 (schema trwi-2): domain scores with physical units, proof level set by the validator, IRIS+ IDs
+  methodologyVersion?: string | null;
+  domainScores?: DomainScoreV02[] | null;
+  proofLevel?: ProofLevel | null;
+  iris?: string[] | null;
 }
 
 export interface TokenAttribute {
@@ -39,7 +44,7 @@ export interface TokenMetadata {
   external_url?: string;
   attributes: TokenAttribute[];
   properties: {
-    schema: "regen-bazaar/trwi-1";
+    schema: "regen-bazaar/trwi-1" | "regen-bazaar/trwi-2";
     impactValue: number;
     editions: number;
     tablesVersion: string;
@@ -50,6 +55,10 @@ export interface TokenMetadata {
     region?: string;
     period?: { start?: string; end?: string };
     easUID?: string;
+    methodologyVersion?: string;
+    domainScores?: { domain: string; score: number; physical: { amount: number; unit: string }[] }[];
+    proofLevel?: ProofLevel;
+    iris?: string[];
   };
 }
 
@@ -65,15 +74,28 @@ export function buildTokenMetadata(input: TokenMetadataInput): TokenMetadata {
   const period = [year(input.periodStart), year(input.periodEnd)].filter(Boolean).join("–");
 
   const deeds = input.actions.map((a) => `${a.quantity.toLocaleString("en-US")} ${pretty(a.actionType)}`);
+  const v02 = input.methodologyVersion === "v0.2";
   const description =
     (deeds.length ? `Verified real-world impact: ${deeds.join(", ")}.` : "Verified real-world impact.") +
-    " Impact Value is platform-assessed (beta), not third-party certified.";
+    (v02
+      ? " Impact Value is Regen Bazaar's own relative index (methodology v0.2, Community layer), not a certification or a carbon credit."
+      : " Impact Value is platform-assessed (beta), not third-party certified.");
+  const domainScores = v02
+    ? (input.domainScores ?? []).map((d) => ({ domain: d.domain, score: d.score, physical: d.physical }))
+    : [];
 
   const attributes: TokenAttribute[] = [];
   if (input.domain) attributes.push({ trait_type: "Impact domain", value: pretty(input.domain) });
   for (const a of input.actions) {
     attributes.push({ trait_type: pretty(a.actionType), value: a.quantity, display_type: "number" });
   }
+  for (const d of domainScores) {
+    attributes.push({ trait_type: `Domain score: ${pretty(d.domain)}`, value: d.score, display_type: "number" });
+    for (const p of d.physical) {
+      attributes.push({ trait_type: `${pretty(d.domain)} (${p.unit})`, value: p.amount, display_type: "number" });
+    }
+  }
+  if (v02 && input.proofLevel) attributes.push({ trait_type: "Proof level", value: input.proofLevel });
   attributes.push({ trait_type: "Impact Value", value: input.impactValue, display_type: "number" });
   attributes.push({ trait_type: "Editions", value: input.editions, display_type: "number" });
   if (region) attributes.push({ trait_type: "Region (approximate)", value: region });
@@ -81,7 +103,11 @@ export function buildTokenMetadata(input: TokenMetadataInput): TokenMetadata {
   for (const s of sdg) attributes.push({ trait_type: "SDG", value: s });
   for (const e of ebf) attributes.push({ trait_type: "EBF", value: e });
   if (input.easUID) attributes.push({ trait_type: "EAS attestation", value: input.easUID });
-  attributes.push({ trait_type: "Methodology", value: `${input.tablesVersion} (platform-assessed, not certified)` });
+  if (v02) for (const i of input.iris ?? []) attributes.push({ trait_type: "IRIS+ metric", value: i });
+  attributes.push({
+    trait_type: "Methodology",
+    value: v02 ? `v0.2 Community layer (${input.tablesVersion})` : `${input.tablesVersion} (platform-assessed, not certified)`,
+  });
 
   return {
     name: input.title,
@@ -90,7 +116,7 @@ export function buildTokenMetadata(input: TokenMetadataInput): TokenMetadata {
     ...(input.externalUrl ? { external_url: input.externalUrl } : {}),
     attributes,
     properties: {
-      schema: "regen-bazaar/trwi-1",
+      schema: v02 ? "regen-bazaar/trwi-2" : "regen-bazaar/trwi-1",
       impactValue: input.impactValue,
       editions: input.editions,
       tablesVersion: input.tablesVersion,
@@ -103,6 +129,14 @@ export function buildTokenMetadata(input: TokenMetadataInput): TokenMetadata {
         ? { period: { start: input.periodStart ?? undefined, end: input.periodEnd ?? undefined } }
         : {}),
       ...(input.easUID ? { easUID: input.easUID } : {}),
+      ...(v02
+        ? {
+            methodologyVersion: "v0.2",
+            domainScores,
+            ...(input.proofLevel ? { proofLevel: input.proofLevel } : {}),
+            iris: input.iris ?? [],
+          }
+        : {}),
     },
   };
 }

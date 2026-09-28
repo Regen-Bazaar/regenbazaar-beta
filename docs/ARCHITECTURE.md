@@ -18,13 +18,20 @@ NGO writes a report (free text)
 [ Extract ]  an LLM (DeepSeek) reads the text → a structured list of actions
         │     (falls back to keyword parsing if no API key)
         ▼
-[ Score ]    a deterministic formula turns actions → Impact Value (IV)
-        │     IV = Σ (AW × SM × TBV × ESM × PIM × ACDM)
+[ Check ]    the NGO checks the actions in the form and adds area, place, proof links
+        │     (the AI reading is kept next to their corrections for the validator)
         ▼
-[ Store ]    saved to the database in status "pending_verification"
+[ Score ]    a deterministic formula (methodology v0.2) turns actions → physical units →
+        │     domain scores (Σ units × AW × SM × ESM × S) → Impact Value (Σ domain score × k)
+        ▼
+[ Store ]    saved to the database in status "pending_verification", stamped "v0.2"
         │
         ▼
-[ Verify ]   a human approves/rejects in the /verify queue
+[ Proof ]    on the validator's request the server fetches the proof links safely, saves a
+        │     hash snapshot and raises flags (dates, numbers, place); flags never set anything
+        ▼
+[ Verify ]   a human sets the proof level (P0–P4), confirms the environmental sensitivity
+        │     (with a suggestion from open map layers), and approves/rejects in /verify
         │
         ▼
 [ Tokenize ] (on-chain, gated on the deployer key) verified impact is attested
@@ -32,6 +39,9 @@ NGO writes a report (free text)
         ▼
 [ Fund ]     buyers fund it in the marketplace; NGOs rank on the leaderboard
 ```
+Two streams meet only in the price: *how much impact* (the score above) and *how sure we are* (the proof
+level). The proof level never changes the score.
+
 **Key principle:** the LLM only *reads*; it never decides the score. The score is a pure, repeatable
 formula, so the same report always yields the same number — and anyone can audit it.
 
@@ -85,14 +95,29 @@ later phases, not yet wired.
   for the production VPS deploy.
 - **Reference tables are versioned** (`TABLES_VERSION`). Every score is stamped with the version that
   produced it, so old scores stay reproducible even when the tables change.
+- **Two methodologies live side by side.** v0.1 (`tables.ts`, `score.ts`, `price.ts`) scores nothing new but
+  stays untouched so old reports recompute exactly. v0.2 (`tables-v02.ts`, `units.ts`, `score-v02.ts`,
+  `proof.ts`, `esm-layers.ts`, `cards-v02.ts`) scores every new report. `scoreImpact(actions, ctx, version)`
+  picks one; the column `methodology_version` says which one produced a row (empty = v0.1).
+- **One IV on-chain, domain scores on screens.** The EAS schema and contracts carry a single `impactValue`, so v0.2
+  still produces one IV (domain scores × published coefficients k). Screens lead with the domain score and
+  physical units.
+- **Weight cards are code.** `packages/impact-engine/src/cards-v02.ts` holds the text of the 34 justification
+  cards; `/methodology/cards/[action]` renders them and `scripts/render-cards.ts` regenerates
+  `docs/methodology/cards/*.md`, so the numbers always come from the tables.
 - **tRWI is ERC-1155 with fractional editions** — one verified impact can be split across many buyers
-  without double-counting; buyers can "retire" editions to claim the offset.
+  without double-counting; buyers can "retire" editions to record their contribution.
 - **Two DB code paths.** Dev uses an inline schema snapshot (`lib/dev-schema.ts`) for PGlite; prod uses
   real Drizzle migrations applied by `packages/db` `migrate`. They must stay in sync (see KNOWN_ISSUES).
 
 ## 7. Fragile areas — don't change without understanding first
-- **`packages/impact-engine/src/tables.ts`** — changing existing weights silently changes everyone's
-  scores. Add new actions freely; when you change existing values, bump `TABLES_VERSION`.
+- **`packages/impact-engine/src/tables.ts`** (v0.1): do not change; old reports recompute from it.
+- **`packages/impact-engine/src/tables-v02.ts`** — changing a weight changes every new score. Change the card
+  text and status with it, bump `TABLES_VERSION_V02`, and rerun `scripts/sensitivity.ts` and
+  `scripts/render-cards.ts`.
+- **`packages/pipeline/src/proof-check.ts`** — the only code that fetches URLs given by users. Keep the address
+  check inside the socket lookup (it stops DNS rebinding) and keep flags computed by `compareWithClaim`, never
+  by the model.
 - **`apps/web/src/lib/dev-schema.ts`** — a hand-maintained snapshot of the schema for the dev DB. If you
   change the Drizzle schema, update this too (or dev breaks while prod is fine).
 - **DeepSeek prompt in `packages/pipeline/src/extractor-deepseek.ts`** — it constrains the model to the

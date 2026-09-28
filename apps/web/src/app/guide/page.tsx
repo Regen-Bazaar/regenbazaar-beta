@@ -79,10 +79,10 @@ export default async function Guide() {
         <ul className="list-disc space-y-2 pl-5 marker:text-accent">
           <li>
             Browse the <Link href="/marketplace" className="link">Marketplace</Link> and open any
-            project to see its Impact Value breakdown and its on-chain attestation.
+            project to see its score per impact area, its proof level and its on-chain attestation.
           </li>
           <li>
-            Read how Impact Value is calculated on <Link href="/methodology" className="link">Methodology</Link>.
+            Read how impact is scored on <Link href="/methodology" className="link">Methodology</Link>.
           </li>
           <li>
             Check the verified smart contracts on the{" "}
@@ -202,8 +202,18 @@ export default async function Guide() {
           <li>
             Open <Link href="/tokenize" className="link">Tokenize impact</Link> and describe what you did in
             plain words, with numbers: for example{" "}
-            <i>&quot;planted 300 mangroves, collected 120 kg of waste, 25 volunteers&quot;</i>. The Impact Value
-            preview updates as you type.
+            <i>&quot;planted 300 mangroves on 0.2 ha, collected 120 kg of waste&quot;</i>. Or press <i>Fill example</i> to
+            see a sample.
+          </li>
+          <li>
+            Check the actions we found and correct numbers or units. For planting, add the planted area so carbon can
+            be counted. Then add where the work happened (country, ecosystem, coordinates) and the dates.
+          </li>
+          <li>
+            Add proof: at least one public link (a post, your website, a report), and photos if you have them. A
+            validator uses them to set the proof level: P1 one public link, P2 photos with date and place or two
+            independent posts, P3 a partner or authority confirms, P4 a measurement or registry record. Reports
+            without proof are not listed.
           </li>
           <li>
             Enter your organisation name and a <b>payout wallet</b> (your MetaMask address). Every sale pays this wallet
@@ -216,8 +226,8 @@ export default async function Guide() {
           <li>
             The Regen Bazaar team reviews it. Once approved, it is recorded on-chain (an EAS attestation, with the report
             stored on IPFS), gets its own generated tRWI artwork, and appears in the{" "}
-            <Link href="/marketplace" className="link">Marketplace</Link> with a price based on its Impact
-            Value. It is listed on <b>{chain}</b>, the network selected when you submit, and only there, so the same
+            <Link href="/marketplace" className="link">Marketplace</Link> with its score per impact area, its proof
+            level and a price based on its Impact Value. It is listed on <b>{chain}</b>, the network selected when you submit, and only there, so the same
             impact is never sold twice.
           </li>
         </ol>
@@ -232,8 +242,17 @@ export default async function Guide() {
             <b>Edition</b>: one share of an impact. Each impact is split into 100 editions, so you can fund a small part.
           </li>
           <li>
-            <b>Impact Value</b>: a score from a published formula. It is a relative score for comparing reports, not a
-            carbon or money amount. See <Link href="/methodology" className="link">Methodology</Link>.
+            <b>Domain score</b>: the score for one impact area (environment, animal welfare, education, poverty, social,
+            health), shown with physical units such as kg of waste or tCO₂e per year.
+          </li>
+          <li>
+            <b>Impact Value</b>: all domain scores added up with published coefficients. It is Regen Bazaar&apos;s own
+            relative index for comparing reports, not a certification, carbon or money amount. See{" "}
+            <Link href="/methodology" className="link">Methodology</Link>.
+          </li>
+          <li>
+            <b>Proof level</b>: P0 to P4, how well the work is evidenced. A validator sets it; it does not change the
+            score.
           </li>
           <li>
             <b>Retire</b>: permanently claim the impact of an edition you own. The edition is burned and cannot be
@@ -255,7 +274,7 @@ export default async function Guide() {
       <Section id="real" title="What is real and what is not">
         <ul className="list-disc space-y-2 pl-5 marker:text-accent">
           <li>Test networks and test tokens only. No real money moves.</li>
-          <li>Impact Value is platform-assessed with published weights, not third-party certified.</li>
+          <li>Impact Value is Regen Bazaar&apos;s own relative index with published weights and sources, not a certification.</li>
           <li>Reports submitted as the demo organisation, or marked &quot;(test data)&quot;, are sample data.</li>
           <li>Found a problem or something unclear? Tell us in our community chat.</li>
           <li>

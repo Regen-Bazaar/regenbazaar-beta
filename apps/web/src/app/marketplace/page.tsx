@@ -8,6 +8,8 @@ import { currentNetwork } from "../../lib/network-server";
 import { DEFAULT_NETWORK_KEY, getNetwork } from "../../lib/networks";
 import { formatUnits } from "viem";
 import { FrameworkTag } from "../../components/FrameworkTag";
+import { ProofBadge, VersionBadge } from "../../components/ImpactBadges";
+import { headline, impactView } from "../../lib/impact-view";
 
 export const metadata = {
   title: "Marketplace",
@@ -17,7 +19,14 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 type Tags = { sdg: string[]; ebf: string[] } | null;
-type Search = { domain?: string; sdg?: string; ebf?: string; q?: string };
+type Search = { domain?: string; sdg?: string; ebf?: string; q?: string; proof?: string; sort?: string };
+const PROOF_FILTERS = ["P1", "P2", "P3", "P4"];
+const SORTS = [
+  ["", "Impact Value"],
+  ["score", "Domain score"],
+  ["price", "Price per edition"],
+  ["value", "IV per $100"],
+] as const;
 
 function hrefWith(current: Search, patch: Partial<Search>): string {
   const merged = { ...current, ...patch };
@@ -48,6 +57,7 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
       id: listings.id,
       pricePerEdition: listings.pricePerEdition,
       maxEditions: listings.maxEditions,
+      priceUsd: listings.priceUsd,
     })
     .from(listings)
     .where(and(eq(listings.active, true), eq(listings.chainId, NETWORK.chain.id)));
@@ -77,10 +87,35 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
     if (sp.sdg && !(tags?.sdg ?? []).includes(sp.sdg)) return false;
     if (sp.ebf && !(tags?.ebf ?? []).includes(sp.ebf)) return false;
     if (q && !r.title.toLowerCase().includes(q)) return false;
+    // Proof filter: this level or higher (v0.1 reports have no proof level).
+    if (sp.proof && PROOF_FILTERS.includes(sp.proof)) {
+      const level = impactView(r).proofLevel;
+      if (!level || level < sp.proof) return false;
+    }
     return true;
   });
+  const ivPer100 = (r: (typeof rows)[number]) => {
+    const usd = Number(listingBySubmission.get(r.id)?.priceUsd ?? 0);
+    return usd > 0 ? (Number(r.ivValue ?? 0) / usd) * 100 : -1;
+  };
+  if (sp.sort === "value") {
+    rows.sort((a, b) => ivPer100(b) - ivPer100(a));
+  } else if (sp.sort === "score") {
+    rows.sort((a, b) => (impactView(b).primary?.score ?? 0) - (impactView(a).primary?.score ?? 0));
+  } else if (sp.sort === "price") {
+    const price = (id: string) => {
+      const l = listingBySubmission.get(id);
+      return l ? BigInt(l.pricePerEdition) : -1n;
+    };
+    rows.sort((a, b) => {
+      const pa = price(a.id);
+      const pb = price(b.id);
+      if (pa < 0n || pb < 0n) return pa < 0n ? (pb < 0n ? 0 : 1) : -1;
+      return pa < pb ? -1 : pa > pb ? 1 : 0;
+    });
+  }
 
-  const active = sp.domain || sp.sdg || sp.ebf || sp.q;
+  const active = sp.domain || sp.sdg || sp.ebf || sp.q || sp.proof;
 
   const Chip = ({ label, on, href }: { label: string; on: boolean; href: string }) => (
     <Link
@@ -106,6 +141,22 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
                 </div>
               </div>
             )}
+            <div className="mt-6">
+              <h2 className="label-mono mb-2.5">Proof level</h2>
+              <div className="flex flex-wrap gap-2">
+                {PROOF_FILTERS.map((p) => (
+                  <Chip key={p} label={`${p}+`} on={sp.proof === p} href={hrefWith(sp, { proof: sp.proof === p ? "" : p })} />
+                ))}
+              </div>
+            </div>
+            <div className="mt-6">
+              <h2 className="label-mono mb-2.5">Sort by</h2>
+              <div className="flex flex-wrap gap-2">
+                {SORTS.map(([v, label]) => (
+                  <Chip key={v || "iv"} label={label} on={(sp.sort ?? "") === v} href={hrefWith(sp, { sort: v })} />
+                ))}
+              </div>
+            </div>
             {sdgs.length > 0 && (
               <div className="mt-6">
                 <h2 className="label-mono mb-2.5">SDG</h2>
@@ -128,7 +179,7 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
             )}
     </>
   );
-  const activeFilters = [sp.domain, sp.sdg, sp.ebf].filter(Boolean).length;
+  const activeFilters = [sp.domain, sp.sdg, sp.ebf, sp.proof].filter(Boolean).length;
 
   return (
     <main className="page-wrap py-10 md:py-14">
@@ -155,6 +206,8 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
             {sp.domain && <input type="hidden" name="domain" value={sp.domain} />}
             {sp.sdg && <input type="hidden" name="sdg" value={sp.sdg} />}
             {sp.ebf && <input type="hidden" name="ebf" value={sp.ebf} />}
+            {sp.proof && <input type="hidden" name="proof" value={sp.proof} />}
+            {sp.sort && <input type="hidden" name="sort" value={sp.sort} />}
             <button className="btn btn-secondary btn-sm">Search</button>
           </form>
           <div className="hidden lg:block">{filterGroups}</div>
@@ -198,6 +251,8 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
             const tags = l.frameworkTags as Tags;
             const listing = listingBySubmission.get(l.id);
             const tokenized = !!listing; // listed (EAS-attested) on THIS network
+            const view = impactView(l);
+            const h = headline(view);
             return (
               <article key={l.id} className="card flex flex-col overflow-hidden transition-colors hover:!border-line-strong">
                 <Link href={`/submission/${l.id}`} className="relative block">
@@ -213,6 +268,8 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
                   </Link>
                   <div className="mt-1 truncate text-sm text-muted">by {l.orgName}</div>
                   <div className="mb-5 mt-3 flex flex-wrap gap-1.5">
+                    {view.version === "v0.2" && <ProofBadge level={view.proofLevel} />}
+                    <VersionBadge version={view.version} />
                     {tags?.sdg.slice(0, 3).map((t) => (
                       <FrameworkTag key={t} kind="sdg" value={t} />
                     ))}
@@ -221,16 +278,20 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
                     ))}
                   </div>
                   <div className="mt-auto grid grid-cols-2 gap-3 border-t border-line pt-4">
-                    <div>
-                      <div className="label-mono">Impact Value</div>
-                      <div className="text-xl font-semibold text-accent">{Number(l.ivValue ?? 0).toLocaleString("en-US")}</div>
+                    <div className="min-w-0">
+                      <div className="label-mono truncate">{h.label}</div>
+                      <div className="text-xl font-semibold text-accent">{h.value}</div>
+                      {view.version === "v0.2" && h.sub && <div className="truncate text-xs text-subtle">{h.sub}</div>}
                     </div>
                     <div>
                       <div className="label-mono">Per edition</div>
                       <div className="text-xl font-semibold">
                         {listing ? (
                           <>
-                            {Number(formatUnits(BigInt(listing.pricePerEdition), NETWORK.saleCurrency.decimals)).toLocaleString("en-US", { maximumFractionDigits: 6 })}{" "}
+                            {listing.priceUsd != null && <span>${(Number(listing.priceUsd) / listing.maxEditions).toLocaleString("en-US", { maximumFractionDigits: 4 })} </span>}
+                            <span className={listing.priceUsd != null ? "text-sm font-normal text-muted" : ""}>
+                              {Number(formatUnits(BigInt(listing.pricePerEdition), NETWORK.saleCurrency.decimals)).toLocaleString("en-US", { maximumFractionDigits: 6 })}
+                            </span>{" "}
                             <span className="text-base font-normal text-muted">{NETWORK.saleCurrency.symbol}</span>
                           </>
                         ) : (

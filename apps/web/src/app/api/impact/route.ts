@@ -25,12 +25,24 @@ export async function GET(req: Request) {
     impactValue: Number(r.ivValue ?? 0),
     frameworks: r.frameworkTags,
     actions: r.extractedActions,
-    methodology: {
-      version: r.tablesVersion,
-      basis: "deterministic IV = sum(AW*SM*TBV*ESM*PIM*ACDM)",
-      assessment: "platform-assessed (beta)",
-      thirdPartyCertified: false,
-    },
+    ...(r.methodologyVersion === "v0.2"
+      ? { domainScores: r.domainScores, proofLevel: r.proofLevel ?? null }
+      : {}),
+    methodology:
+      r.methodologyVersion === "v0.2"
+        ? {
+            version: "v0.2",
+            tables: r.tablesVersion,
+            basis: "deterministic: domain score = sum(units*AW*SM*ESM*S); IV = sum(domain score*k); proof level P0-P4 set by a validator, not part of IV",
+            assessment: "Regen Bazaar relative index, Community layer",
+            thirdPartyCertified: false,
+          }
+        : {
+            version: r.tablesVersion,
+            basis: "deterministic IV = sum(AW*SM*TBV*ESM*PIM*ACDM)",
+            assessment: "platform-assessed (beta)",
+            thirdPartyCertified: false,
+          },
     detail: new URL(`/submission/${r.id}`, req.url).toString(),
   }));
 

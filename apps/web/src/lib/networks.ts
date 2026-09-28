@@ -14,6 +14,15 @@ export interface SaleCurrency {
   testMint?: boolean; // testnet stand-in token with a public mint() (demo buyers can fund themselves)
 }
 
+/**
+ * USD value of one unit of the sale currency, used to turn a v0.2 USD price into a token amount.
+ * USDG / tUSDG are dollar stablecoins (1). Test CELO has no market value; on the test network it is counted
+ * as $1 so prices stay comparable. Mainnet primary sales settle in a stablecoin (decision D4).
+ */
+export function usdPerUnit(_currency: SaleCurrency): number {
+  return 1;
+}
+
 export interface Network {
   key: NetworkKey;
   chain: Chain;

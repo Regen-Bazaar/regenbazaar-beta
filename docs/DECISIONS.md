@@ -279,3 +279,56 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   attack surface); paying partners from the platform fee off-chain (rejected: manual, not transparent).
 - **Trade-offs / fragile:** the partner and rate are only as trustworthy as the server signer, same as `feeBps` today.
   The web still targets v1 until the coordinated redeploy after 2026-10-04; merging this changes nothing live.
+
+## 2026-09-28 — Impact Value methodology v0.2 (Community layer), engine and cards
+- **What:** New engine path next to v0.1: `tables-v02.ts`, `units.ts`, `score-v02.ts`, `proof.ts`, entry point
+  `scoreImpact(actions, ctx, version)` (default v0.2). Domain score = Σ units × AW × SM × ESM × S; IV = Σ domain
+  score × k. 34 justification cards in `docs/methodology/cards/`, Five Dimensions rubric, ±50% sensitivity
+  report, methodology text and changelog in `docs/methodology/`.
+- **Why:** Owner approved the v0.2 plan on 2026-09-27 (D1 model, D2 single IV via domain coefficients with
+  domain scores on screens, D3 proof levels with P1 minimum, D5 server-side link checks with SSRF and
+  prompt-injection protection, D7 no new dependencies). v0.1 multipliers were self-declared and rewarded
+  wording and period length; every number now carries a source status.
+- **How:** `tables.ts`, `price.ts`, `score.ts` and their tests are untouched, so v0.1 scores recompute
+  exactly. Lines of one action are merged before scoring; units are normalised (t → kg, m² → ha); tree
+  counts need area or density; dedup rules for area vs trees, registry carbon, recycling vs collection,
+  workshops vs participants, meals vs families. Proof level never enters IV. Contracts unchanged: EAS still
+  carries one `impactValue`, now v0.2.
+- **Alternatives:** dropping SM entirely (rejected by owner; fixed as an area factor instead); pricing from
+  NGO cost (rejected; cost only calibrates the rate); rubric-derived weights now (deferred: units inside a
+  domain differ in size, so v0.1 weights stay as labelled assumptions until the cost survey).
+- **Trade-offs / fragile:** all k = 1.0 and most non-environment weights are assumptions pending the cost
+  survey (D6); tree counts without area score 0; the default mangrove survival 0.72 is a proxy. The price
+  formula (D4) is not implemented until the owner approves it separately. Staking rewards scale with IV, so
+  the v0.2 scale must be considered before mainnet.
+
+## 2026-09-28 — Methodology v0.2: data, proof checks, screens, ESM suggestions
+- **What:** Migration 0004 (additive, nullable columns; old rows untouched, empty `methodology_version` = v0.1).
+  Pipeline scores new reports with v0.2, validates location, proof links (https only), registry declaration and
+  v0.2 context; the NGO's corrected actions are scored and the AI reading is stored next to them. Validators set
+  the proof level (P1+ required to approve a v0.2 report) and confirm ESM, which rescores the report. Proof links
+  are fetched by `proof-check.ts`; flags only. Screens lead with domain scores, physical units and proof level.
+  ESM suggestions come from GeoJSON extracts of open layers (`ESM_LAYERS_DIR`).
+- **Why:** plan stages 2–5 (D3, D5, D7).
+- **How / alternatives:** SSRF protection without new packages: the address check runs inside the socket's DNS
+  lookup (blocks rebinding), redirects re-validated; alternative (check then fetch) would be open to rebinding.
+  The LLM only lists facts from a proof page; deterministic code compares them with the claim, so text on the
+  page cannot produce a flag. Weight cards moved into code (`cards-v02.ts`) so the site and docs share one source.
+  Layer data lives outside the image (large, licence attribution per layer).
+- **Trade-offs / fragile:** price and currency unchanged until D4; token metadata `regen-bazaar/trwi-2` for v0.2
+  reports publishes the country, never coordinates; no photo EXIF reading yet; ESM suggestions need the extracts.
+
+## 2026-09-28 — Community scope, USD price (D4), manual map check, deploy before 04.10
+- **Scope:** 12 actions that need capital, a licence or professionals are parked (`parked` in `tables-v02.ts`):
+  kept in the tables and cards, score 0 with `out_of_scope`, not offered to the extractor or the form. Registered
+  carbon work scores no carbon here. Owner: community groups do not do these for free.
+- **Price (D4 approved):** `price-v02.ts`, USD = IV × rate × P × C; rate $1 per point provisional until the cost
+  survey. First sales settle in USDG at that price; test CELO counted as $1 on Celo Sepolia until a stablecoin is
+  added before mainnet. Listings store `price_usd` and `price_model_version`. Alternative (native token) rejected
+  for primary sales: NGO revenue would follow the token price; trading lives on the secondary market.
+- **Maps:** validators check the site on satellite, Global Mangrove Watch and Allen Coral Atlas links. Local
+  extracts rejected (global coverage would need gigabytes and would not update); an on-demand lookup from open
+  global maps (ESA WorldCover as cloud-optimized GeoTIFF, Allen Coral Atlas, Global Forest Watch data) is on the
+  roadmap. The GeoJSON loader stays as an optional path (`ESM_LAYERS_DIR`).
+- **Rubric:** not used to set weights; kept as a documented cross-check (see the owner discussion of 2026-09-28).
+- **Deploy:** owner approved deploying v0.2 before the Arbitrum deadline, after a check on a server copy.

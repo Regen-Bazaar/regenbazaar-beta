@@ -18,6 +18,8 @@ export type PortfolioItem = {
   title: string;
   domain: string | null;
   totalIV: number;
+  headline?: string; // v0.2: primary domain score and physical units of the whole report
+  proofLevel?: string | null;
 };
 
 export function Portfolio({ items }: { items: PortfolioItem[] }) {
@@ -122,6 +124,12 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
                     {i.balance.toString()} of {i.maxEditions} editions · Impact Value{" "}
                     {ivOf(i).toLocaleString(undefined, { maximumFractionDigits: 2 })}
                   </p>
+                  {i.headline && (
+                    <p className="mt-1 text-sm text-subtle">
+                      Whole report: {i.headline}
+                      {i.proofLevel ? ` · proof ${i.proofLevel}` : ""} · methodology v0.2
+                    </p>
+                  )}
                   <p className="mt-2 break-all text-sm text-subtle">
                     tRWI #{i.tokenId} · EAS attestation {i.easUid.slice(0, 10)}…{i.easUid.slice(-6)} ·{" "}
                     <a
