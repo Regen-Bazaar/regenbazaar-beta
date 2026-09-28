@@ -20,16 +20,17 @@ Small NGOs and community groups do measurable good (reforestation, cleanups, ani
 turn that work into something a funder can buy, hold and verify. Carbon registries cost more to certify than a
 small project raises; donations give the funder a receipt, not an asset.
 
-On Regen Bazaar an organisation describes its work in plain language. An LLM extracts the actions and quantities;
-a deterministic, versioned formula computes the Impact Value (the LLM never scores). A human validator approves,
-metadata is pinned to IPFS and the claim is attested on-chain with EAS. Funders buy fractional editions of that
+On Regen Bazaar an organisation describes its work in plain language. An LLM lists the actions and quantities
+and the organisation corrects that list. Methodology v0.2 converts them to physical units, scores each impact area
+and one Impact Value, Regen Bazaar's own relative index (the LLM never scores). A validator sets a proof level
+P0 to P4, metadata is pinned to IPFS and the claim is attested on-chain with EAS. Funders buy fractional editions of that
 impact as **tRWI** (tokenized real-world impact, ERC-1155), paid in Paxos USDG. The token is lazily minted from a
 platform-signed EIP-712 voucher, so nothing exists on-chain until someone funds it, and 97.5% of the price goes to
 the NGO wallet in the same transaction. Funders can hold, transfer or retire editions to claim the impact. A public
 `/api/impact` catalogue lets AI agents discover and fund impact programmatically.
 
-Status: public beta on testnets (Arbitrum Sepolia, Robinhood Chain testnet, Celo Sepolia). Impact Value weights
-are v0.1, platform-assessed, not third-party certified. No production users or revenue yet.
+Status: public beta on testnets (Arbitrum Sepolia, Robinhood Chain testnet, Celo Sepolia). Impact Value is
+Regen Bazaar's own relative index (methodology v0.2), not a certification. No production users or revenue yet.
 
 ## Links
 - **Live app:** https://app.regenbazaar.com (network switcher: Arbitrum Sepolia, Robinhood Chain testnet, Celo Sepolia)
@@ -81,14 +82,19 @@ Links: X https://x.com/RegenBazaar · Telegram https://t.me/regen_bazaar · GitH
   Blockscout (and Arbiscan on Arbitrum Sepolia). Not externally audited.
 
 ## Methodology, stated plainly
-- **Now (v0.1):** a deterministic, versioned formula over 34 action types in six domains (environment, animal
-  welfare, education, poverty, social, health), mapped to SDGs. Every score carries its table version and a
-  per-factor breakdown; quantities are clamped against gaming; a person approves before anything is listed.
-  The weights are starting values set by the platform, not calibrated against external standards.
-- **Next (v0.2):** the audit of v0.1 is done and the v0.2 plan is ready: environmental actions in physical units
-  from public coefficients (IPCC default tables, US EPA WARM, IFI grid emission factors), proof levels for
-  evidence, and scores per impact domain alongside the overall Impact Value. Versioned, so past scores stay
-  auditable. Published in the public roadmap.
+- **Live since 2026-09-28 (v0.2, Community layer):** https://app.regenbazaar.com/methodology
+  - Score per impact area in physical units (tCO₂e per year from IPCC 2019 and Bernal 2018, kg of waste,
+    people, animals); one Impact Value, Regen Bazaar's own relative index, kept for price and the on-chain
+    attestation.
+  - 34 public weight cards, each with source status (sourced, derived, assumption) and a ±50% sensitivity test.
+    Community layer: 22 volunteer actions scored, 12 that need capital or specialists kept aside.
+  - Proof levels P0 to P4 set by a validator; the server checks public links (hash snapshot, date, number and
+    place flags). Nothing below P1 is listed.
+  - Price in USD: IV × rate × P × complexity; primary sale in USDG. The rate is provisional, pending a cost
+    survey with pilot groups.
+  - Every score is stamped with its methodology version and never rescored; v0.1 reports keep their v0.1 value.
+- **Not yet:** weights marked "assumption" await a cost survey and expert review. Not a certification, not a
+  carbon credit.
 
 ---
 
@@ -116,7 +122,7 @@ Links: X https://x.com/RegenBazaar · Telegram https://t.me/regen_bazaar · GitH
 - Capped royalty on secondary sales (max 10%), paid back to the NGO.
 - Later: verification services for organisations that need a higher proof level, and an API for funders and
   agents that allocate at volume.
-- Path to mainnet: multisig and timelock on admin roles, external audit, methodology v0.2, then Arbitrum One and
+- Path to mainnet: multisig and timelock on admin roles, external audit, cost survey for the v0.2 weights, then Arbitrum One and
   Robinhood Chain mainnet.
 
 ---
@@ -158,6 +164,7 @@ https://app.regenbazaar.com/roadmap ("Journey so far"):
 - Redesign with light and dark themes, phone layout: `412a0d8`, `720ec78`, `d94d2f6`
 - Wallet UX: switch to the site network, WalletConnect (QR / phone), readable errors: `6d2725d`, `72da940`, `ea8d660`
 - Verification page shows evidence and organisation; submission input validation: `9320158`, `8f3e57c`
+- Methodology v0.2 live on the site, 2026-09-28: PR https://github.com/Regen-Bazaar/regenbazaar-beta/pull/42
 - [?] всё, что будет сделано до 12.10 (дописать перед подачей)
 
 > Для Paul: Arbitrum Open House подаётся параллельно с тем же кодом; правила Colosseum это не запрещают.
@@ -167,7 +174,10 @@ https://app.regenbazaar.com/roadmap ("Journey so far"):
   https://explorer.testnet.chain.robinhood.com/tx/0xea4a18d20c2fc3c4ed2a46ef7681129a99b905118745ff2de9ad95609ca2ba77
 - Arbitrum Sepolia, purchase through the live app:
   https://arbitrum-sepolia.blockscout.com/tx/0x9b4a1d72107faf1dcc218754e3e3a419a34f31c92fde71d60a496166cd65ceb5
-- [?] свежие хэши после прогона демо (шаг 1 задания)
+- Arbitrum Sepolia, end-to-end on methodology v0.2 (test data): report, proof level P2, EAS attestation,
+  tRWI #10, purchase of 2 editions in USDG, 2026-09-28:
+  https://arbitrum-sepolia.blockscout.com/tx/0xb49beb3138eb3e786a992cbe37476cb51f120b469e5bf2de7ef6dd58d98df488
+  (report page https://app.regenbazaar.com/submission/12d4ed94-0293-44ff-93a2-aaa8b53280bf)
 
 ## Contract addresses (same on Arbitrum Sepolia and Robinhood Chain testnet)
 | Contract | Address |
@@ -186,18 +196,20 @@ Celo Sepolia: same v3 contracts at other addresses, `packages/contracts/deployme
 ## Judges' likely questions (answers for Paul)
 
 **"Where do the weights come from?"**
-v0.1 are starting weights. The audit is done and the v0.2 plan is ready: physical units from IPCC, EPA and IFI
-coefficients, evidence levels, and scores per impact domain. Today the weights are platform-assessed, not
-third-party certified, and every score records its methodology version, so nothing is hidden.
+v0.2 is live: each weight has a public card with its source status (sourced, derived, assumption) and a
+sensitivity test; environment uses IPCC 2019 and Bernal 2018. Weights marked "assumption" await a cost survey and
+expert review. Every score records its methodology version, so nothing is hidden. Note: the video was recorded
+before v0.2.
 
 **"Why not just donate?"** A donation gives a receipt. tRWI gives a transferable, retirable asset tied to an
 on-chain attestation, and the NGO is paid in the same transaction.
 
-**"Is this a carbon credit?"** No. Impact Value is a relative score today; v0.2 adds physical units for
-environmental actions, but we do not issue carbon credits.
+**"Is this a carbon credit?"** No. Impact Value is Regen Bazaar's own relative index; v0.2 shows physical units
+for environmental actions, but we do not issue carbon credits and a buyer cannot claim an emissions result.
 
 **"Who stops fake reports?"** A human validator approves every report; evidence is linked; quantities are clamped;
-one report is listed on one network only. v0.2 adds proof levels (from self-reported to second-party witnessed).
+one report is listed on one network only. v0.2 proof levels P0 to P4 (from self-reported to second-party
+witnessed); nothing below P1 is listed.
 
 ## Screenshots (если форма просит изображения)
 Папка: `~/Downloads/RegenBazaar-screenshots-2026-09-25/`. Рекомендую `*-screen.png` (первый экран), светлая тема:
