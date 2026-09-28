@@ -279,3 +279,25 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   attack surface); paying partners from the platform fee off-chain (rejected: manual, not transparent).
 - **Trade-offs / fragile:** the partner and rate are only as trustworthy as the server signer, same as `feeBps` today.
   The web still targets v1 until the coordinated redeploy after 2026-10-04; merging this changes nothing live.
+
+## 2026-09-28 — Impact Value methodology v0.2 (Community layer), engine and cards
+- **What:** New engine path next to v0.1: `tables-v02.ts`, `units.ts`, `score-v02.ts`, `proof.ts`, entry point
+  `scoreImpact(actions, ctx, version)` (default v0.2). Domain score = Σ units × AW × SM × ESM × S; IV = Σ domain
+  score × k. 34 justification cards in `docs/methodology/cards/`, Five Dimensions rubric, ±50% sensitivity
+  report, methodology text and changelog in `docs/methodology/`.
+- **Why:** Owner approved the v0.2 plan on 2026-09-27 (D1 model, D2 single IV via domain coefficients with
+  domain scores on screens, D3 proof levels with P1 minimum, D5 server-side link checks with SSRF and
+  prompt-injection protection, D7 no new dependencies). v0.1 multipliers were self-declared and rewarded
+  wording and period length; every number now carries a source status.
+- **How:** `tables.ts`, `price.ts`, `score.ts` and their tests are untouched, so v0.1 scores recompute
+  exactly. Lines of one action are merged before scoring; units are normalised (t → kg, m² → ha); tree
+  counts need area or density; dedup rules for area vs trees, registry carbon, recycling vs collection,
+  workshops vs participants, meals vs families. Proof level never enters IV. Contracts unchanged: EAS still
+  carries one `impactValue`, now v0.2.
+- **Alternatives:** dropping SM entirely (rejected by owner; fixed as an area factor instead); pricing from
+  NGO cost (rejected; cost only calibrates the rate); rubric-derived weights now (deferred: units inside a
+  domain differ in size, so v0.1 weights stay as labelled assumptions until the cost survey).
+- **Trade-offs / fragile:** all k = 1.0 and most non-environment weights are assumptions pending the cost
+  survey (D6); tree counts without area score 0; the default mangrove survival 0.72 is a proxy. The price
+  formula (D4) is not implemented until the owner approves it separately. Staking rewards scale with IV, so
+  the v0.2 scale must be considered before mainnet.
