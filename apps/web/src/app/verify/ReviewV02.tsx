@@ -28,6 +28,7 @@ export type SubmissionV02 = {
   proofChecks: ProofCheck[] | null;
   proofLevel: string | null;
   registryDeclaration: { standard: string; serial?: string } | null;
+  esmSuggestion?: { esm: number; matches: { id: string; name: string; esm: number; attribution: string }[] } | null;
 };
 
 export interface ReviewChoice {
@@ -242,7 +243,19 @@ export function ReviewV02({
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-subtle">1.3 when the site is inside mangrove, reef or intact forest on open maps.</p>
+            {s.esmSuggestion ? (
+              <p className="mt-1 text-xs text-subtle">
+                Suggested {s.esmSuggestion.esm.toFixed(1)}
+                {s.esmSuggestion.matches.length
+                  ? `: site inside ${s.esmSuggestion.matches.map((m) => `${m.name} (${m.attribution})`).join(", ")}`
+                  : ": no sensitive layer at this point"}
+                . Check the map before confirming.
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-subtle">
+                No map suggestion (no coordinates or no layer data). 1.3 when the site is inside mangrove, reef or intact forest.
+              </p>
+            )}
           </div>
         )}
       </div>

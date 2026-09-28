@@ -17,7 +17,8 @@ app's marketplace / leaderboard / dashboards read chain truth instead of off-cha
 5. `pnpm dev` (local) or `pnpm start` (prod). Add `regenbazaar_indexer` as a service in `deploy/docker-compose.yml`.
 
 ## What it tracks
-- `TRWI.ImpactTokenized` → `impact_token` rows (creator, total IV, editions, EAS UID, URI).
+- `TRWI.CollectionRegistered` (first lazy mint) → `impact_token` rows (creator, total IV, editions, EAS UID, URI).
+- `TRWI.ImpactMinted` → editions minted to a buyer.
 - `TRWI.ImpactRetired` → accumulates retired IV per token.
 - `TRWIStaking.Staked` / `Claimed` / `Unstaked` → `stake` rows (owner, amount, IV staked, rewards, active).
 

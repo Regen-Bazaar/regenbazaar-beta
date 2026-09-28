@@ -18,6 +18,7 @@ import { isAdmin } from "../../../lib/admin";
 import { clientIp, rateLimit } from "../../../lib/rate-limit";
 import { findDuplicates } from "../../../lib/duplicates";
 import { currentNetwork } from "../../../lib/network-server";
+import { esmSuggestionFor } from "../../../lib/esm-layers";
 
 export const runtime = "nodejs";
 
@@ -77,8 +78,14 @@ export async function GET(req: Request) {
         .where(inArray(organizations.id, orgIds))
     : [];
   const orgById = new Map(orgs.map((o) => [o.id, o]));
+  const esm = await Promise.all(rows.map((r) => (r.methodologyVersion === "v0.2" ? esmSuggestionFor(r.location) : null)));
   return NextResponse.json(
-    rows.map((r) => ({ ...r, org: orgById.get(r.orgId) ?? null, possibleDuplicates: findDuplicates(r, all) })),
+    rows.map((r, i) => ({
+      ...r,
+      org: orgById.get(r.orgId) ?? null,
+      possibleDuplicates: findDuplicates(r, all),
+      esmSuggestion: esm[i],
+    })),
   );
 }
 

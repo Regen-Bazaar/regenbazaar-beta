@@ -301,3 +301,19 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   survey (D6); tree counts without area score 0; the default mangrove survival 0.72 is a proxy. The price
   formula (D4) is not implemented until the owner approves it separately. Staking rewards scale with IV, so
   the v0.2 scale must be considered before mainnet.
+
+## 2026-09-28 — Methodology v0.2: data, proof checks, screens, ESM suggestions
+- **What:** Migration 0004 (additive, nullable columns; old rows untouched, empty `methodology_version` = v0.1).
+  Pipeline scores new reports with v0.2, validates location, proof links (https only), registry declaration and
+  v0.2 context; the NGO's corrected actions are scored and the AI reading is stored next to them. Validators set
+  the proof level (P1+ required to approve a v0.2 report) and confirm ESM, which rescores the report. Proof links
+  are fetched by `proof-check.ts`; flags only. Screens lead with domain scores, physical units and proof level.
+  ESM suggestions come from GeoJSON extracts of open layers (`ESM_LAYERS_DIR`).
+- **Why:** plan stages 2–5 (D3, D5, D7).
+- **How / alternatives:** SSRF protection without new packages: the address check runs inside the socket's DNS
+  lookup (blocks rebinding), redirects re-validated; alternative (check then fetch) would be open to rebinding.
+  The LLM only lists facts from a proof page; deterministic code compares them with the claim, so text on the
+  page cannot produce a flag. Weight cards moved into code (`cards-v02.ts`) so the site and docs share one source.
+  Layer data lives outside the image (large, licence attribution per layer).
+- **Trade-offs / fragile:** price and currency unchanged until D4; token metadata `regen-bazaar/trwi-2` for v0.2
+  reports publishes the country, never coordinates; no photo EXIF reading yet; ESM suggestions need the extracts.
