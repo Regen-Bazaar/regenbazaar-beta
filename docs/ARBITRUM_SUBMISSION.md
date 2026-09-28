@@ -1,9 +1,11 @@
-# Arbitrum Open House Singapore: Online Buildathon · submission v3 (submitted 2026-09-27)
+# Arbitrum Open House Singapore: Online Buildathon · submission v4 (submitted 2026-09-27, card updated 2026-09-28)
 
 > Для Paul (в форму не вставлять): **подано 27.09.2026** (Paul сказал «да»), проект в Project Gallery:
 > https://www.hackquest.io/projects/Regen-Bazaar. До дедлайна карточку можно править (Edit Project); тексты ниже
 > совпадают с карточкой и формой на 27.09. v3: одна площадка с переключателем сети, видео Loom, защита от
 > повторного листинга, /roadmap, методология v0.1 → план v0.2, кран Paxos на Arbitrum Sepolia снова работает с 26.09.
+> v4 (28.09, «да» Paul): карточка обновлена под методику v0.2 в проде (PR #42) и сквозной тест на Arbitrum Sepolia;
+> картинки 3 и 4 заменены на скриншоты v0.2. Поля отправленной формы не менялись.
 > Правила: `tRWI`, без длинных тире, веса platform-assessed, без трекшена, цифры партнёров не используются.
 
 - **Tracks:** Overall Prize, Promising Products Track, Grants (all three, Paul 25.09)
@@ -28,6 +30,9 @@ Fund verified real-world impact on-chain, paid in USDG, with provenance anyone c
 - **One purchase = attest-backed lazy mint + stablecoin split to the NGO** in one transaction:
   ~465-518k gas, 0.000022 ETH on Arbitrum Sepolia, 0.0000052 ETH on Robinhood Chain testnet.
 - **No double counting:** one report is listed on one network only; listing refuses a report already listed anywhere.
+- **Methodology v0.2 live (2026-09-28):** scores per impact area in physical units, 34 weight cards, proof
+  levels P0 to P4, USD price = IV × rate × proof × complexity. End-to-end check on Arbitrum Sepolia (test
+  data): EAS attestation https://arbitrum-sepolia.blockscout.com/tx/0x27b4b46eba1346a6bb76785c8d23f4046d4850e38203e07ab4811213be620b23, purchase in tUSDG https://arbitrum-sepolia.blockscout.com/tx/0xb49beb3138eb3e786a992cbe37476cb51f120b469e5bf2de7ef6dd58d98df488.
 - **No wallet needed to review:** the video and the proof transactions below.
 
 ## Problem
@@ -40,7 +45,7 @@ one-directional: the funder gets a receipt, not an asset.
 An NGO describes its impact in plain language. An LLM extracts the actions (DeepSeek V4 Flash via OpenRouter,
 chosen by an eval of 8 low-cost models for zero invented numbers and resistance to prompt injection; the report
 is treated strictly as data and the output is validated). A deterministic, versioned formula then computes the
-Impact Value: the LLM never scores. Weights are published and platform-assessed, not third-party certified. A human validator approves; the platform pins metadata to IPFS and attests the claim on-chain with
+Impact Value: the LLM never scores. Weights are published with a source status each; Impact Value is Regen Bazaar's own relative index, not a certification. A human validator sets the proof level (P0 to P4) and approves; the platform pins metadata to IPFS and attests the claim on-chain with
 EAS. Funders buy fractional editions of that impact as **tRWI** (tokenized real-world impact, ERC-1155) and pay
 in **USDG**. The token is lazily minted at purchase from a platform-signed voucher, so nothing is minted until
 someone funds it, and the NGO is paid in the same transaction.
@@ -64,17 +69,20 @@ someone funds it, and the NGO is paid in the same transaction.
 - **Status, stated plainly:** beta on testnets; no production users or revenue yet.
 
 ## Methodology status (stated plainly)
-- **Done:** a deterministic, versioned formula (`IV = Σ quantity × AW × SM × TBV × ESM × PIM × ACDM`) over 34
-  action types in six domains (environment, animal welfare, education, poverty, social, health), each mapped to
-  SDGs and ecosystem-benefit tags. The LLM only extracts numbers; it never scores. Every score carries its table
-  version and a per-factor breakdown; quantities are clamped against gaming; a human validator approves before
-  anything is listed. Published at `/methodology`.
-- **v0.1 is a starting point:** the weights are seed values set by the platform, and Impact Value is a relative
-  score, not a carbon or monetary unit. Prices derived from it (IV × 0.5 USDG across 100 editions) are
-  provisional too.
-- **Audit done, v0.2 plan ready:** environmental actions in physical units from public coefficients (IPCC,
-  US EPA, IFI grid factors), proof levels for evidence, and scores per impact domain; versioned so past scores
-  stay auditable. Plan published at `/roadmap`.
+- **Methodology v0.2 "Community layer", live since 2026-09-28** (PR #42): https://app.regenbazaar.com/methodology
+- Impact Value is Regen Bazaar's own relative index, not a certification. Each impact area (environment, animal
+  welfare, education, poverty, social, health) gets its own score in physical units (mangroves: hectares to
+  tCO2e per year from IPCC 2019 and Bernal et al. 2018; waste in kg). One overall IV (sum of area scores × k) is
+  kept for price, EAS attestation and staking.
+- Every one of the 34 weights has a public card marked sourced, derived or assumption, with a ±50% sensitivity
+  check. The Community layer scores 22 actions volunteers can deliver; 12 that need capital, a licence or
+  professionals score 0 for now.
+- Proof levels P0 to P4 are set only by a validator; nothing below P1 is listed. The server fetches public proof
+  links (https only, SSRF-protected), keeps a hash snapshot and raises flags; page text cannot change flags,
+  level or IV.
+- Price in USD = IV × rate × proof level × complexity. The $1 per point rate is provisional, to be calibrated
+  with a cost survey of pilot groups.
+- v0.1 scores stay versioned and auditable; the v0.1 engine files are unchanged.
 
 ## Why on-chain, and why Arbitrum
 - **Provenance anyone can check:** each tRWI collection references an EAS attestation; the sale contract
@@ -173,6 +181,10 @@ and follow-ups #27-#39, all merged to `main`:
 - UI redesign (light/dark theme, readable type, phone layout) and demo polish: #32-#36
 - Wallet switches to or adds the site network, WalletConnect, guide with test tokens per network: #37
 - Input validation, verification page with evidence and duplicate hints, roadmap with methodology v0.2: #38, #39
+- Methodology v0.2 live (per-area scores, weight cards, proof levels P0 to P4, USD price, step-by-step
+  submission form, validator panel, per-area leaderboard) and public links in token metadata: #42, #43
+- End-to-end v0.2 check on Arbitrum Sepolia (test data): approval at P2, EAS attestation, tRWI #10, purchase of
+  2 editions in tUSDG at $0.5075 each, matching the formula
 
 ## Smart contract quality
 - Solidity 0.8.29, OpenZeppelin 5.1 (AccessControl, Pausable, ReentrancyGuard, SafeERC20, UUPS, ERC20Capped),
@@ -194,12 +206,12 @@ Paul Burg (team leader on HackQuest).
 
 ## What's next
 - Embedded wallets and gasless checkout for non-crypto funders.
-- Methodology v0.2 (physical units, proof levels, per-domain scores), then review by domain experts.
+- Methodology v0.2 calibration: cost survey with pilot groups for the rate, then review of the weights by domain experts.
 - Multisig + timelock, external audit, then mainnet (Arbitrum One / Robinhood Chain).
 
 ## HackQuest project card (Project Setup page)
 
-> Для Paul: поля карточки проекта, как сохранены 27.09. Кошелёк 0x7380…21B5 подключён вами (для получения приза, сеть Arbitrum).
+> Для Paul: поля карточки проекта, как сохранены 28.09. Кошелёк 0x7380…21B5 подключён вами (для получения приза, сеть Arbitrum).
 
 - **Name:** Regen Bazaar
 - **Intro** (199/200):
@@ -213,16 +225,17 @@ NGOs turn verified real-world impact into tRWI tokens that anyone can fund in Pa
 - **MVP Link:** https://app.regenbazaar.com
 - **Project Link:** https://github.com/Regen-Bazaar/regenbazaar-beta
 - **X (Twitter):** RegenBazaar
-- **Images (max 4, 1280x720):** new design, dark theme: home, marketplace, project page with on-chain proof, tokenize
+- **Images (max 4, 1280x720):** home and marketplace (dark theme); v0.2 report page with proof and v0.2 step-by-step
+  tokenize form (light theme, `RegenBazaar/assets/app-proof-v02.jpg`, `app-tokenize-v02.jpg`)
 - **Demo video:** https://www.loom.com/share/a69dc479cec34ad3a5499168db8b7d77 (Loom, ~5 min)
-- **Description** (as on the card, 27.09):
+- **Description** (as on the card, 28.09):
 
 ```
 Regen Bazaar is a marketplace for tokenized real-world impact (tRWI). Small NGOs and community groups do measurable good (reforestation, cleanups, animal rescue, education) but cannot turn that work into something a funder can buy, hold and verify. Regen Bazaar closes that gap on Arbitrum.
 
 Demo video (5 min): https://www.loom.com/share/a69dc479cec34ad3a5499168db8b7d77
 
-How it works: an NGO describes its work in plain language. An LLM extracts the actions (the report is treated strictly as data and the output is validated). A deterministic, versioned formula computes the Impact Value; the LLM never scores. A validator reviews the evidence and approves; the platform pins metadata and a generated artwork to IPFS and attests the claim on-chain with EAS. Funders buy fractional editions as tRWI (ERC-1155) and pay in Paxos USDG. The token is lazily minted at purchase from a platform-signed EIP-712 voucher, and the NGO is paid in the same transaction.
+How it works: an NGO describes its work in plain language. An LLM extracts the actions (the report is treated strictly as data and the output is validated). A deterministic, versioned formula (methodology v0.2) computes the Impact Value; the LLM never scores. A validator checks the public proof, sets a proof level (P0 to P4) and approves; the platform pins metadata and a generated artwork to IPFS and attests the claim on-chain with EAS. Funders buy fractional editions as tRWI (ERC-1155) and pay in Paxos USDG. The token is lazily minted at purchase from a platform-signed EIP-712 voucher, and the NGO is paid in the same transaction.
 
 One live app, one network switcher: https://app.regenbazaar.com runs on Arbitrum Sepolia and Robinhood Chain testnet (plus Celo Sepolia, the original network); the wallet switches to the chosen network. Real Paxos USDG purchase on Robinhood Chain testnet, 97.5% paid straight to the NGO: https://explorer.testnet.chain.robinhood.com/tx/0xea4a18d20c2fc3c4ed2a46ef7681129a99b905118745ff2de9ad95609ca2ba77
 
@@ -232,16 +245,22 @@ Who pays: individual funders who want proof of what they funded, companies with 
 
 USDG: Paxos USDG is allowlisted on both Arbitrum chains. The Paxos testnet faucet stopped dispensing on Arbitrum Sepolia from 2026-09-22 to 2026-09-26, so the Arbitrum Sepolia demo sells in tUSDG, a clearly labelled stand-in with the same interface; the contract already accepts USDG and switching is one config value.
 
-Methodology status, stated plainly: v0.1 uses seed weights set by the platform, and Impact Value is a relative score. The audit of v0.1 is done and the v0.2 plan is ready: environmental actions in physical units from public coefficients (IPCC, US EPA, IFI grid factors), proof levels for evidence, and scores per impact domain. Plan on the roadmap: https://app.regenbazaar.com/roadmap
+Methodology v0.2, live since 2026-09-28: https://app.regenbazaar.com/methodology
+Impact Value is Regen Bazaar's own relative index, not a certification. Each impact area (environment, animal welfare, education, poverty, social, health) gets its own score in physical units: for example mangroves go from hectares to tCO2e per year (IPCC 2019, Bernal et al. 2018), waste is counted in kg. One overall IV (sum of area scores × k) is kept for price, EAS attestation and staking. Every one of the 34 weights has a public card marked sourced, derived or assumption, with its sensitivity: https://app.regenbazaar.com/methodology/cards/mangroves_planted
+Community layer: the 22 actions volunteers can deliver are scored; 12 that need capital, a licence or professionals score 0 for now.
+Proof levels P0 to P4 are set only by a validator, and a report below P1 is not listed. The server fetches public proof links (https only, SSRF-protected), stores a hash snapshot and raises flags on dates, numbers and place; page text cannot change the flags, the level or the IV (covered by a prompt-injection test).
+Price in USD = IV × rate × proof level × complexity, paid in stablecoin at that price. The $1 per point rate is provisional and will be calibrated with a cost survey of pilot groups.
+
+End-to-end check on Arbitrum Sepolia, 2026-09-28 (test data): v0.2 report, proof-link check, approval at P2, EAS attestation (https://arbitrum-sepolia.blockscout.com/tx/0x27b4b46eba1346a6bb76785c8d23f4046d4850e38203e07ab4811213be620b23), tRWI #10, purchase of 2 editions in tUSDG (https://arbitrum-sepolia.blockscout.com/tx/0xb49beb3138eb3e786a992cbe37476cb51f120b469e5bf2de7ef6dd58d98df488). The price, $0.5075 per edition, matched the formula, and the IV in the token matched the database: https://app.regenbazaar.com/submission/12d4ed94-0293-44ff-93a2-aaa8b53280bf
 
 Before Regen Bazaar we ran two single-organisation pilots of this model: Clean Phangan (community beach cleanups, Optimism) and EcoThailand Foundation (mangroves, Celo). Status: beta on testnets, no production users or revenue yet.
 
 Contracts are source-verified (Blockscout on both chains, Arbiscan); 61 Foundry tests; OpenZeppelin 5.1. Guide: https://app.regenbazaar.com/guide
 ```
-- **Progress During Hackathon** (as on the card, 27.09):
+- **Progress During Hackathon** (as on the card, 28.09):
 
 ```
-Built during the buildathon (https://github.com/Regen-Bazaar/regenbazaar-beta, PR #26 and follow-ups #27-#39):
+Built during the buildathon (https://github.com/Regen-Bazaar/regenbazaar-beta, PR #26 and follow-ups #27-#43):
 
 - Deployed and source-verified the full contract set on Arbitrum Sepolia (Blockscout + Arbiscan) and Robinhood Chain testnet (Blockscout).
 - USDG checkout: Paxos USDG allowlisted on both chains; real USDG purchases on Robinhood Chain testnet; labelled tUSDG stand-in on Arbitrum Sepolia, added while the Paxos faucet was not dispensing there.
@@ -253,7 +272,8 @@ Built during the buildathon (https://github.com/Regen-Bazaar/regenbazaar-beta, P
 - New interface: light and dark theme, readable type, phone layout.
 - LLM extraction via OpenRouter, model chosen by an eval of 8 low-cost models (no invented numbers, resists prompt injection).
 - Public-beta safety: LLM content moderation, input validation, rate limits, validator-only approvals, link-only evidence.
-- Methodology: audit of the v0.1 weights done; v0.2 plan (physical units from IPCC, US EPA and IFI factors, proof levels, per-domain scores) published on /roadmap.
+- Methodology v0.2 "Community layer", live 2026-09-28 (PR #42): scores per impact area in physical units, 34 weight cards (sourced / derived / assumption), proof levels P0 to P4 set by a validator, server-side proof-link checks with hash snapshots, USD price = IV × rate × proof × complexity, step-by-step submission form, validator panel, per-area leaderboard. Tests: engine 57, pipeline 31, db 2.
+- End-to-end v0.2 check on Arbitrum Sepolia (test data): report, proof check, P2 approval, EAS attestation, tRWI #10, purchase of 2 editions in tUSDG; price and IV matched the formula.
 
 Before the buildathon (not claimed): the Impact Value engine, the contract set and its June 2026 self-audit, a Celo Sepolia deployment.
 ```
