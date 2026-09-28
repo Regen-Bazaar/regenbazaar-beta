@@ -5,6 +5,7 @@ import { buildTokenMetadata } from "@rb/pipeline";
 import { parseProofLevel, type DomainScoreV02, type ExtractedAction, type FrameworkTags } from "@rb/impact-engine";
 import { getDb } from "../../../../../lib/db";
 import { isAdmin } from "../../../../../lib/admin";
+import { siteUrl } from "../../../../../lib/site";
 
 export const runtime = "nodejs";
 
@@ -35,7 +36,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
     periodEnd: c.periodEnd ?? null,
     tablesVersion: s.tablesVersion ?? "",
     easUID: null, // set once the EAS attestation exists (at mint)
-    externalUrl: new URL(`/submission/${s.id}`, req.url).toString(),
+    externalUrl: siteUrl(`/submission/${s.id}`),
     methodologyVersion: s.methodologyVersion ?? null,
     domainScores: (s.domainScores ?? []) as DomainScoreV02[],
     proofLevel: parseProofLevel(s.proofLevel),

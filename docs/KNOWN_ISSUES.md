@@ -164,3 +164,6 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
 - **Report page shows pending reports by direct link** (existing behaviour, unchanged by v0.2).
 - **Deploy order:** migration 0004 (additive) before the new web build; `methodology_version` stays empty for
   old rows, which the app reads as v0.1.
+- **Token metadata links (fixed 2026-09-28):** metadata pinned before this date has `external_url` pointing at
+  `http://0.0.0.0:3000/...` (the server's bind address). IPFS content is immutable, so those tokens keep it;
+  the report is still found by its title, EAS UID and the in-metadata data. New listings use `PUBLIC_SITE_URL`.
