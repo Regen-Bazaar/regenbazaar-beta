@@ -1,7 +1,19 @@
 import { NextResponse } from "next/server";
 import { verifications, impactSubmissions, organizations, listings } from "@rb/db/schema";
 import { buildTokenMetadata, renderImpactCard } from "@rb/pipeline";
-import { computePrice, type ExtractedAction, type FrameworkTags } from "@rb/impact-engine";
+import {
+  clampEsm,
+  computeImpactValueV02,
+  computePrice,
+  isListable,
+  parseProofLevel,
+  type DomainScoreV02,
+  type ExtractedAction,
+  type ExtractedActionV02,
+  type FrameworkTags,
+  type ImpactContextV02,
+  type ProofLevel,
+} from "@rb/impact-engine";
 import { eq, sql } from "drizzle-orm";
 import { parseUnits } from "viem";
 import { getDb } from "../../../lib/db";
@@ -34,6 +46,10 @@ async function registerListing(db: DB, net: Network, submissionId: string, reqUr
   const ngo = org.walletAddress as Hex;
 
   const c = (s.context ?? {}) as { regionCode?: string; periodStart?: string; periodEnd?: string };
+  const v02 = s.methodologyVersion === "v0.2";
+  const domainScores = v02 ? ((s.domainScores ?? []) as DomainScoreV02[]) : [];
+  const primary = [...domainScores].sort((a, b) => b.weighted - a.weighted)[0];
+  const proofLevel = v02 ? (parseProofLevel(s.proofLevel) ?? null) : null;
   // Generative artwork (deterministic from the impact data), pinned so the token image outlives our site.
   const card = renderImpactCard({
     seed: s.id,
@@ -44,6 +60,14 @@ async function registerListing(db: DB, net: Network, submissionId: string, reqUr
     sdgs: (s.frameworkTags as FrameworkTags | null)?.sdg ?? [],
     periodStart: c.periodStart ?? null,
     periodEnd: c.periodEnd ?? null,
+    headline: primary
+      ? {
+          score: primary.score,
+          domain: primary.domain,
+          physical: primary.physical.map((p) => `${p.amount} ${p.unit}`).slice(-1)[0] ?? null,
+        }
+      : null,
+    proofLevel,
   });
   const imageUri = await pinFile(card, "trwi.svg", "image/svg+xml");
   const meta = buildTokenMetadata({
@@ -59,6 +83,10 @@ async function registerListing(db: DB, net: Network, submissionId: string, reqUr
     periodEnd: c.periodEnd ?? null,
     tablesVersion: s.tablesVersion ?? "",
     externalUrl: new URL(`/submission/${s.id}`, reqUrl).toString(),
+    methodologyVersion: s.methodologyVersion ?? null,
+    domainScores,
+    proofLevel,
+    iris: ((s.frameworkTags as { iris?: string[] } | null)?.iris ?? []),
   });
 
   const metadataURI = await pinJson(meta); // ipfs://<cid>
@@ -113,7 +141,45 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "submissionId and a valid decision are required" }, { status: 422 });
   }
 
+  // v0.2 review fields: the proof level is set here and only here (never by the submitter or the AI);
+  // ESM is the validator's confirmation of the open-data suggestion, clamped to 1.0..1.3.
+  const proofLevel: ProofLevel | null = body.proofLevel === undefined || body.proofLevel === null ? null : parseProofLevel(body.proofLevel);
+  if (body.proofLevel !== undefined && body.proofLevel !== null && !proofLevel) {
+    return NextResponse.json({ error: "proofLevel must be one of P0, P1, P2, P3, P4" }, { status: 422 });
+  }
+  let esm: number | null = null;
+  if (body.esm !== undefined && body.esm !== null) {
+    if (typeof body.esm !== "number" || !Number.isFinite(body.esm) || body.esm < 1 || body.esm > 1.3) {
+      return NextResponse.json({ error: "esm must be a number from 1.0 to 1.3" }, { status: 422 });
+    }
+    esm = clampEsm(body.esm);
+  }
+
   const db = await getDb();
+  const [target] = await db.select().from(impactSubmissions).where(eq(impactSubmissions.id, submissionId)).limit(1);
+  if (!target) return NextResponse.json({ error: "submission not found" }, { status: 404 });
+  const isV02 = target.methodologyVersion === "v0.2";
+  if (decision === "approve" && isV02 && !isListable(proofLevel ?? parseProofLevel(target.proofLevel))) {
+    return NextResponse.json({ error: "set a proof level P1–P4 before approving (P0 is not listed)" }, { status: 422 });
+  }
+  if (isV02 && (proofLevel || esm !== null)) {
+    const patch: Partial<typeof impactSubmissions.$inferInsert> = { updatedAt: new Date() };
+    if (proofLevel) patch.proofLevel = proofLevel;
+    if (esm !== null) {
+      // Rescore with the confirmed ESM; the formula and tables stay v0.2, only the context changes.
+      const ctx = { ...((target.context ?? {}) as ImpactContextV02), esm };
+      const iv = computeImpactValueV02((target.extractedActions ?? []) as ExtractedActionV02[], ctx);
+      Object.assign(patch, {
+        context: ctx,
+        ivResult: iv,
+        ivValue: iv.impactValue.toFixed(4),
+        domainScores: iv.domainScores,
+        frameworkTags: iv.frameworkTags,
+      });
+    }
+    await db.update(impactSubmissions).set(patch).where(eq(impactSubmissions.id, submissionId));
+  }
+
   // The ONE network this report is listed on: the one chosen at submission (legacy rows without a network ->
   // default). Resolved before the decision is recorded so a refused approval leaves no trace.
   let net: Network | undefined;

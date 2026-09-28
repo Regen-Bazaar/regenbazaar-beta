@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server";
-import { processSubmission, createDeepSeekExtractor, moderate, parseContext, parseDomain } from "@rb/pipeline";
+import {
+  processSubmission,
+  createDeepSeekExtractor,
+  moderate,
+  parseContextV02,
+  parseDomain,
+  parseLocation,
+  parseProofLinks,
+  parseRegistry,
+} from "@rb/pipeline";
 import { impactSubmissions, organizations } from "@rb/db/schema";
 import { desc, eq, inArray, sql } from "drizzle-orm";
 import { getAddress, isAddress } from "viem";
@@ -105,8 +114,14 @@ export async function POST(req: Request) {
   // Domain and scoring context must match the engine's tables; unknown values used to crash scoring (500).
   const domain = parseDomain(body.domain);
   if (!domain.ok) return NextResponse.json({ error: domain.error }, { status: 422 });
-  const context = parseContext(body.context);
+  const context = parseContextV02(body.context);
   if (!context.ok) return NextResponse.json({ error: context.error }, { status: 422 });
+  const location = parseLocation(body.location);
+  if (!location.ok) return NextResponse.json({ error: location.error }, { status: 422 });
+  const proofLinks = parseProofLinks(body.proofLinks);
+  if (!proofLinks.ok) return NextResponse.json({ error: proofLinks.error }, { status: 422 });
+  const registry = parseRegistry(body.registry);
+  if (!registry.ok) return NextResponse.json({ error: registry.error }, { status: 422 });
 
   // Evidence links: plain http(s) URLs only (rendered as links, never embedded).
   const mediaUris = Array.isArray(body.mediaUris)
@@ -116,7 +131,7 @@ export async function POST(req: Request) {
         .slice(0, MAX_MEDIA)
     : [];
 
-  const verdict = await moderate([`Organisation: ${orgName}`, `Title: ${title}`, description, ...mediaUris].join("\n"));
+  const verdict = await moderate([`Organisation: ${orgName}`, `Title: ${title}`, description, ...mediaUris, ...proofLinks.value].join("\n"));
   if (!verdict.allowed) {
     return NextResponse.json(
       { error: `submission rejected by content check (${verdict.category}). Please describe real-world impact only.` },
@@ -141,11 +156,22 @@ export async function POST(req: Request) {
         context: context.value,
         mediaUris,
         chainId,
+        location: location.value,
+        proofLinks: proofLinks.value,
+        registry: registry.value,
       },
       { extractor },
     );
     return NextResponse.json(
-      { id: submission.id, status: submission.status, impactValue: iv.impactValue, frameworkTags: iv.frameworkTags },
+      {
+        id: submission.id,
+        status: submission.status,
+        methodologyVersion: submission.methodologyVersion,
+        impactValue: iv.impactValue,
+        domainScores: "domainScores" in iv ? iv.domainScores : undefined,
+        flags: "flags" in iv ? iv.flags : undefined,
+        frameworkTags: iv.frameworkTags,
+      },
       { status: 201 },
     );
   } catch {

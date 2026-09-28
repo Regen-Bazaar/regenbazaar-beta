@@ -14,6 +14,9 @@ export interface ImpactCardInput {
   sdgs: string[]; // e.g. ["SDG-13", "SDG-14"]
   periodStart?: string | null;
   periodEnd?: string | null;
+  // v0.2: the main number is the primary domain score with its physical unit; IV stays on the token.
+  headline?: { score: number; domain: string; physical?: string | null } | null;
+  proofLevel?: string | null;
 }
 
 const PALETTES: Record<string, { bg: [string, string]; accent: string[] }> = {
@@ -136,7 +139,11 @@ export function renderImpactCard(input: ImpactCardInput): string {
     });
   }
 
-  const ivText = iv >= 1000 ? Math.round(iv).toLocaleString("en-US") : (Math.round(iv * 10) / 10).toString();
+  const main = input.headline && Number.isFinite(input.headline.score) ? Math.max(0, input.headline.score) : iv;
+  const ivText = main >= 1000 ? Math.round(main).toLocaleString("en-US") : (Math.round(main * 10) / 10).toString();
+  const mainLabel = input.headline ? `${input.headline.domain.replace(/_/g, " ").toUpperCase()} SCORE` : "IMPACT VALUE";
+  const sub = input.headline?.physical ? input.headline.physical.slice(0, 40) : "";
+  const badge = input.headline ? `v0.2${input.proofLevel ? ` · ${input.proofLevel}` : ""}` : "";
   const titleLines = wrap(input.title, 34, 2);
   const period = [input.periodStart, input.periodEnd].filter(Boolean).map((d) => String(d).slice(0, 10)).join(" to ");
   const domain = (input.domain ?? "impact").replace(/_/g, " ");
@@ -148,7 +155,9 @@ ${pattern}
 ${ringSvg}
 ${sdgSvg}
 <text x="${cx}" y="${cy + 8}" font-size="92" font-weight="700" text-anchor="middle" fill="#f5efe0">${xml(ivText)}</text>
-<text x="${cx}" y="${cy + 50}" font-size="22" letter-spacing="4" text-anchor="middle" fill="#d9c27a">IMPACT VALUE</text>
+<text x="${cx}" y="${cy + 50}" font-size="22" letter-spacing="4" text-anchor="middle" fill="#d9c27a">${xml(mainLabel)}</text>
+${sub ? `<text x="${cx}" y="${cy + 84}" font-size="22" text-anchor="middle" fill="#f5efe0" opacity="0.8">${xml(sub)}</text>` : ""}
+${badge ? `<text x="940" y="740" font-size="20" letter-spacing="2" text-anchor="end" fill="#d9c27a">${xml(badge)}</text>` : ""}
 <rect x="0" y="690" width="${W}" height="310" fill="#000" opacity="0.35"/>
 <text x="60" y="740" font-size="20" letter-spacing="5" fill="#d9c27a">${xml(domain.toUpperCase())}</text>
 ${titleLines.map((l, i) => `<text x="60" y="${800 + i * 50}" font-size="42" font-weight="700" fill="#f5efe0">${xml(l)}</text>`).join("\n")}

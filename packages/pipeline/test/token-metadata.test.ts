@@ -54,3 +54,35 @@ test("approximate region only; missing image falls back to a mint-time placehold
   assert.ok(!m.attributes.some((a) => a.trait_type === "Region (approximate)"));
   assert.equal(m.properties.region, undefined);
 });
+
+test("v0.2 metadata: schema trwi-2, domain scores with physical units, proof level, IRIS+ IDs", () => {
+  const m = buildTokenMetadata({
+    ...input,
+    methodologyVersion: "v0.2",
+    tablesVersion: "v0.2-community-2026-09",
+    domainScores: [
+      { domain: "environment", score: 28.8, k: 1, weighted: 28.8, physical: [{ amount: 1.2, unit: "ha" }, { amount: 27.72, unit: "tCO2e/yr" }] },
+      { domain: "education", score: 6, k: 1, weighted: 6, physical: [{ amount: 30, unit: "students" }] },
+    ],
+    proofLevel: "P3",
+    iris: ["PI2389"],
+  });
+  assert.equal(m.properties.schema, "regen-bazaar/trwi-2");
+  assert.equal(m.properties.methodologyVersion, "v0.2");
+  assert.equal(m.properties.proofLevel, "P3");
+  assert.deepEqual(m.properties.iris, ["PI2389"]);
+  assert.equal(m.properties.domainScores?.[0].score, 28.8);
+  const traits = Object.fromEntries(m.attributes.map((a) => [a.trait_type, a.value]));
+  assert.equal(traits["Domain score: environment"], 28.8);
+  assert.equal(traits["environment (tCO2e/yr)"], 27.72);
+  assert.equal(traits["Proof level"], "P3");
+  assert.equal(traits["Methodology"], "v0.2 Community layer (v0.2-community-2026-09)");
+  assert.match(m.description, /own relative index/);
+  assert.doesNotMatch(m.description, /offset|certified/i);
+});
+
+test("v0.1 metadata keeps schema trwi-1 even if v0.2 fields are passed without the version", () => {
+  const m = buildTokenMetadata({ ...input, proofLevel: "P2" });
+  assert.equal(m.properties.schema, "regen-bazaar/trwi-1");
+  assert.equal(m.properties.proofLevel, undefined);
+});

@@ -21,7 +21,10 @@ const SYSTEM =
   "canonical keys, choosing the closest match (e.g. a rescued dog or cat -> animals_rescued): " +
   CANONICAL_KEYS +
   ". If an action does not clearly match any key, omit it. Use a separate action per distinct activity. " +
-  "Quantities must be positive numbers.";
+  "Quantities must be positive numbers. Keep the unit the report uses (kg, t, ha, m2, rai, liters, kWh, MWh, " +
+  "trees, animals, students...); never convert numbers yourself. For tree or mangrove planting, also give " +
+  "areaHa or densityPerHa only when the report states the planted area or density, and survivalRate (0 to 1) " +
+  "only when it states how many survived. For schools, give classroom space in m2 when stated.";
 
 const TOOL = {
   type: "function" as const,
@@ -39,6 +42,10 @@ const TOOL = {
               actionType: { type: "string" },
               quantity: { type: "number" },
               unit: { type: "string" },
+              areaHa: { type: "number" },
+              densityPerHa: { type: "number" },
+              survivalRate: { type: "number" },
+              mangroveForm: { type: "string", enum: ["tree", "shrub"] },
             },
             required: ["actionType", "quantity", "unit"],
           },

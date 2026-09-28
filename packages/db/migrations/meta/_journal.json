@@ -29,6 +29,13 @@
       "when": 1790324829081,
       "tag": "0003_submissions_chain_id",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790558813412,
+      "tag": "0004_methodology_v02",
+      "breakpoints": true
     }
   ]
 }

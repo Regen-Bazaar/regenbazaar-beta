@@ -56,6 +56,13 @@ CREATE TABLE IF NOT EXISTS "impact_submissions" (
   "framework_tags" jsonb,
   "media_uris" jsonb,
   "chain_id" integer,
+  "methodology_version" varchar(10),
+  "location" jsonb,
+  "proof_links" jsonb,
+  "proof_checks" jsonb,
+  "proof_level" varchar(2),
+  "domain_scores" jsonb,
+  "registry_declaration" jsonb,
   "created_at" timestamp with time zone DEFAULT now() NOT NULL,
   "updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -98,6 +105,8 @@ CREATE TABLE IF NOT EXISTS "listings" (
   "beneficiary" varchar(42) NOT NULL,
   "eas_uid" varchar(66) NOT NULL,
   "metadata_uri" text NOT NULL,
+  "price_usd" numeric(30, 4),
+  "price_model_version" varchar(40),
   "nonce" integer DEFAULT 0 NOT NULL,
   "active" boolean DEFAULT true NOT NULL,
   "created_at" timestamp with time zone DEFAULT now() NOT NULL

@@ -17,7 +17,7 @@ test("processSubmission: extract -> score -> persist into verification queue", a
     description: "1000 trees planted and 5 workshops held",
     context: { regionCode: "temperate" },
     chainId: 11142220,
-  });
+  }, { methodologyVersion: "v0.1" });
 
   // trees: 0.1*1000*1.5 = 150 ; workshops: 0.05*5*1.0 = 0.25 -> 150.25
   assert.equal(iv.impactValue, 150.25);
@@ -50,7 +50,7 @@ test("LLM extractor path with sanitization of bad output", async () => {
   const { submission, iv } = await processSubmission(
     db,
     { orgId: org.id, title: "T", description: "ignored when extractor present" },
-    { extractor },
+    { extractor, methodologyVersion: "v0.1" },
   );
 
   // only trees_planted 200 survived: 0.1 * 200 * 1.2 (sm>=100) = 24

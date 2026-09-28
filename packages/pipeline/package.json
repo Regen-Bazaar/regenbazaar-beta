@@ -7,7 +7,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "test": "node --import tsx --test test/pipeline.test.ts test/token-metadata.test.ts"
+    "test": "node --import tsx --test test/pipeline.test.ts test/token-metadata.test.ts test/pipeline-v02.test.ts"
   },
   "dependencies": {
     "@rb/db": "workspace:*",

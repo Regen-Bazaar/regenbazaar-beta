@@ -81,6 +81,14 @@ export const impactSubmissions = pgTable(
     mediaUris: jsonb("media_uris"), // string[]
     // Network chosen at submission; the report is listed on this chain only (null = legacy, pre-2026-09-25).
     chainId: integer("chain_id"),
+    // Methodology v0.2 (null = scored before v0.2, i.e. v0.1; old rows are never rescored).
+    methodologyVersion: varchar("methodology_version", { length: 10 }),
+    location: jsonb("location"), // { lat, lon, ecosystem, layers } for ESM suggestions
+    proofLinks: jsonb("proof_links"), // string[] of public https links given by the NGO
+    proofChecks: jsonb("proof_checks"), // AI flags per link + snapshot hash; flags only, never a level
+    proofLevel: varchar("proof_level", { length: 2 }), // P0..P4, set by a validator only
+    domainScores: jsonb("domain_scores"), // DomainScoreV02[]
+    registryDeclaration: jsonb("registry_declaration"), // { standard, serial? }
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -138,11 +146,15 @@ export const listings = pgTable("listings", {
   beneficiary: varchar("beneficiary", { length: 42 }).notNull(), // NGO payout
   easUid: varchar("eas_uid", { length: 66 }).notNull(),
   metadataUri: text("metadata_uri").notNull(),
+  priceUsd: numeric("price_usd", { precision: 30, scale: 4 }), // v0.2 total price in USD (null = v0.1 listing)
+  priceModelVersion: varchar("price_model_version", { length: 40 }),
   nonce: integer("nonce").notNull().default(0),
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [uniqueIndex("listings_chain_token_idx").on(t.chainId, t.tokenId)]);
 
+// DEPRECATED: not read by the engine (weights live in packages/impact-engine tables, versioned in code).
+// Kept so existing databases need no destructive migration.
 export const actionWeights = pgTable(
   "action_weights",
   {
