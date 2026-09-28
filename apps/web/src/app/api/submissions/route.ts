@@ -4,6 +4,7 @@ import {
   createDeepSeekExtractor,
   moderate,
   parseContextV02,
+  parseCost,
   parseDomain,
   parseLocation,
   parseProofLinks,
@@ -129,6 +130,8 @@ export async function POST(req: Request) {
   if (!proofLinks.ok) return NextResponse.json({ error: proofLinks.error }, { status: 422 });
   const registry = parseRegistry(body.registry);
   if (!registry.ok) return NextResponse.json({ error: registry.error }, { status: 422 });
+  const cost = parseCost(body.cost);
+  if (!cost.ok) return NextResponse.json({ error: cost.error }, { status: 422 });
 
   // Evidence links: plain http(s) URLs only (rendered as links, never embedded).
   const mediaUris = Array.isArray(body.mediaUris)
@@ -166,6 +169,7 @@ export async function POST(req: Request) {
         location: location.value,
         proofLinks: proofLinks.value,
         registry: registry.value,
+        cost: cost.value,
         declaredActions: Array.isArray(body.actions) ? (body.actions as unknown[]).slice(0, 40) : undefined,
       },
       { extractor },

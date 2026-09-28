@@ -332,3 +332,15 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   roadmap. The GeoJSON loader stays as an optional path (`ESM_LAYERS_DIR`).
 - **Rubric:** not used to set weights; kept as a documented cross-check (see the owner discussion of 2026-09-28).
 - **Deploy:** owner approved deploying v0.2 before the Arbitrum deadline, after a check on a server copy.
+
+## 2026-09-28 — Price from declared, evidenced cost (replaces IV × rate for new reports)
+- **What:** `cost-v02.ts`: price USD = (volunteer hours × declared value of an hour + money spent) × P. The form's
+  complexity step became "What it took". Validators see the country's statutory minimum hourly wage next to the
+  declared hourly value (`MIN_WAGE_REFERENCE`, reference only). Amounts are converted with a dated FX table.
+- **Why:** owner, 2026-09-28: impact does not depend on cost, but the price does; the rate and domain coefficients k
+  had no source, and a survey of pilots would not generalise across countries. Each group declares its own local
+  costs, checked through the proof layer; no regional average database, no automatic caps.
+- **Alternatives:** IV × rate × P × C (kept only as a fallback for reports without a cost declaration); pilot cost
+  survey (rejected); platform-set hourly values by country (rejected: the minimum wage is shown, the group decides).
+- **Fragile:** FX and minimum wage tables need periodic updates (dated in code); cost inflation is caught only by the
+  validator and by buyers comparing impact per $100.

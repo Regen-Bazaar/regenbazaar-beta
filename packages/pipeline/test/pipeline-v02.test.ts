@@ -5,6 +5,7 @@ import * as schema from "@rb/db/schema";
 import {
   processSubmission,
   parseContextV02,
+  parseCost,
   parseLocation,
   parseProofLinks,
   parseRegistry,
@@ -134,4 +135,26 @@ test("declared actions (form step 2) are scored; the AI reading is kept and edit
     declaredActions: [{ actionType: "waste_collected_kg", quantity: 380, unit: "kg" }],
   });
   assert.equal((same.submission.context as { submitterEdited: boolean }).submitterEdited, false);
+});
+
+test("parseCost: currency code, non-negative bounded amounts, known categories only", () => {
+  assert.deepEqual(parseCost({ currency: "thb", volunteerHours: 40, hourlyValue: 50, spent: { materials: 1000, bribes: 5 } }), {
+    ok: true,
+    value: { currency: "THB", volunteerHours: 40, hourlyValue: 50, spent: { materials: 1000 } },
+  });
+  assert.deepEqual(parseCost(undefined), { ok: true, value: undefined });
+  assert.equal(parseCost({ currency: "baht" }).ok, false);
+  assert.equal(parseCost({ currency: "THB", volunteerHours: -1 }).ok, false);
+  assert.equal(parseCost({ currency: "THB", spent: { food: "100" } }).ok, false);
+  assert.equal(parseCost({ currency: "THB", hourlyValue: 1e9 }).ok, false);
+});
+
+test("the cost declaration is stored with the report and does not change IV", async () => {
+  const { db } = await createTestDb();
+  const o = await org(db, "0b004");
+  const base = { orgId: o.id, title: "Cleanup", description: "Collected 380 kg of waste" };
+  const a = await processSubmission(db, base);
+  const b = await processSubmission(db, { ...base, cost: { currency: "THB", volunteerHours: 40, hourlyValue: 50, spent: { transport: 500 } } });
+  assert.equal(b.iv.impactValue, a.iv.impactValue);
+  assert.deepEqual((b.submission.context as { cost: unknown }).cost, { currency: "THB", volunteerHours: 40, hourlyValue: 50, spent: { transport: 500 } });
 });

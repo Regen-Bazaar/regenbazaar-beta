@@ -266,18 +266,25 @@ export default function Methodology() {
               </p>
             </Section>
 
-            <Section id="price" title="Price">
+            <Section id="price" title="Price: what the work took">
               <p>
-                <span className="font-mono text-fg">price (USD) = IV × rate × P × C</span>, split across editions. The rate is
-                ${PRICE_RATE_USD_PER_IV.value} per IV point for now, to be calibrated with a cost survey of pilot groups. P is
-                the proof level factor; C is the complexity of the work (five questions, 1.0 to 1.4), moved here from the
-                impact score because difficulty is a cost, not an outcome.
+                Impact and price are separate. The impact score says what changed in the world; the price says what it took
+                to make it happen. The group declares its volunteer hours, the value of one hour, and the money it spent
+                (materials, transport, equipment, food and water, paid services), with receipts or photos where it can.
+              </p>
+              <div className="card p-5 text-center font-mono text-fg">
+                price (USD) = (hours × value of an hour + money spent) × P
+              </div>
+              <p>
+                P is the proof level factor. A validator sees the country&apos;s statutory minimum hourly wage next to the
+                declared value of an hour, as a reference frame, not a limit. Costs differ between countries, so the same
+                work can cost less in one place than another; buyers see the impact per $100 and choose.
               </p>
               <p>
-                First sales settle in a dollar stablecoin (USDG) at that price, so an organisation knows what it receives.
-                Resale on the secondary market is free. On the Celo test network the price is paid in test CELO, counted as
-                $1; a stablecoin replaces it before mainnet. Reports scored with v0.1 keep their v0.1 price (IV ×{" "}
-                {PRICE_RATE_PER_IV} in the sale currency).
+                First sales settle in a dollar stablecoin (USDG) at that price; resale is free. On the Celo test network
+                test CELO is counted as $1 until a stablecoin is added before mainnet. Reports without a cost declaration
+                keep the earlier rule (IV × ${PRICE_RATE_USD_PER_IV.value} × P × complexity); v0.1 reports keep IV ×{" "}
+                {PRICE_RATE_PER_IV} in the sale currency.
               </p>
             </Section>
 

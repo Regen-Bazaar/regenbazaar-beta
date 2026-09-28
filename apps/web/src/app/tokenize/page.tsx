@@ -5,11 +5,16 @@ import { useAccount } from "wagmi";
 import {
   ACTION_WEIGHTS_V02,
   GRID_FACTORS,
+  COST_CATEGORIES,
+  FX_USD,
+  MIN_WAGE_REFERENCE,
   computeImpactValueV02,
-  computePriceV02,
+  costToUsd,
   isCommunityAction,
+  priceFromCost,
   ruleBasedExtract as extractAll,
-  type ComplexityAnswers,
+  type CostCategory,
+  type CostDeclaration,
   type Ecosystem,
   type ExtractedActionV02,
 } from "@rb/impact-engine";
@@ -19,7 +24,7 @@ import { ErrorNote } from "../../components/ErrorNote";
 import { DomainScores } from "../../components/ImpactBadges";
 import { DOMAIN_KEYS, DOMAIN_LABEL, fmt } from "../../lib/impact-view";
 
-const STEPS = ["What you did", "Check actions", "Where", "Proof", "Complexity", "Review"] as const;
+const STEPS = ["What you did", "Check actions", "Where", "Proof", "What it took", "Review"] as const;
 const ECOSYSTEMS: Ecosystem[] = ["mangrove", "forest", "coral_reef", "seagrass", "grassland", "coast", "urban", "other"];
 const REGISTRIES = [
   ["none", "Not registered anywhere else"],
@@ -29,13 +34,14 @@ const REGISTRIES = [
   ["hypercerts", "Hypercerts"],
   ["other", "Other"],
 ] as const;
-const COMPLEXITY: { key: keyof ComplexityAnswers; label: string; options: string[] }[] = [
-  { key: "technicalExpertise", label: "Technical expertise", options: ["low", "medium", "high"] },
-  { key: "resourceIntensity", label: "Resource intensity", options: ["low", "medium", "high"] },
-  { key: "projectScale", label: "Project scale", options: ["local", "city", "regional"] },
-  { key: "regulatory", label: "Permits and regulation", options: ["low", "medium", "high"] },
-  { key: "environmentalConditions", label: "Working conditions", options: ["easy", "moderate", "challenging"] },
-];
+const COST_LABEL: Record<CostCategory, string> = {
+  materials: "Materials (seedlings, bags, tools)",
+  transport: "Transport",
+  equipment: "Equipment rent or purchase",
+  food: "Food and water",
+  services: "Paid services (vet, boat, skip)",
+  other: "Other",
+};
 const AREA_ACTIONS = ["trees_planted", "mangroves_planted"];
 // Only Community-layer actions are offered; parked ones (need capital or professionals) are not scored.
 const ruleBasedExtract = (text: string) => extractAll(text).filter((a) => isCommunityAction(a.actionType));
@@ -97,7 +103,7 @@ function num(s: string): number | undefined {
   return s.trim() !== "" && Number.isFinite(n) ? n : undefined;
 }
 
-type ComplexityDraft = Partial<Record<keyof ComplexityAnswers, string>>;
+type SpentDraft = Partial<Record<CostCategory, string>>;
 
 export default function Tokenize() {
   const NETWORK = useNetwork();
@@ -126,8 +132,11 @@ export default function Tokenize() {
   const [mediaText, setMediaText] = useState("");
   const [registry, setRegistry] = useState("");
   const [serial, setSerial] = useState("");
-  // 5. complexity (price only)
-  const [complexity, setComplexity] = useState<ComplexityDraft>({});
+  // 5. what it took (drives the price)
+  const [currency, setCurrency] = useState("");
+  const [hours, setHours] = useState("");
+  const [hourly, setHourly] = useState("");
+  const [spent, setSpent] = useState<SpentDraft>({});
 
   const lines = (t: string) => t.split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
   const proofLinks = lines(proofText);
@@ -153,7 +162,16 @@ export default function Tokenize() {
   const scored = actionsFromText === description ? actions : ruleBasedExtract(description);
   const iv = useMemo(() => computeImpactValueV02(scored, ctx), [scored, ctx]);
 
-  const complexityCount = Object.values(complexity).filter(Boolean).length;
+  const wageRef = country ? MIN_WAGE_REFERENCE[country] : undefined;
+  const cost: CostDeclaration | null = currency
+    ? {
+        currency,
+        volunteerHours: num(hours) ?? 0,
+        hourlyValue: num(hourly) ?? 0,
+        spent: Object.fromEntries(COST_CATEGORIES.map((k) => [k, num(spent[k] ?? "") ?? 0]).filter(([, v]) => (v as number) > 0)),
+      }
+    : null;
+  const costUsd = cost ? costToUsd(cost) : null;
   const expectedP = proofLinks.length + mediaUris.length >= 2 ? "P2" : proofLinks.length >= 1 ? "P1" : "P0";
 
   const problems: string[] = [];
@@ -163,7 +181,7 @@ export default function Tokenize() {
   if (periodStart && periodEnd && periodEnd < periodStart) problems.push("The end date is before the start date (step 3).");
   if (!proofLinks.length) problems.push("Add at least one public link as proof (step 4). Reports without proof (P0) are not listed.");
   if (proofLinks.some((u) => !u.startsWith("https://"))) problems.push("Proof links must start with https:// (step 4).");
-  if (complexityCount > 0 && complexityCount < COMPLEXITY.length) problems.push("Answer all five complexity questions or none (step 5).");
+  if (!cost || !costUsd || costUsd.totalUsd <= 0) problems.push("Tell us what the work took: hours and money spent, in your currency (step 5).");
 
   function fillExample() {
     setTitle(EXAMPLE.title);
@@ -183,6 +201,10 @@ export default function Tokenize() {
     setPeriodEnd(EXAMPLE.periodEnd);
     setProofText(EXAMPLE.proofText);
     setRegistry("none");
+    setCurrency("THB");
+    setHours("60");
+    setHourly("60");
+    setSpent({ materials: "3000", transport: "1500", food: "1200" });
   }
 
   const updateAction = (i: number, patch: Partial<ExtractedActionV02>) =>
@@ -220,8 +242,8 @@ export default function Tokenize() {
             adjacentToHabitat: adjacent || undefined,
             periodStart: periodStart || undefined,
             periodEnd: periodEnd || undefined,
-            complexity: complexityCount === COMPLEXITY.length ? complexity : undefined,
           },
+          cost: cost ?? undefined,
         }),
       });
       const data = await res.json();
@@ -403,7 +425,7 @@ export default function Tokenize() {
                   id="country"
                   value={country}
                   onChange={setCountry}
-                  options={Object.keys(GRID_FACTORS)}
+                  options={[...new Set([...Object.keys(GRID_FACTORS), ...Object.keys(MIN_WAGE_REFERENCE)])].sort()}
                   placeholder="Other or not listed"
                 />
               </div>
@@ -472,19 +494,52 @@ export default function Tokenize() {
           )}
 
           {step === 4 && (
-            <div>
-              <p className="mb-4 text-sm text-subtle">
-                Optional. Complexity does not change the impact score; it is used for the price, because harder work costs
-                more. Answer all five or leave all empty.
+            <div className="space-y-6">
+              <p className="text-sm text-subtle">
+                What the work took sets the price. It does not change the impact score. Count everyone&apos;s time and the
+                money you spent; photos of receipts help the validator.
               </p>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {COMPLEXITY.map((q) => (
-                  <div key={q.key}>
-                    <Label htmlFor={q.key}>{q.label}</Label>
-                    <Select id={q.key} value={complexity[q.key] ?? ""} onChange={(v) => setComplexity((c) => ({ ...c, [q.key]: v || undefined }))} options={q.options} />
-                  </div>
-                ))}
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div>
+                  <Label htmlFor="cur">Currency</Label>
+                  <Select id="cur" value={currency} onChange={setCurrency} options={Object.keys(FX_USD)} />
+                </div>
+                <div>
+                  <Label htmlFor="hours">Volunteer hours (people × hours)</Label>
+                  <input id="hours" inputMode="decimal" value={hours} onChange={(e) => setHours(e.target.value)} placeholder="e.g. 20 people × 3 h = 60" className="field" />
+                </div>
+                <div>
+                  <Label htmlFor="hourly">Value of one hour{currency ? `, ${currency}` : ""}</Label>
+                  <input id="hourly" inputMode="decimal" value={hourly} onChange={(e) => setHourly(e.target.value)} className="field" />
+                  {wageRef && (
+                    <p className="mt-1 text-xs text-subtle">
+                      Minimum wage in {country}: {fmt(wageRef.hourly, 2)} {wageRef.currency} per hour
+                    </p>
+                  )}
+                </div>
               </div>
+              <div>
+                <div className="mb-2 text-sm font-semibold text-muted">Money spent{currency ? `, ${currency}` : ""}</div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {COST_CATEGORIES.map((k) => (
+                    <div key={k}>
+                      <Label htmlFor={`spent-${k}`}>{COST_LABEL[k]}</Label>
+                      <input
+                        id={`spent-${k}`}
+                        inputMode="decimal"
+                        value={spent[k] ?? ""}
+                        onChange={(e) => setSpent((m) => ({ ...m, [k]: e.target.value }))}
+                        className="field"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {costUsd && (
+                <p className="text-sm text-muted">
+                  In total ≈ ${fmt(costUsd.totalUsd, 2)}: time ${fmt(costUsd.labourUsd, 2)}, money ${fmt(costUsd.spentUsd, 2)}.
+                </p>
+              )}
             </div>
           )}
 
@@ -499,6 +554,10 @@ export default function Tokenize() {
                 <dd>{[country, ecosystem.replace(/_/g, " "), lat && lon ? `${lat}, ${lon}` : ""].filter(Boolean).join(" · ") || "not given"}</dd>
                 <dt className="text-subtle">Period</dt>
                 <dd>{[periodStart, periodEnd].filter(Boolean).join(" to ") || "not given"}</dd>
+                <dt className="text-subtle">What it took</dt>
+                <dd>
+                  {costUsd ? `≈ $${fmt(costUsd.totalUsd, 2)} (${hours || 0} volunteer hours, money ${fmt(costUsd.spentUsd, 2)} USD)` : "not given"}
+                </dd>
                 <dt className="text-subtle">Proof</dt>
                 <dd>{proofLinks.length} link(s), {mediaUris.length} media</dd>
               </dl>
@@ -568,15 +627,11 @@ export default function Tokenize() {
               <div className="rounded-xl bg-raised p-4">
                 <div className="label-mono">Price</div>
                 {(() => {
-                  const est = computePriceV02(
-                    iv.impactValue,
-                    expectedP === "P0" ? "P1" : expectedP,
-                    complexityCount === COMPLEXITY.length ? (complexity as ComplexityAnswers) : undefined,
-                  );
+                  const est = cost ? priceFromCost(cost, expectedP === "P0" ? "P1" : expectedP) : null;
                   return (
                     <>
-                      <div className="mt-1 text-xl font-semibold">≈ ${fmt(est?.totalUsd ?? 0, 2)}</div>
-                      <div className="text-xs text-subtle">estimate; final after review (IV × rate × proof × complexity)</div>
+                      <div className="mt-1 text-xl font-semibold">{est ? `≈ $${fmt(est.totalUsd, 2)}` : "add costs"}</div>
+                      <div className="text-xs text-subtle">what it took × proof level; final after review</div>
                     </>
                   );
                 })()}
