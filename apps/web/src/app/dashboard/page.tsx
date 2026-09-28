@@ -3,6 +3,8 @@ import { desc, eq, inArray } from "drizzle-orm";
 import { impactSubmissions, organizations } from "@rb/db/schema";
 import { getDb } from "../../lib/db";
 import { FrameworkTag } from "../../components/FrameworkTag";
+import { ProofBadge } from "../../components/ImpactBadges";
+import { DOMAIN_LABEL, headline, impactView, physicalText, sumPhysical } from "../../lib/impact-view";
 
 export const metadata = {
   title: "NGO dashboard",
@@ -34,6 +36,7 @@ export default async function Dashboard() {
   const rows = joined.map((j) => ({ ...j.s, orgName: j.orgName }));
   const totalIV = rows.reduce((s, r) => s + Number(r.ivValue ?? 0), 0);
   const tokenized = rows.filter((r) => r.status === "tokenized").length;
+  const perDomain = [...sumPhysical(rows)].map(([d, m]) => ({ d, text: physicalText([...m].map(([unit, amount]) => ({ unit, amount })), 3) }));
 
   return (
     <main className="page-wrap py-10 md:py-14">
@@ -49,9 +52,20 @@ export default async function Dashboard() {
 
       <div className="mt-10 grid gap-5 sm:grid-cols-3">
         <Stat label="Submissions" value={String(rows.length)} />
-        <Stat label="Total Impact Value" value={totalIV.toLocaleString()} accent />
+        <Stat label="Impact Value (all)" value={totalIV.toLocaleString("en-US", { maximumFractionDigits: 1 })} accent />
         <Stat label="Tokenized" value={String(tokenized)} />
       </div>
+
+      {perDomain.length > 0 && (
+        <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {perDomain.map(({ d, text }) => (
+            <div key={d} className="card p-5">
+              <div className="label-mono">{DOMAIN_LABEL[d]}</div>
+              <div className="mt-1 text-lg">{text || "scored"}</div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {rows.length === 0 ? (
         <div className="card mt-10 p-10 text-center text-muted">
@@ -61,6 +75,8 @@ export default async function Dashboard() {
         <div className="card mt-10 overflow-hidden">
           {rows.map((s, i) => {
             const tags = s.frameworkTags as Tags;
+            const view = impactView(s);
+            const h = headline(view);
             return (
               <Link
                 key={s.id}
@@ -81,9 +97,11 @@ export default async function Dashboard() {
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center sm:gap-6">
                   <div className="text-right">
-                    <div className="label-mono">Impact Value</div>
-                    <div className="text-xl font-semibold text-accent">{Number(s.ivValue ?? 0).toLocaleString()}</div>
+                    <div className="label-mono">{h.label}</div>
+                    <div className="text-xl font-semibold text-accent">{h.value}</div>
+                    {view.version === "v0.2" && h.sub && <div className="text-xs text-subtle">{h.sub}</div>}
                   </div>
+                  {view.version === "v0.2" && <ProofBadge level={view.proofLevel} link={false} />}
                   <span className={`badge ${STATUS_STYLES[s.status] ?? ""}`}>
                     {s.status.replace(/_/g, " ")}
                   </span>

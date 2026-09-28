@@ -22,6 +22,7 @@ import { onchainEnabled, attestImpact, ivToWei } from "../../../lib/onchain";
 import { DEFAULT_NETWORK_KEY, ENABLED_NETWORKS, getNetwork, networkByChainId, type Network } from "../../../lib/networks";
 import type { DB } from "@rb/db";
 import { isAdmin } from "../../../lib/admin";
+import { cardHeadline } from "../../../lib/impact-view";
 
 export const runtime = "nodejs";
 
@@ -45,10 +46,9 @@ async function registerListing(db: DB, net: Network, submissionId: string, reqUr
   if (!org) throw new Error("org not found");
   const ngo = org.walletAddress as Hex;
 
-  const c = (s.context ?? {}) as { regionCode?: string; periodStart?: string; periodEnd?: string };
+  const c = (s.context ?? {}) as { regionCode?: string; country?: string; periodStart?: string; periodEnd?: string };
   const v02 = s.methodologyVersion === "v0.2";
   const domainScores = v02 ? ((s.domainScores ?? []) as DomainScoreV02[]) : [];
-  const primary = [...domainScores].sort((a, b) => b.weighted - a.weighted)[0];
   const proofLevel = v02 ? (parseProofLevel(s.proofLevel) ?? null) : null;
   // Generative artwork (deterministic from the impact data), pinned so the token image outlives our site.
   const card = renderImpactCard({
@@ -60,13 +60,7 @@ async function registerListing(db: DB, net: Network, submissionId: string, reqUr
     sdgs: (s.frameworkTags as FrameworkTags | null)?.sdg ?? [],
     periodStart: c.periodStart ?? null,
     periodEnd: c.periodEnd ?? null,
-    headline: primary
-      ? {
-          score: primary.score,
-          domain: primary.domain,
-          physical: primary.physical.map((p) => `${p.amount} ${p.unit}`).slice(-1)[0] ?? null,
-        }
-      : null,
+    headline: cardHeadline(s),
     proofLevel,
   });
   const imageUri = await pinFile(card, "trwi.svg", "image/svg+xml");
@@ -78,7 +72,7 @@ async function registerListing(db: DB, net: Network, submissionId: string, reqUr
     frameworks: s.frameworkTags as FrameworkTags | null,
     impactValue: Number(s.ivValue),
     editions: MAX_EDITIONS,
-    regionCode: c.regionCode ?? null,
+    regionCode: c.regionCode ?? c.country ?? null, // coarse only: v0.2 publishes the country, never coordinates
     periodStart: c.periodStart ?? null,
     periodEnd: c.periodEnd ?? null,
     tablesVersion: s.tablesVersion ?? "",

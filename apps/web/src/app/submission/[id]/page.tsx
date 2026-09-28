@@ -9,6 +9,9 @@ import { BuyButton } from "../../../components/BuyButton";
 import { CopyValue } from "../../../components/CopyValue";
 import { formatUnits } from "viem";
 import { FrameworkTag } from "../../../components/FrameworkTag";
+import { DomainScores, ProofBadge, VersionBadge } from "../../../components/ImpactBadges";
+import { fmt, impactView } from "../../../lib/impact-view";
+import type { IVResultV02 } from "@rb/impact-engine";
 
 export const dynamic = "force-dynamic";
 
@@ -81,8 +84,11 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
   const otherNet = elsewhere ? networkByChainId(elsewhere.chainId) : undefined;
   const explorer = NETWORK.chain.blockExplorers?.default.url ?? "";
 
-  const iv = s.ivResult as IVResult;
-  const tags = (s.frameworkTags as { sdg: string[]; ebf: string[] } | null) ?? { sdg: [], ebf: [] };
+  const view = impactView(s);
+  const iv = view.version === "v0.1" ? (s.ivResult as IVResult) : null;
+  const iv02 = view.version === "v0.2" ? (s.ivResult as IVResultV02 | null) : null;
+  const tags = (s.frameworkTags as { sdg: string[]; ebf: string[]; iris?: string[] } | null) ?? { sdg: [], ebf: [] };
+  const proofLinks = Array.isArray(s.proofLinks) ? (s.proofLinks as string[]) : [];
 
   return (
     <main className="page-wrap py-10 md:py-14">
@@ -132,6 +138,47 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
               <p className="mt-2 text-sm text-subtle">External links provided by the organisation, not hosted or checked by us.</p>
             </Section>
           )}
+          {proofLinks.length > 0 && (
+            <Section title="Public proof">
+              <ul className="space-y-1">
+                {proofLinks.map((u) => (
+                  <li key={u} className="break-all">
+                    <a href={u} target="_blank" rel="noopener noreferrer nofollow ugc" className="link">
+                      {u}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-sm text-subtle">
+                Links given by the organisation. A validator reviews them and sets the proof level (
+                <a href="/methodology#proof" className="link">P0 to P4</a>).
+              </p>
+            </Section>
+          )}
+          {iv02 && (
+            <Section title="Recognised actions">
+              <div className="space-y-3">
+                {iv02.breakdown.map((b) => (
+                  <div key={b.actionType} className="card px-4 py-3">
+                    <div className="flex justify-between gap-4">
+                      <a href={`/methodology/cards/${b.actionType}`} className="font-semibold capitalize hover:text-accent">
+                        {b.actionType.replace(/_/g, " ")}
+                      </a>
+                      <span className="font-semibold text-accent">{fmt(b.raw, 2)}</span>
+                    </div>
+                    <div className="mt-1 font-mono text-sm text-subtle">
+                      {fmt(b.units, 2)} {b.scoredUnit} × AW {b.aw} · SM {b.sm} · ESM {b.esm} · S {b.s}
+                    </div>
+                    <div className="mt-1 text-xs text-subtle">
+                      {b.awStatus} · {b.awSource}
+                    </div>
+                  </div>
+                ))}
+                {iv02.breakdown.length === 0 && <p className="text-subtle">No recognised actions.</p>}
+              </div>
+            </Section>
+          )}
+          {!iv02 && (
           <Section title="Recognised actions">
             <div className="space-y-3">
               {(iv?.breakdown ?? []).map((b) => (
@@ -148,6 +195,7 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
               {(!iv || iv.breakdown.length === 0) && <p className="text-subtle">No recognised actions.</p>}
             </div>
           </Section>
+          )}
         </div>
 
         <aside className="card p-6 lg:sticky lg:top-24">
@@ -155,11 +203,27 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
             // eslint-disable-next-line @next/next/no-img-element -- our own generated SVG
             <img src={`/api/submissions/${s.id}/image`} alt="tRWI card" className="art mb-6 aspect-square w-full" />
           )}
-          <div className="label-mono">Impact Value</div>
-          <div className="mt-1 font-display text-5xl text-accent">{Number(s.ivValue ?? 0).toLocaleString()}</div>
-          <div className="mt-2 text-sm text-subtle">
-            platform-assessed (beta) · not third-party certified · {s.tablesVersion ?? "n/a"}
-          </div>
+          {view.version === "v0.2" ? (
+            <>
+              <DomainScores scores={view.domainScores} />
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-subtle">
+                <span className="label-mono">Proof</span> <ProofBadge level={view.proofLevel} />
+                <VersionBadge version="v0.2" />
+              </div>
+              <div className="mt-3 text-sm text-subtle">
+                Impact Value (all areas) <b className="text-fg">{fmt(view.iv)}</b> · methodology v0.2, Community layer ·
+                Regen Bazaar&apos;s own relative index, not a certification
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="label-mono">Impact Value</div>
+              <div className="mt-1 font-display text-5xl text-accent">{Number(s.ivValue ?? 0).toLocaleString()}</div>
+              <div className="mt-2 text-sm text-subtle">
+                platform-assessed (beta) · not third-party certified · {s.tablesVersion ?? "n/a"}
+              </div>
+            </>
+          )}
 
           <div className="mt-5 flex flex-wrap gap-1.5">
             {tags.sdg.map((t) => (

@@ -35,8 +35,8 @@ export function Footer() {
             Verified real-world impact as a tradable asset class, for NGOs and the people who fund them.
           </p>
           <p className="mt-4 text-sm text-subtle">
-            Testnet beta: test networks and test tokens only, no real money moves. Impact Value is platform-assessed,
-            not third-party certified.
+            Testnet beta: test networks and test tokens only, no real money moves. Impact Value is Regen Bazaar&apos;s
+            own relative index (methodology v0.2), not a certification.
           </p>
         </div>
         <FooterCol title="Product" links={PRODUCT} />

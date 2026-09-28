@@ -305,3 +305,11 @@ test("table: same 34 actions as v0.1, every weight has a status and a source", (
     if (w.s) assert.ok(w.s.source.length > 0, k);
   }
 });
+
+test("every v0.2 action has a justification card", async () => {
+  const { CARDS_V02 } = await import("../src/cards-v02.ts");
+  assert.deepEqual(Object.keys(CARDS_V02).sort(), Object.keys(ACTION_WEIGHTS_V02).sort());
+  for (const [k, c] of Object.entries(CARDS_V02)) {
+    assert.ok(c.definition && c.anchor && c.calc && c.evidence && c.questions.length > 0, k);
+  }
+});

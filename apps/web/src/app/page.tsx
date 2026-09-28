@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DOMAIN_LABEL, fmt, sumPhysical } from "../lib/impact-view";
 import { and, countDistinct, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { impactSubmissions, listings } from "@rb/db/schema";
 import { getDb } from "../lib/db";
@@ -51,10 +52,23 @@ export default async function Home() {
     .where(inArray(impactSubmissions.status, ["verified", "tokenized"]));
   // Distinct reports, not listing rows: a few early test reports were listed on two networks before the
   // one-report-one-network rule, and counting rows would show more listings than reports.
+  const v02Rows = await db
+    .select({ methodologyVersion: impactSubmissions.methodologyVersion, domainScores: impactSubmissions.domainScores })
+    .from(impactSubmissions)
+    .where(and(inArray(impactSubmissions.status, ["verified", "tokenized"]), eq(impactSubmissions.methodologyVersion, "v0.2")));
+  // Physical totals per impact area (methodology v0.2); the single IV stays for older reports only.
+  const physicalStats = [...sumPhysical(v02Rows)].flatMap(([d, m]) => {
+    const order = ["tCO2e/yr", "tCO2e", "kg", "animals", "students", "people"];
+    const rank = (unit: string) => (order.includes(unit) ? order.indexOf(unit) : order.length);
+    const best = [...m].sort((a, b) => rank(a[0]) - rank(b[0]))[0];
+    return best ? [{ v: `${best[0].startsWith("tCO2e") ? "≈ " : ""}${fmt(best[1])}`, k: `${best[0]} · ${DOMAIN_LABEL[d].toLowerCase()}` }] : [];
+  });
   const [listed] = await db.select({ n: countDistinct(listings.submissionId) }).from(listings).where(eq(listings.active, true));
   const STATS = [
     { v: Number(stats?.reports ?? 0).toLocaleString("en-US"), k: "verified impact reports" },
-    { v: Number(stats?.totalIv ?? 0).toLocaleString("en-US", { maximumFractionDigits: 0 }), k: "total Impact Value" },
+    ...(physicalStats.length
+      ? physicalStats.slice(0, 3)
+      : [{ v: Number(stats?.totalIv ?? 0).toLocaleString("en-US", { maximumFractionDigits: 0 }), k: "total Impact Value" }]),
     { v: Number(stats?.orgs ?? 0).toLocaleString("en-US"), k: "organisations" },
     { v: Number(listed?.n ?? 0).toLocaleString("en-US"), k: "reports listed on-chain" },
     { v: String(enabledNetworks().length), k: "test networks" },
@@ -180,7 +194,7 @@ export default async function Home() {
             ))}
           </ol>
           <p className="mt-10">
-            <Link href="/methodology" className="link">How Impact Value is calculated →</Link>
+            <Link href="/methodology" className="link">How impact is scored →</Link>
             <span className="mx-3 text-subtle">·</span>
             <Link href="/roadmap" className="link">Roadmap →</Link>
           </p>

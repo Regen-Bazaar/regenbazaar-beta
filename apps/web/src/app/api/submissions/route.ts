@@ -159,6 +159,7 @@ export async function POST(req: Request) {
         location: location.value,
         proofLinks: proofLinks.value,
         registry: registry.value,
+        declaredActions: Array.isArray(body.actions) ? (body.actions as unknown[]).slice(0, 40) : undefined,
       },
       { extractor },
     );

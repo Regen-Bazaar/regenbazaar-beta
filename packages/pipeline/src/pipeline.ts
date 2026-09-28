@@ -44,6 +44,9 @@ export interface SubmissionInput {
   location?: SubmissionLocation | null;
   proofLinks?: string[];
   registry?: RegistryDeclaration | null;
+  // Actions as checked and corrected by the submitter (form step 2). v0.2 scores these; the AI's own
+  // reading is stored next to them so a validator sees every edit.
+  declaredActions?: unknown;
 }
 
 export interface SubmissionLocation {
@@ -283,6 +286,16 @@ function isValidAction(x: unknown): x is ExtractedAction {
   );
 }
 
+function sameActions(a: ExtractedActionV02[], b: ExtractedActionV02[]): boolean {
+  const key = (x: ExtractedActionV02[]) =>
+    JSON.stringify(
+      x
+        .map((y) => [y.actionType, y.quantity, y.unit.toLowerCase(), y.areaHa ?? null, y.densityPerHa ?? null, y.survivalRate ?? null])
+        .sort((p, q) => String(p[0]).localeCompare(String(q[0])) || Number(p[1]) - Number(q[1])),
+    );
+  return key(a) === key(b);
+}
+
 export async function processSubmission(db: DB, input: SubmissionInput, opts: ProcessOptions = {}) {
   const version = opts.methodologyVersion ?? "v0.2";
   const sanitize = version === "v0.2" ? sanitizeActionsV02 : sanitizeActions;
@@ -323,8 +336,19 @@ export async function processSubmission(db: DB, input: SubmissionInput, opts: Pr
     return { submission, iv };
   }
 
-  const ctx: ImpactContext & ImpactContextV02 = { ...(input.context ?? {}) };
+  const declared = sanitizeActionsV02(input.declaredActions);
+  const aiActions = actions;
+  const submitterEdited = declared.length > 0 && !sameActions(declared, aiActions);
+  if (declared.length > 0) actions = declared;
+
+  const ctx: ImpactContext & ImpactContextV02 & { aiActions?: ExtractedActionV02[]; submitterEdited?: boolean } = {
+    ...(input.context ?? {}),
+  };
   delete ctx.esm; // ESM comes from a validator, never from the submitter
+  if (declared.length > 0) {
+    ctx.aiActions = aiActions;
+    ctx.submitterEdited = submitterEdited;
+  }
   if (!ctx.ecosystem && input.location?.ecosystem) ctx.ecosystem = input.location.ecosystem;
   if (input.registry) ctx.registry = input.registry;
   const iv = computeImpactValueV02(actions, ctx);

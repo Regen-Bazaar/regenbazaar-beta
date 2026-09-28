@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { impactSubmissions, organizations } from "@rb/db/schema";
 import { renderImpactCard } from "@rb/pipeline";
 import { getDb } from "../../../../../lib/db";
+import { cardHeadline, impactView } from "../../../../../lib/impact-view";
 
 export const runtime = "nodejs";
 
@@ -28,6 +29,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     sdgs: (row.s.frameworkTags as { sdg?: string[] } | null)?.sdg ?? [],
     periodStart: c.periodStart ?? null,
     periodEnd: c.periodEnd ?? null,
+    headline: cardHeadline(row.s),
+    proofLevel: impactView(row.s).proofLevel,
   });
   return new Response(svg, {
     headers: {

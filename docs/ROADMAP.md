@@ -20,7 +20,9 @@ Also on the site: https://app.regenbazaar.com/roadmap
 - One report, one network: each impact report is listed only on the network it was submitted on, so it is never sold twice
 - Contracts source-verified; 61 Foundry tests; June 2026 security self-audit ([proof](https://sepolia.arbiscan.io/address/0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030#code))
 - Stablecoin checkout in Paxos USDG, with the organisation paid in the same transaction ([proof](https://explorer.testnet.chain.robinhood.com/tx/0xea4a18d20c2fc3c4ed2a46ef7681129a99b905118745ff2de9ad95609ca2ba77))
-- AI extraction of plain-language reports, deterministic published scoring formula (v0.1), on-chain EAS attestations ([proof](https://app.regenbazaar.com/methodology))
+- AI extraction of plain-language reports, deterministic published scoring formula, on-chain EAS attestations ([proof](https://app.regenbazaar.com/methodology))
+- Methodology v0.2 (Community layer): physical units from public coefficients, a published card with source status for every weight, scores per impact domain, double-counting rules, and a sensitivity test ([proof](https://app.regenbazaar.com/methodology))
+- Proof levels P0 to P4 set by a validator; proof links fetched safely on the server, saved as a dated snapshot and checked for dates, numbers and place
 - Generated artwork for every tRWI, pinned to IPFS as the token image
 - Funder page with holdings and retirement; step-by-step guide ([proof](https://app.regenbazaar.com/guide))
 - Public-beta safety: content moderation, rate limits, reviewer-only approvals, duplicate hints for reviewers
@@ -42,10 +44,8 @@ Also on the site: https://app.regenbazaar.com/roadmap
 
 **Goal:** Make the Impact Value a number a funder can rely on, and make double counting hard.
 
-- Methodology v0.2 for community groups and small organisations: environmental actions in physical units from public coefficients (IPCC default tables, US EPA WARM, IFI grid emission factors, peer-reviewed mangrove rates); social, education and health actions defined by IRIS+ metrics
-- A written rationale for every scoring weight, with its source or marked as a platform estimate, and a sensitivity test of how rankings change when weights move
-- Scores per impact domain (environment, animal welfare, education, poverty, social, health), with the overall Impact Value kept for pricing and rewards
-- Proof of impact: links to public posts and reports, dated and geotagged photos, a second-party witness; an AI check flags mismatches and a person sets the proof level
+- Cost survey with 5 to 10 pilot groups (a cleanup, a sterilisation, a lesson) to set the domain coefficients and the price rate
+- Dated and geotagged photos read on upload, and a second-party witness flow, as evidence for proof levels P2 and P3
 - Ecosystem sensitivity from the location of the work, using open data (ecoregions, coral reef and mangrove maps, forest change)
 - Price in US dollars derived from the Impact Value, the proof level and the difficulty of the work
 - Versioned scoring, so past reports keep the score of the version that produced them

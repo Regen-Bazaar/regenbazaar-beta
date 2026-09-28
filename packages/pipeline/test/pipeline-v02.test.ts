@@ -112,3 +112,26 @@ test("parseRegistry: known standards, safe serials, no serial without a standard
   assert.equal(parseRegistry({ standard: "none", serial: "123" }).ok, false);
   assert.equal(parseRegistry({ standard: "verra", serial: "<script>" }).ok, false);
 });
+
+test("declared actions (form step 2) are scored; the AI reading is kept and edits are marked", async () => {
+  const { db } = await createTestDb();
+  const o = await org(db, "0b003");
+  const { submission, iv } = await processSubmission(db, {
+    orgId: o.id,
+    title: "Mangroves",
+    description: "We planted 3000 mangroves",
+    declaredActions: [{ actionType: "mangroves_planted", quantity: 3000, unit: "trees", areaHa: 1.2 }],
+  });
+  const ctx = submission.context as { aiActions: unknown[]; submitterEdited: boolean };
+  assert.equal(ctx.submitterEdited, true); // area added by the NGO
+  assert.deepEqual(ctx.aiActions, [{ actionType: "mangroves_planted", quantity: 3000, unit: "trees" }]);
+  assert.ok(iv.impactValue > 0);
+
+  const same = await processSubmission(db, {
+    orgId: o.id,
+    title: "Cleanup",
+    description: "Collected 380 kg of waste",
+    declaredActions: [{ actionType: "waste_collected_kg", quantity: 380, unit: "kg" }],
+  });
+  assert.equal((same.submission.context as { submitterEdited: boolean }).submitterEdited, false);
+});
