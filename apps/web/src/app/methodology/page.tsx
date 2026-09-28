@@ -225,7 +225,7 @@ export default function Methodology() {
                 get no bonus per hectare. All other actions: ×1.0.
               </p>
               <p>
-                <b>ESM, environmental sensitivity</b> ({ESM_MIN} to {ESM_MAX}, environment only): suggested from open maps
+                <b>ESM, environmental sensitivity</b> ({ESM_MIN} to {ESM_MAX}, environment only):
                 a validator checks the site coordinates on open maps (mangroves, reefs, forest) and sets it. Until then, 1.0.
               </p>
               <p>
