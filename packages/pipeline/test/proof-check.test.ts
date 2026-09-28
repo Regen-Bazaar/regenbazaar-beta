@@ -6,6 +6,7 @@ import {
   compareWithClaim,
   duplicateFlags,
   extractFactsRegex,
+  guardedLookup,
   htmlToText,
   isBlockedAddress,
   safeFetch,
@@ -172,4 +173,14 @@ test("the same snapshot in another report is flagged as duplicate", () => {
   assert.equal(out[0].flags[0].code, "duplicate_media");
   assert.match(out[0].flags[0].detail, /41/);
   assert.deepEqual(out[1].flags, []);
+});
+
+test("guarded lookup answers both Node modes (all addresses, or one) and refuses private ones", async () => {
+  const lookup = guardedLookup(async () => [{ address: "93.184.216.34", family: 4 }, { address: "2606:4700::1111", family: 6 }]);
+  const all = await new Promise<unknown>((res, rej) => lookup("x.org", { all: true }, (e, a) => (e ? rej(e) : res(a))));
+  assert.deepEqual(all, [{ address: "93.184.216.34", family: 4 }, { address: "2606:4700::1111", family: 6 }]);
+  const one = await new Promise<unknown[]>((res, rej) => lookup("x.org", {}, (e, a, f) => (e ? rej(e) : res([a, f]))));
+  assert.deepEqual(one, ["93.184.216.34", 4]);
+  const bad = guardedLookup(async () => [{ address: "10.0.0.1", family: 4 }]);
+  await assert.rejects(new Promise((res, rej) => bad("x.org", { all: true }, (e, a) => (e ? rej(e) : res(a)))), /private or internal/);
 });

@@ -123,6 +123,28 @@ export interface SafeFetchOptions {
   maxRedirects?: number;
 }
 
+type LookupCallback = (err: NodeJS.ErrnoException | null, address: string | LookupAddress[], family?: number) => void;
+
+/**
+ * DNS lookup for the socket that refuses private or internal addresses. Node 20+ asks for all addresses
+ * (`all: true`, for IPv4/IPv6 selection) and expects an array back; older callers expect one address.
+ */
+export function guardedLookup(resolver: Resolver) {
+  return (host: string, opts: { all?: boolean } | number | undefined, cb: LookupCallback) => {
+    resolver(host).then(
+      (addrs) => {
+        if (!addrs.length || addrs.some((a) => isBlockedAddress(a.address))) {
+          cb(new ProofFetchError("host resolves to a private or internal address") as NodeJS.ErrnoException, "", 4);
+          return;
+        }
+        if (typeof opts === "object" && opts?.all) cb(null, addrs);
+        else cb(null, addrs[0].address, addrs[0].family);
+      },
+      (e) => cb(e as NodeJS.ErrnoException, "", 4),
+    );
+  };
+}
+
 function fetchOnce(u: URL, resolver: Resolver, timeoutMs: number, maxBytes: number) {
   return new Promise<{ status: number; headers: Record<string, string | string[] | undefined>; body: Buffer; truncated: boolean }>(
     (resolve, reject) => {
@@ -133,19 +155,7 @@ function fetchOnce(u: URL, resolver: Resolver, timeoutMs: number, maxBytes: numb
           headers: { "user-agent": "RegenBazaarProofCheck/1.0 (+https://www.regenbazaar.com)", accept: "text/html,text/plain;q=0.9,*/*;q=0.1" },
           timeout: timeoutMs,
           // Resolution happens here, at connect time: every address is checked, a blocked one aborts.
-          lookup: (host, _opts, cb) => {
-            resolver(host).then(
-              (addrs) => {
-                const bad = addrs.find((a) => isBlockedAddress(a.address));
-                if (!addrs.length || bad) {
-                  cb(new ProofFetchError("host resolves to a private or internal address") as NodeJS.ErrnoException, "", 4);
-                  return;
-                }
-                cb(null, addrs[0].address, addrs[0].family);
-              },
-              (e) => cb(e as NodeJS.ErrnoException, "", 4),
-            );
-          },
+          lookup: guardedLookup(resolver),
         },
         (res) => {
           const chunks: Buffer[] = [];
