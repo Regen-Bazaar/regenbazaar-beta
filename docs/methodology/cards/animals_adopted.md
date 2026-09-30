@@ -11,7 +11,7 @@ Methodology v0.2, Community layer. Domain: animal welfare. Part of Regen Bazaar'
 | Anchor | None (v0.1 value 0.6). WOAH 7.7.20 covers rehoming. |
 | Calculation | animals × 0.6. |
 | Status | assumption (needs check). Source: v0.1 value; WOAH 7.7.20 |
-| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
+| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, platform value |
 | Sensitivity (±50%) | sensitive (ranking moves at −50%: 2, at +50%: 0) |
 | Five Dimensions rubric | depth 3, duration 3, vulnerability 3 → product 27; rubric-implied weight 0.771 (1.29× current) |
 | Proof that fits | P2 photos with adopters; P3 adoption contract; P4 shelter register. |

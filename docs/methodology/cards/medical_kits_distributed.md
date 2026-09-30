@@ -11,7 +11,7 @@ Methodology v0.2, Community layer. Domain: health. Part of Regen Bazaar's own re
 | Anchor | None (v0.1 value 0.1). |
 | Calculation | kits × 0.1. |
 | Status | assumption (needs check). Source: v0.1 value |
-| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
+| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, platform value |
 | Sensitivity (±50%) | unstable (ranking moves at −50%: 4, at +50%: 3) |
 | Five Dimensions rubric | depth 1, duration 1, vulnerability 3 → product 3; rubric-implied weight 0.1 (1.00× current) |
 | Proof that fits | P2 photos; P3 partner confirmation. |

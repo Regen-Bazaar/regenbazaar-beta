@@ -11,7 +11,7 @@ Methodology v0.2, Community layer. Domain: poverty. Part of Regen Bazaar's own r
 | Anchor | None (v0.1 value 0.02). With families_supported in the same report, only the higher row counts. |
 | Calculation | meals × 0.02. |
 | Status | assumption (needs check). Source: v0.1 value |
-| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
+| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, platform value |
 | Sensitivity (±50%) | unstable (ranking moves at −50%: 6, at +50%: 2) |
 | Five Dimensions rubric | depth 1, duration 1, vulnerability 3 → product 3; rubric-implied weight 0.14 (7.00× current) |
 | Proof that fits | P1 post; P2 photos with dates; P3 partner or community confirmation; P4 distribution register. |

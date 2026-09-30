@@ -10,11 +10,11 @@ import { isListable, proofFactor, type ProofLevel } from "./proof.ts";
 
 export const PRICE_MODEL_VERSION_V02 = "v0.2-usd-2026-09";
 
-/** USD per IV point. Provisional until the cost survey with pilot groups (D6). */
+/** USD per IV point, used only for reports without a cost declaration (cost-v02.ts prices the rest). Platform value. */
 export const PRICE_RATE_USD_PER_IV: SourcedValue = {
   value: 1.0,
   status: "assumption",
-  source: "provisional; calibrated with the pilot cost survey (D6)",
+  source: "platform value; fallback for reports without a cost declaration",
   needsCheck: true,
 };
 

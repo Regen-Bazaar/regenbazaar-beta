@@ -11,7 +11,7 @@ Methodology v0.2, Community layer. Domain: animal welfare. Part of Regen Bazaar'
 | Anchor | None (v0.1 value 0.5). |
 | Calculation | animals × 0.5. |
 | Status | assumption (needs check). Source: v0.1 value |
-| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
+| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, platform value |
 | Sensitivity (±50%) | unstable (ranking moves at −50%: 2, at +50%: 3) |
 | Five Dimensions rubric | depth 2, duration 2, vulnerability 3 → product 12; rubric-implied weight 0.343 (0.69× current) |
 | Proof that fits | P1 public post; P2 intake photos with dates; P3 vet or shelter partner record; P4 official intake register. |

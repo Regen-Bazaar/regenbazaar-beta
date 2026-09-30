@@ -11,7 +11,7 @@ Within a domain, the rubric-implied weight is proportional to depth × duration 
 the domain's total equals the current total. The table compares it with the current weight.
 
 **Status: proposal for review.** The scores are the platform's first judgement. v0.2 tables keep the v0.1
-weights until the owner, the cost survey and the expert round confirm the scores, because units inside a
+weights until the owner and the expert round confirm the scores, because units inside a
 domain differ in size (a meal and a job are both "one unit"), which the rubric alone cannot correct.
 Rows at more than 2× or under 0.5× the current weight go to experts first.
 

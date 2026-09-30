@@ -11,7 +11,7 @@ Methodology v0.2, Community layer. Domain: education. Part of Regen Bazaar's own
 | Anchor | None (v0.1 value 0.2). Calibration source for the expert round: World Bank LAYS (learning-adjusted years of schooling). |
 | Calculation | students × 0.2. Workshops in the same report score 0. |
 | Status | assumption (needs check). Source: v0.1 value |
-| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
+| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, platform value |
 | Sensitivity (±50%) | sensitive (ranking moves at −50%: 0, at +50%: 2) |
 | Five Dimensions rubric | depth 2, duration 2, vulnerability 2 → product 8; rubric-implied weight 0.237 (1.18× current) |
 | Proof that fits | P1 post; P2 class photos with dates; P3 school or partner letter; P4 attendance register or test results. |

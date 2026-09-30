@@ -10,7 +10,7 @@ export interface SourcedValue {
   value: number;
   status: SourceStatus;
   source: string; // short citation; the full reasoning is in docs/methodology/cards/<action>.md
-  needsCheck?: boolean; // value is provisional until the cost survey (D6) or the expert round
+  needsCheck?: boolean; // value is provisional until the expert round
 }
 
 /** A parsed action. v0.2 adds optional physical details the NGO can declare. */
