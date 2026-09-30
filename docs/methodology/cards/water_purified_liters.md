@@ -13,7 +13,7 @@ Methodology v0.2, Community layer. Domain: environment. Part of Regen Bazaar's o
 | Anchor | Gold Standard Safe Drinking Water Supply v2.0 (July 2026): caps of 1.3 L/day under 5, 4.5 L/day ages 5–18, 5.5 L/day adults; 5% deduction when defaults are used. Quality: no detectable E. coli per 100 ml (v1.0). Weight 0.0055 per person-day keeps the v0.1 scale. |
 | Calculation | person-days = litres ÷ 5.5 × 0.95; score = person-days × 0.0055 × ESM. |
 | Status | assumption (needs check). Source: v0.1 scale (0.001/L × 5.5 L); needs check |
-| Multipliers | SM (area factor): no, 1.0. ESM: yes, 1.0–1.3. Domain coefficient k: 1.0, pending cost survey |
+| Multipliers | SM (area factor): no, 1.0. ESM: yes, 1.0–1.3. Domain coefficient k: 1.0, platform value |
 | Sensitivity (±50%) | not in the sample set |
 | Proof that fits | P2 photos of the system in use; P3 school or community confirmation; P4 water quality test (E. coli). |
 | SDG tags (contributes to) | SDG-6 |

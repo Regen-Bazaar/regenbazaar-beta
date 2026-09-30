@@ -15,7 +15,7 @@ v0.1 and v0.2 numbers are on different scales and should not be compared directl
 | PIM | 1.0 to 1.8 by density | removed | reach is counted directly |
 | ACDM | 1.0 to 1.42 in IV | moved to price | difficulty is a cost |
 | Survival S | none | coral 0.65, mangroves by surviving share | not every planted unit survives |
-| Domain coefficients k | implicit | six published numbers, 1.0 until the cost survey | makes the cross-domain value judgement explicit |
+| Domain coefficients k | implicit | six published numbers, all 1.0 (platform values) | makes the cross-domain value judgement explicit |
 | Proof | did not affect anything | P0–P4, set by a person; affects listing and price only | confidence is separate from quantity |
 | Duplicates in one report | not handled | merge lines; area vs trees; registry carbon; workshops vs participants; meals vs families | the same work counted once |
 | Volunteers | 0.05 each | 0, shown as context | an input, not an outcome |

@@ -13,7 +13,7 @@ Methodology v0.2, Community layer. Domain: education. Part of Regen Bazaar's own
 | Anchor | None (v0.1 value 1.0). |
 | Calculation | scholarships × 1.0. |
 | Status | assumption (needs check). Source: v0.1 value |
-| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
+| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, platform value |
 | Sensitivity (±50%) | not in the sample set |
 | Proof that fits | P3 school confirmation; P4 payment record to the school. |
 | SDG tags (contributes to) | SDG-4 |

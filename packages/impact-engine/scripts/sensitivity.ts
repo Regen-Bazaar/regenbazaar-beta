@@ -77,4 +77,4 @@ ${base.map((n, i) => `| ${i + 1} | ${n} | ${baseIv.get(n)} |`).join("\n")}
 ${rows.join("\n")}
 
 Stable: ranking unchanged both ways. Sensitive: 1–2 positions move. Unstable: more; these go to experts first.
-Weights that change places across domains depend on the domain coefficients k (all 1.0 until the cost survey).`);
+Weights that change places across domains depend on the domain coefficients k (all 1.0, platform values open to expert review).`);

@@ -117,8 +117,8 @@ export default function Methodology() {
               <p>
                 Impact Value is <b>Regen Bazaar&apos;s own relative index</b> for comparing reports from small NGOs and
                 community groups. It is <b>not a certification</b>, not a carbon or biodiversity credit, and it does not
-                let a buyer claim any emissions result. Weights marked &quot;assumption&quot; are platform judgement awaiting a
-                cost survey with pilot groups and an expert review. Projects certified by a registry can declare their
+                let a buyer claim any emissions result. Weights marked &quot;assumption&quot; are platform judgement, published so that
+                anyone can challenge them, and open to review by independent domain experts. Projects certified by a registry can declare their
                 serial number, which prevents double claiming.
               </p>
             </Section>
@@ -239,7 +239,8 @@ export default function Methodology() {
               <p>
                 No public source can say how many kilograms of litter equal one student taught. That exchange rate is a
                 value judgement, so it is explicit and small: six published numbers. Today all are{" "}
-                {Object.values(DOMAIN_K)[0].value}, pending a cost survey with pilot groups and an expert review.
+                {Object.values(DOMAIN_K)[0].value}: every domain counts equally. They are platform values, open to review by
+                independent domain experts.
               </p>
             </Section>
 

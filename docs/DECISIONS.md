@@ -344,3 +344,14 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   survey (rejected); platform-set hourly values by country (rejected: the minimum wage is shown, the group decides).
 - **Fragile:** FX and minimum wage tables need periodic updates (dated in code); cost inflation is caught only by the
   validator and by buyers comparing impact per $100.
+
+## 2026-09-29 — No cost survey
+- **What:** The pilot cost survey (D6) is dropped. Price comes from each group's declared, evidenced cost
+  (`cost-v02.ts`); validators compare the declared value of an hour with the country's statutory minimum hourly
+  wage as a reference. Domain coefficients k (all 1.0, domains count equally), weights marked "assumption" and the
+  $1 per IV point fallback rate (only for reports without a cost declaration) are published platform values, open
+  to review by independent domain experts. Wording on `/methodology`, `/roadmap`, the cards, engine comments and
+  docs no longer mentions a survey.
+- **Why:** owner, 2026-09-29: groups declare their own costs, so no survey is needed; entries above that say
+  "until the cost survey" are superseded by this one.
+- **Fragile:** k and the assumption weights have no calibration step other than the expert review.

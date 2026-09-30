@@ -13,7 +13,7 @@ Methodology v0.2, Community layer. Domain: health. Part of Regen Bazaar's own re
 | Anchor | None (v0.1 value 0.2). Calibration sources: WHO DALY methods (2024), DCP3 (CC BY 3.0 IGO). |
 | Calculation | patients × 0.2. With vaccinations or kits in the same report, a `review_overlap` flag goes to the validator. |
 | Status | assumption (needs check). Source: v0.1 value |
-| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
+| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, platform value |
 | Sensitivity (±50%) | not in the sample set |
 | Proof that fits | P2 photos; P3 clinic or health office letter; P4 patient register. |
 | SDG tags (contributes to) | SDG-3 |

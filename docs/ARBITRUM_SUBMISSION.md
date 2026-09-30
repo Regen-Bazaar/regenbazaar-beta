@@ -80,8 +80,7 @@ someone funds it, and the NGO is paid in the same transaction.
 - Proof levels P0 to P4 are set only by a validator; nothing below P1 is listed. The server fetches public proof
   links (https only, SSRF-protected), keeps a hash snapshot and raises flags; page text cannot change flags,
   level or IV.
-- Price in USD = IV × rate × proof level × complexity. The $1 per point rate is provisional, to be calibrated
-  with a cost survey of pilot groups.
+- Price in USD = (volunteer hours × the group's declared value of an hour + money spent) × proof level factor, split across editions; validators see the country's statutory minimum hourly wage as a reference. Reports without a cost declaration fall back to IV × rate × proof level × complexity, with a $1 per point platform rate.
 - v0.1 scores stay versioned and auditable; the v0.1 engine files are unchanged.
 
 ## Why on-chain, and why Arbitrum
@@ -206,7 +205,7 @@ Paul Burg (team leader on HackQuest).
 
 ## What's next
 - Embedded wallets and gasless checkout for non-crypto funders.
-- Methodology v0.2 calibration: cost survey with pilot groups for the rate, then review of the weights by domain experts.
+- Methodology v0.2: review of the weights and domain coefficients by independent domain experts.
 - Multisig + timelock, external audit, then mainnet (Arbitrum One / Robinhood Chain).
 
 ## HackQuest project card (Project Setup page)
@@ -249,7 +248,7 @@ Methodology v0.2, live since 2026-09-28: https://app.regenbazaar.com/methodology
 Impact Value is Regen Bazaar's own relative index, not a certification. Each impact area (environment, animal welfare, education, poverty, social, health) gets its own score in physical units: for example mangroves go from hectares to tCO2e per year (IPCC 2019, Bernal et al. 2018), waste is counted in kg. One overall IV (sum of area scores × k) is kept for price, EAS attestation and staking. Every one of the 34 weights has a public card marked sourced, derived or assumption, with its sensitivity: https://app.regenbazaar.com/methodology/cards/mangroves_planted
 Community layer: the 22 actions volunteers can deliver are scored; 12 that need capital, a licence or professionals score 0 for now.
 Proof levels P0 to P4 are set only by a validator, and a report below P1 is not listed. The server fetches public proof links (https only, SSRF-protected), stores a hash snapshot and raises flags on dates, numbers and place; page text cannot change the flags, the level or the IV (covered by a prompt-injection test).
-Price in USD = IV × rate × proof level × complexity, paid in stablecoin at that price. The $1 per point rate is provisional and will be calibrated with a cost survey of pilot groups.
+Price in USD = (volunteer hours × the group's declared value of an hour + money spent) × proof level factor, split across editions; validators see the country's statutory minimum hourly wage as a reference. Reports without a cost declaration fall back to IV × rate × proof level × complexity, with a $1 per point platform rate. Paid in stablecoin at that price.
 
 End-to-end check on Arbitrum Sepolia, 2026-09-28 (test data): v0.2 report, proof-link check, approval at P2, EAS attestation (https://arbitrum-sepolia.blockscout.com/tx/0x27b4b46eba1346a6bb76785c8d23f4046d4850e38203e07ab4811213be620b23), tRWI #10, purchase of 2 editions in tUSDG (https://arbitrum-sepolia.blockscout.com/tx/0xb49beb3138eb3e786a992cbe37476cb51f120b469e5bf2de7ef6dd58d98df488). The price, $0.5075 per edition, matched the formula, and the IV in the token matched the database: https://app.regenbazaar.com/submission/12d4ed94-0293-44ff-93a2-aaa8b53280bf
 

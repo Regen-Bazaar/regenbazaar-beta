@@ -64,10 +64,9 @@ export const PHASES: Phase[] = [
     grant: true,
     goal: "Make the Impact Value a number a funder can rely on, and make double counting hard.",
     items: [
-      "Cost survey with 5 to 10 pilot groups (a cleanup, a sterilisation, a lesson) to set the domain coefficients and the price rate",
       "Dated and geotagged photos read on upload, and a second-party witness flow, as evidence for proof levels P2 and P3",
       "Automatic ecosystem sensitivity at the site coordinates, read on demand from open global maps (ESA WorldCover land cover including mangroves, Allen Coral Atlas reefs, Global Forest Watch data) with no local copy of the maps; today a validator checks the site on the maps by hand",
-      "Calibrated price rate in US dollars from the pilot cost survey; a dollar stablecoin checkout on Celo before mainnet",
+      "A dollar stablecoin checkout on Celo before mainnet",
       "Versioned scoring, so past reports keep the score of the version that produced them",
       "Similarity checks across all reports, and checks against other impact registries so the same work is not sold twice",
       "Revocation: withdraw the on-chain attestation and delist a claim that turns out to be false",

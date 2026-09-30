@@ -13,7 +13,7 @@ Methodology v0.2, Community layer. Domain: poverty. Part of Regen Bazaar's own r
 | Anchor | None (v0.1 value 0.3). |
 | Calculation | people × 0.3. |
 | Status | assumption (needs check). Source: v0.1 value; JMP safely managed |
-| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
+| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, platform value |
 | Sensitivity (±50%) | not in the sample set |
 | Proof that fits | P2 photos of the installation; P3 community confirmation; P4 water quality test. |
 | SDG tags (contributes to) | SDG-6, SDG-1 |

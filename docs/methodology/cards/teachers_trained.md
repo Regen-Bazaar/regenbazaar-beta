@@ -11,7 +11,7 @@ Methodology v0.2, Community layer. Domain: education. Part of Regen Bazaar's own
 | Anchor | None (v0.1 value 0.5). GEEAP Smart Buys 2023 rates structured pedagogy with teacher guides as a good buy. |
 | Calculation | teachers × 0.5. |
 | Status | assumption (needs check). Source: v0.1 value |
-| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
+| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, platform value |
 | Sensitivity (±50%) | unstable (ranking moves at −50%: 2, at +50%: 2) |
 | Five Dimensions rubric | depth 2, duration 3, vulnerability 2 → product 12; rubric-implied weight 0.355 (0.71× current) |
 | Proof that fits | P2 training photos; P3 school or education office letter; P4 certificate list. |

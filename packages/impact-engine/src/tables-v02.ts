@@ -5,7 +5,7 @@
 // docs/methodology/cards/<action>.md. v0.1 tables (tables.ts) stay unchanged for old scores.
 //
 // Environment scores are in tCO2e-equivalent points (1 point = 1 tCO2e, same anchor as v0.1
-// co2_offset_ton = 1.0). Other domains keep v0.1 per-unit weights until the cost survey (D6) and the
+// co2_offset_ton = 1.0). Other domains keep v0.1 per-unit weights, labelled as assumptions, until the
 // expert round; the domain coefficients k connect them into one IV.
 
 import type { ImpactDomain } from "./types.ts";
@@ -160,14 +160,14 @@ export function isCommunityAction(actionType: string): boolean {
   return !!w && !w.parked;
 }
 
-/** k: published domain coefficients that turn domain scores into one IV. All 1.0 until the cost survey (D6). */
+/** k: published domain coefficients that turn domain scores into one IV. All 1.0 (domains count equally); platform values open to expert review. */
 export const DOMAIN_K: Record<ImpactDomain, SourcedValue> = {
-  environment: A(1.0, "pending cost survey (D6)"),
-  animal_welfare: A(1.0, "pending cost survey (D6)"),
-  education: A(1.0, "pending cost survey (D6)"),
-  poverty: A(1.0, "pending cost survey (D6)"),
-  social: A(1.0, "pending cost survey (D6)"),
-  health: A(1.0, "pending cost survey (D6)"),
+  environment: A(1.0, "platform value: domains count equally"),
+  animal_welfare: A(1.0, "platform value: domains count equally"),
+  education: A(1.0, "platform value: domains count equally"),
+  poverty: A(1.0, "platform value: domains count equally"),
+  social: A(1.0, "platform value: domains count equally"),
+  health: A(1.0, "platform value: domains count equally"),
 };
 
 /** SM v0.2: area-scale factor for area-based ecosystem actions, on the report's total area of one action. */
