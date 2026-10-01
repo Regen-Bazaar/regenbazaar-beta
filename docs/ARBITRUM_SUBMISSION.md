@@ -1,4 +1,4 @@
-# Arbitrum Open House Singapore: Online Buildathon · submission v4 (submitted 2026-09-27, card updated 2026-09-28)
+# Arbitrum Open House Singapore: Online Buildathon · submission v5 (submitted 2026-09-27, card updated 2026-09-28 and 2026-10-01)
 
 > Для Paul (в форму не вставлять): **подано 27.09.2026** (Paul сказал «да»), проект в Project Gallery:
 > https://www.hackquest.io/projects/Regen-Bazaar. До дедлайна карточку можно править (Edit Project); тексты ниже
@@ -6,6 +6,9 @@
 > повторного листинга, /roadmap, методология v0.1 → план v0.2, кран Paxos на Arbitrum Sepolia снова работает с 26.09.
 > v4 (28.09, «да» Paul): карточка обновлена под методику v0.2 в проде (PR #42) и сквозной тест на Arbitrum Sepolia;
 > картинки 3 и 4 заменены на скриншоты v0.2. Поля отправленной формы не менялись.
+> v5 (01.10, «да» Paul): формула цены, утверждённая Paul 01.10: Price in USD = Impact Value × rate × proof factor ×
+> cost coefficient (1.0 to 1.5); опроса пилотов нет, сложность в цене не участвует. Картинка 4 заменена на скриншот
+> формы со шагом «What it took» (`app-tokenize-v03.jpg`, снят с живого сайта 01.10).
 > Правила: `tRWI`, без длинных тире, веса platform-assessed, без трекшена, цифры партнёров не используются.
 
 - **Tracks:** Overall Prize, Promising Products Track, Grants (all three, Paul 25.09)
@@ -31,7 +34,7 @@ Fund verified real-world impact on-chain, paid in USDG, with provenance anyone c
   ~465-518k gas, 0.000022 ETH on Arbitrum Sepolia, 0.0000052 ETH on Robinhood Chain testnet.
 - **No double counting:** one report is listed on one network only; listing refuses a report already listed anywhere.
 - **Methodology v0.2 live (2026-09-28):** scores per impact area in physical units, 34 weight cards, proof
-  levels P0 to P4, USD price = IV × rate × proof × complexity. End-to-end check on Arbitrum Sepolia (test
+  levels P0 to P4, USD price = Impact Value × rate × proof factor × cost coefficient (1.0 to 1.5). End-to-end check on Arbitrum Sepolia (test
   data): EAS attestation https://arbitrum-sepolia.blockscout.com/tx/0x27b4b46eba1346a6bb76785c8d23f4046d4850e38203e07ab4811213be620b23, purchase in tUSDG https://arbitrum-sepolia.blockscout.com/tx/0xb49beb3138eb3e786a992cbe37476cb51f120b469e5bf2de7ef6dd58d98df488.
 - **No wallet needed to review:** the video and the proof transactions below.
 
@@ -80,8 +83,8 @@ someone funds it, and the NGO is paid in the same transaction.
 - Proof levels P0 to P4 are set only by a validator; nothing below P1 is listed. The server fetches public proof
   links (https only, SSRF-protected), keeps a hash snapshot and raises flags; page text cannot change flags,
   level or IV.
-- Price in USD = IV × rate × proof level × complexity. The $1 per point rate is provisional, to be calibrated
-  with a cost survey of pilot groups.
+- Price in USD = Impact Value × rate × proof factor × cost coefficient (1.0 to 1.5 from the costs a group
+  declares). The rate is $1 per IV point for now. Costs never replace the impact and are never added as dollars.
 - v0.1 scores stay versioned and auditable; the v0.1 engine files are unchanged.
 
 ## Why on-chain, and why Arbitrum
@@ -206,12 +209,12 @@ Paul Burg (team leader on HackQuest).
 
 ## What's next
 - Embedded wallets and gasless checkout for non-crypto funders.
-- Methodology v0.2 calibration: cost survey with pilot groups for the rate, then review of the weights by domain experts.
+- Review of the methodology v0.2 weights by independent domain experts.
 - Multisig + timelock, external audit, then mainnet (Arbitrum One / Robinhood Chain).
 
 ## HackQuest project card (Project Setup page)
 
-> Для Paul: поля карточки проекта, как сохранены 28.09. Кошелёк 0x7380…21B5 подключён вами (для получения приза, сеть Arbitrum).
+> Для Paul: поля карточки проекта, как сохранены 01.10. Кошелёк 0x7380…21B5 подключён вами (для получения приза, сеть Arbitrum).
 
 - **Name:** Regen Bazaar
 - **Intro** (199/200):
@@ -226,9 +229,10 @@ NGOs turn verified real-world impact into tRWI tokens that anyone can fund in Pa
 - **Project Link:** https://github.com/Regen-Bazaar/regenbazaar-beta
 - **X (Twitter):** RegenBazaar
 - **Images (max 4, 1280x720):** home and marketplace (dark theme); v0.2 report page with proof and v0.2 step-by-step
-  tokenize form (light theme, `RegenBazaar/assets/app-proof-v02.jpg`, `app-tokenize-v02.jpg`)
+  tokenize form (light theme, `RegenBazaar/assets/app-proof-v02.jpg`; form with the "What it took" step taken from the
+  live site on 2026-10-01)
 - **Demo video:** https://www.loom.com/share/a69dc479cec34ad3a5499168db8b7d77 (Loom, ~5 min)
-- **Description** (as on the card, 28.09):
+- **Description** (as on the card, 01.10):
 
 ```
 Regen Bazaar is a marketplace for tokenized real-world impact (tRWI). Small NGOs and community groups do measurable good (reforestation, cleanups, animal rescue, education) but cannot turn that work into something a funder can buy, hold and verify. Regen Bazaar closes that gap on Arbitrum.
@@ -249,18 +253,18 @@ Methodology v0.2, live since 2026-09-28: https://app.regenbazaar.com/methodology
 Impact Value is Regen Bazaar's own relative index, not a certification. Each impact area (environment, animal welfare, education, poverty, social, health) gets its own score in physical units: for example mangroves go from hectares to tCO2e per year (IPCC 2019, Bernal et al. 2018), waste is counted in kg. One overall IV (sum of area scores × k) is kept for price, EAS attestation and staking. Every one of the 34 weights has a public card marked sourced, derived or assumption, with its sensitivity: https://app.regenbazaar.com/methodology/cards/mangroves_planted
 Community layer: the 22 actions volunteers can deliver are scored; 12 that need capital, a licence or professionals score 0 for now.
 Proof levels P0 to P4 are set only by a validator, and a report below P1 is not listed. The server fetches public proof links (https only, SSRF-protected), stores a hash snapshot and raises flags on dates, numbers and place; page text cannot change the flags, the level or the IV (covered by a prompt-injection test).
-Price in USD = IV × rate × proof level × complexity, paid in stablecoin at that price. The $1 per point rate is provisional and will be calibrated with a cost survey of pilot groups.
+Price in USD = Impact Value × rate × proof factor × cost coefficient (1.0 to 1.5 from the costs a group declares), paid in stablecoin at that price. The rate is $1 per IV point for now.
 
-End-to-end check on Arbitrum Sepolia, 2026-09-28 (test data): v0.2 report, proof-link check, approval at P2, EAS attestation (https://arbitrum-sepolia.blockscout.com/tx/0x27b4b46eba1346a6bb76785c8d23f4046d4850e38203e07ab4811213be620b23), tRWI #10, purchase of 2 editions in tUSDG (https://arbitrum-sepolia.blockscout.com/tx/0xb49beb3138eb3e786a992cbe37476cb51f120b469e5bf2de7ef6dd58d98df488). The price, $0.5075 per edition, matched the formula, and the IV in the token matched the database: https://app.regenbazaar.com/submission/12d4ed94-0293-44ff-93a2-aaa8b53280bf
+End-to-end check on Arbitrum Sepolia, 2026-09-28 (test data): v0.2 report, proof-link check, approval at P2, EAS attestation (https://arbitrum-sepolia.blockscout.com/tx/0x27b4b46eba1346a6bb76785c8d23f4046d4850e38203e07ab4811213be620b23), tRWI #10, purchase of 2 editions in tUSDG (https://arbitrum-sepolia.blockscout.com/tx/0xb49beb3138eb3e786a992cbe37476cb51f120b469e5bf2de7ef6dd58d98df488). The price, $0.5075 per edition, matched the price formula in use that day, and the IV in the token matched the database: https://app.regenbazaar.com/submission/12d4ed94-0293-44ff-93a2-aaa8b53280bf
 
 Before Regen Bazaar we ran two single-organisation pilots of this model: Clean Phangan (community beach cleanups, Optimism) and EcoThailand Foundation (mangroves, Celo). Status: beta on testnets, no production users or revenue yet.
 
 Contracts are source-verified (Blockscout on both chains, Arbiscan); 61 Foundry tests; OpenZeppelin 5.1. Guide: https://app.regenbazaar.com/guide
 ```
-- **Progress During Hackathon** (as on the card, 28.09):
+- **Progress During Hackathon** (as on the card, 01.10):
 
 ```
-Built during the buildathon (https://github.com/Regen-Bazaar/regenbazaar-beta, PR #26 and follow-ups #27-#43):
+Built during the buildathon (https://github.com/Regen-Bazaar/regenbazaar-beta, PR #26 and follow-ups #27-#49):
 
 - Deployed and source-verified the full contract set on Arbitrum Sepolia (Blockscout + Arbiscan) and Robinhood Chain testnet (Blockscout).
 - USDG checkout: Paxos USDG allowlisted on both chains; real USDG purchases on Robinhood Chain testnet; labelled tUSDG stand-in on Arbitrum Sepolia, added while the Paxos faucet was not dispensing there.
@@ -272,8 +276,8 @@ Built during the buildathon (https://github.com/Regen-Bazaar/regenbazaar-beta, P
 - New interface: light and dark theme, readable type, phone layout.
 - LLM extraction via OpenRouter, model chosen by an eval of 8 low-cost models (no invented numbers, resists prompt injection).
 - Public-beta safety: LLM content moderation, input validation, rate limits, validator-only approvals, link-only evidence.
-- Methodology v0.2 "Community layer", live 2026-09-28 (PR #42): scores per impact area in physical units, 34 weight cards (sourced / derived / assumption), proof levels P0 to P4 set by a validator, server-side proof-link checks with hash snapshots, USD price = IV × rate × proof × complexity, step-by-step submission form, validator panel, per-area leaderboard. Tests: engine 57, pipeline 31, db 2.
-- End-to-end v0.2 check on Arbitrum Sepolia (test data): report, proof check, P2 approval, EAS attestation, tRWI #10, purchase of 2 editions in tUSDG; price and IV matched the formula.
+- Methodology v0.2 "Community layer", live 2026-09-28 (PR #42): scores per impact area in physical units, 34 weight cards (sourced / derived / assumption), proof levels P0 to P4 set by a validator, server-side proof-link checks with hash snapshots, USD price = Impact Value × rate × proof factor × cost coefficient (1.0 to 1.5 from declared costs) (PR #49), step-by-step submission form, validator panel, per-area leaderboard. Tests: engine 62, pipeline 33, db 2.
+- End-to-end v0.2 check on Arbitrum Sepolia (test data): report, proof check, P2 approval, EAS attestation, tRWI #10, purchase of 2 editions in tUSDG; price and IV matched the formula in use that day.
 
 Before the buildathon (not claimed): the Impact Value engine, the contract set and its June 2026 self-audit, a Celo Sepolia deployment.
 ```
