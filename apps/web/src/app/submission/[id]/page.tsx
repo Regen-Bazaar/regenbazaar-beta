@@ -281,7 +281,7 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
                         <span>Price (all {listing.maxEditions} editions)</span>
                         <span>
                           ${Number(listing.priceUsd).toLocaleString("en-US", { maximumFractionDigits: 2 })} ·{" "}
-                          {listing.priceModelVersion?.startsWith("v0.2-cost") ? "what the work took × proof level" : "IV × rate × proof × complexity"}
+                          {listing.priceModelVersion?.startsWith("v0.2") ? "IV × rate × proof × cost coefficient" : "IV × rate"}
                         </span>
                       </div>
                     )}

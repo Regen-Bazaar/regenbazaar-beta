@@ -38,7 +38,7 @@ export default async function Card({ params }: { params: Promise<{ action: strin
     ...(w.s ? ([["Survival factor S", `${w.s.value}, ${STATUS[w.s.status]}. Source: ${w.s.source}`]] as [string, string][]) : []),
     [
       "Multipliers",
-      `SM (area factor): ${w.areaFactor ? "yes" : "no, 1.0"}. ESM: ${w.domain === "environment" ? "1.0 to 1.3, confirmed by a validator" : "no, 1.0"}. Domain coefficient k: 1.0, pending cost survey.`,
+      `SM (area factor): ${w.areaFactor ? "yes" : "no, 1.0"}. ESM: ${w.domain === "environment" ? "1.0 to 1.3, confirmed by a validator" : "no, 1.0"}. Domain coefficient k: 1.0 (categories not compared).`,
     ],
     ...(c.rubric
       ? ([["Five Dimensions rubric", `depth ${c.rubric[0]}, duration ${c.rubric[1]}, vulnerability ${c.rubric[2]} (1 to 3 each; proposal for review)`]] as [string, string][])

@@ -117,8 +117,8 @@ export default function Methodology() {
               <p>
                 Impact Value is <b>Regen Bazaar&apos;s own relative index</b> for comparing reports from small NGOs and
                 community groups. It is <b>not a certification</b>, not a carbon or biodiversity credit, and it does not
-                let a buyer claim any emissions result. Weights marked &quot;assumption&quot; are platform judgement awaiting a
-                cost survey with pilot groups and an expert review. Projects certified by a registry can declare their
+                let a buyer claim any emissions result. Weights marked &quot;assumption&quot; are platform judgement awaiting an
+                expert review. Projects certified by a registry can declare their
                 serial number, which prevents double claiming.
               </p>
             </Section>
@@ -237,9 +237,8 @@ export default function Methodology() {
 
             <Section id="k" title="Domain coefficients (k)">
               <p>
-                No public source can say how many kilograms of litter equal one student taught. That exchange rate is a
-                value judgement, so it is explicit and small: six published numbers. Today all are{" "}
-                {Object.values(DOMAIN_K)[0].value}, pending a cost survey with pilot groups and an expert review.
+                The platform does not compare impact across categories at this stage: each category is scored in its own
+                physical units, and the six domain coefficients are all {Object.values(DOMAIN_K)[0].value}.
               </p>
             </Section>
 
@@ -266,24 +265,22 @@ export default function Methodology() {
               </p>
             </Section>
 
-            <Section id="price" title="Price: what the work took">
+            <Section id="price" title="Price: impact first, costs as a coefficient">
+              <div className="card p-5 text-center font-mono text-fg">price (USD) = IV × rate × P × E</div>
               <p>
-                Impact and price are separate. The impact score says what changed in the world; the price says what it took
-                to make it happen. The group declares its volunteer hours, the value of one hour, and the money it spent
-                (materials, transport, equipment, food and water, paid services), with receipts or photos where it can.
+                The Impact Value sets the price. The rate is ${PRICE_RATE_USD_PER_IV.value} per IV point for now. P is the
+                proof level factor. E is the cost coefficient: the group can declare what the work took (volunteer hours,
+                the value of an hour, money spent on materials, transport, equipment, food and water, paid services), and
+                that raises the price of its impact by at most 50% (E from 1.0 to 1.5). Costs are never added as dollars
+                and never replace the impact: more impact means a higher price at the same cost.
               </p>
-              <div className="card p-5 text-center font-mono text-fg">
-                price (USD) = (hours × value of an hour + money spent) × P
-              </div>
               <p>
-                P is the proof level factor. A validator sees the country&apos;s statutory minimum hourly wage next to the
-                declared value of an hour, as a reference frame, not a limit. Costs differ between countries, so the same
-                work can cost less in one place than another; buyers see the impact per $100 and choose.
+                A validator sees the country&apos;s statutory minimum hourly wage next to the declared value of an hour, as
+                a reference frame, not a limit. The 50% cap is set for this methodology version and is not calibrated yet.
               </p>
               <p>
                 First sales settle in a dollar stablecoin (USDG) at that price; resale is free. On the Celo test network
-                test CELO is counted as $1 until a stablecoin is added before mainnet. Reports without a cost declaration
-                keep the earlier rule (IV × ${PRICE_RATE_USD_PER_IV.value} × P × complexity); v0.1 reports keep IV ×{" "}
+                test CELO is counted as $1 until a stablecoin is added before mainnet. v0.1 reports keep IV ×{" "}
                 {PRICE_RATE_PER_IV} in the sale currency.
               </p>
             </Section>

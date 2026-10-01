@@ -11,7 +11,7 @@ Methodology v0.2, Community layer. Domain: social. Part of Regen Bazaar's own re
 | Anchor | Weight 0 (sourced: input metric). |
 | Calculation | 0. Flag `input_not_outcome`. |
 | Status | sourced. Source: input, not outcome (IRIS+ OI1166); shown as context |
-| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
+| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0 (categories not compared) |
 | Sensitivity (±50%) | not in the sample set |
 | Proof that fits | Counts as supporting evidence for other actions (group photo, sign-up list). |
 | SDG tags (contributes to) | SDG-17 |

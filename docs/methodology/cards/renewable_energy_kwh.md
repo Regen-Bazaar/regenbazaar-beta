@@ -13,7 +13,7 @@ Methodology v0.2, Community layer. Domain: environment. Part of Regen Bazaar's o
 | Anchor | IFI Default Grid Factors v3.0 (Dec 2021, UNFCCC), combined margin for intermittent sources, tCO2e/kWh: TH 0.000413, VN 0.000493, ID 0.000714, PH 0.000617, MY 0.000508, KH 0.000874, LA 0.000876, IN 0.000842. Unknown country: lowest listed factor, flagged. |
 | Calculation | kWh × grid factor × 1.0 × ESM. |
 | Status | sourced. Source: anchor: 1 point = 1 tCO2e avoided |
-| Multipliers | SM (area factor): no, 1.0. ESM: yes, 1.0–1.3. Domain coefficient k: 1.0, pending cost survey |
+| Multipliers | SM (area factor): no, 1.0. ESM: yes, 1.0–1.3. Domain coefficient k: 1.0 (categories not compared) |
 | Sensitivity (±50%) | not in the sample set |
 | Proof that fits | P2 photos of the installation and meter; P4 inverter or meter export. |
 | SDG tags (contributes to) | SDG-7, SDG-13 |

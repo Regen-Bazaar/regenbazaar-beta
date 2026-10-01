@@ -1,16 +1,9 @@
-// Price from declared cost (owner decision 2026-09-28). The group declares what the work took (volunteer
-// hours at its own hourly value, and money spent); proof and a validator check it. Impact (IV) is measured
-// separately and never depends on cost; buyers see impact per $100.
-//
-//   price (USD) = (hours × hourly value + money spent) × P        split across editions
-//
-// The country's statutory minimum hourly wage is shown to the validator as a reference frame only; nothing is
-// capped or rejected automatically.
+// Declared cost of the work (owner, 2026-10-01): the group states what the work took (volunteer hours at its own
+// hourly value, and money spent); proof and a validator check it. Cost is NOT the price: it only raises the price of
+// the impact through the cost coefficient E (price-v02.ts). The country's statutory minimum hourly wage is shown to
+// the validator as a reference frame only; nothing is capped or rejected automatically.
 
 import type { SourcedValue } from "./types-v02.ts";
-import { isListable, proofFactor, type ProofLevel } from "./proof.ts";
-
-export const PRICE_MODEL_VERSION_COST = "v0.2-cost-2026-09";
 
 export const COST_CATEGORIES = ["materials", "transport", "equipment", "food", "services", "other"] as const;
 export type CostCategory = (typeof COST_CATEGORIES)[number];
@@ -87,27 +80,6 @@ export function costToUsd(c: CostDeclaration): CostInUsd | null {
     totalUsd: round((labour + spent) * fx.value),
     fxRate: fx.value,
   };
-}
-
-export interface PriceFromCost {
-  totalUsd: number;
-  perEditionUsd: number;
-  costUsd: number;
-  p: number;
-  proofLevel: ProofLevel;
-  editions: number;
-  modelVersion: string;
-}
-
-/** Null when not listable (P0 / no level) or the currency has no rate. */
-export function priceFromCost(c: CostDeclaration, proofLevel: ProofLevel | null | undefined, editions = 1): PriceFromCost | null {
-  if (!proofLevel || !isListable(proofLevel)) return null;
-  const usd = costToUsd(c);
-  if (!usd) return null;
-  const eds = Number.isInteger(editions) && editions > 0 ? editions : 1;
-  const p = proofFactor(proofLevel);
-  const totalUsd = round(usd.totalUsd * p);
-  return { totalUsd, perEditionUsd: round(totalUsd / eds), costUsd: usd.totalUsd, p, proofLevel, editions: eds, modelVersion: PRICE_MODEL_VERSION_COST };
 }
 
 export interface LabourCheck {

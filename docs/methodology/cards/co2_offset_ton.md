@@ -13,7 +13,7 @@ Methodology v0.2, Community layer. Domain: environment. Part of Regen Bazaar's o
 | Anchor | Definition. Counts only with a registry serial; otherwise 0 and a `registry_required` flag, to prevent double claiming. |
 | Calculation | tCO2e × 1.0 × ESM. With a serial, tree and area rows of the same report become evidence only (score 0). |
 | Status | sourced. Source: anchor: 1 point = 1 tCO2e; only with a registry serial |
-| Multipliers | SM (area factor): no, 1.0. ESM: yes, 1.0–1.3. Domain coefficient k: 1.0, pending cost survey |
+| Multipliers | SM (area factor): no, 1.0. ESM: yes, 1.0–1.3. Domain coefficient k: 1.0 (categories not compared) |
 | Sensitivity (±50%) | not in the sample set |
 | Proof that fits | P4 registry record with serial number and retirement. |
 | SDG tags (contributes to) | SDG-13 |

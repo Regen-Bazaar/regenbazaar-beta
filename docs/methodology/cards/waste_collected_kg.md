@@ -11,7 +11,7 @@ Methodology v0.2, Community layer. Domain: environment. Part of Regen Bazaar's o
 | Anchor | None (v0.1 value 0.05 per kg kept). Implies 1 t of litter = 50 tCO2e-equivalent points, likely high relative to carbon. |
 | Calculation | kg × 0.05 × ESM. Tonnes, grams and pounds are converted to kg first; "bags" cannot be converted and are flagged. |
 | Status | assumption (needs check). Source: v0.1 value; unit per Verra Plastic / OBP / BVRio definitions, value needs check |
-| Multipliers | SM (area factor): no, 1.0. ESM: yes, 1.0–1.3. Domain coefficient k: 1.0, pending cost survey |
+| Multipliers | SM (area factor): no, 1.0. ESM: yes, 1.0–1.3. Domain coefficient k: 1.0 (categories not compared) |
 | Sensitivity (±50%) | unstable (ranking moves at −50%: 7, at +50%: 3) |
 | Five Dimensions rubric | depth 1, duration 1, vulnerability 2 → product 2; rubric-implied weight 0.09 (1.80× current) |
 | Proof that fits | P1 public post; P2 geotagged photos of bags and scale, two independent posts; P3 local authority or beach manager confirmation; P4 weighbridge or collection-point receipt. |
