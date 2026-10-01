@@ -175,7 +175,7 @@ https://app.regenbazaar.com/roadmap ("Journey so far"):
 - Arbitrum Sepolia, purchase through the live app:
   https://arbitrum-sepolia.blockscout.com/tx/0x9b4a1d72107faf1dcc218754e3e3a419a34f31c92fde71d60a496166cd65ceb5
 - Arbitrum Sepolia, end-to-end on methodology v0.2 (test data): report, proof level P2, EAS attestation,
-  tRWI #10, purchase of 2 editions in USDG, 2026-09-28:
+  tRWI #10, purchase of 2 editions in tUSDG (testnet stand-in for USDG), 2026-09-28:
   https://arbitrum-sepolia.blockscout.com/tx/0xb49beb3138eb3e786a992cbe37476cb51f120b469e5bf2de7ef6dd58d98df488
   (report page https://app.regenbazaar.com/submission/12d4ed94-0293-44ff-93a2-aaa8b53280bf)
 
