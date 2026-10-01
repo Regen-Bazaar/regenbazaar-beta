@@ -289,13 +289,13 @@ export function ReviewV02({
 }
 
 function CostPanel({ cost, country }: { cost?: CostDeclaration; country?: string }) {
-  if (!cost) return <p className="text-sm text-subtle">No cost declared: priced by the IV rule.</p>;
+  if (!cost) return <p className="text-sm text-subtle">No cost declared: cost coefficient E = 1.0.</p>;
   const usd = costToUsd(cost);
   const check = labourCheck(cost, country);
   const warn = check.ratio !== null && (check.ratio > 3 || check.ratio < 1);
   return (
     <div className="rounded-xl bg-raised p-4 text-sm">
-      <div className="label-mono mb-2">What it took (sets the price)</div>
+      <div className="label-mono mb-2">What it took (raises the price by up to 50%)</div>
       <div>
         {fmt(cost.volunteerHours, 1)} volunteer hours × {fmt(cost.hourlyValue, 2)} {cost.currency}
         {usd ? ` = $${fmt(usd.labourUsd, 2)}` : ""}
@@ -310,7 +310,7 @@ function CostPanel({ cost, country }: { cost?: CostDeclaration; country?: string
         {cost.currency}
         {usd ? ` = $${fmt(usd.spentUsd, 2)}` : ""}
       </div>
-      <div className="mt-2 font-semibold">{usd ? `Total ≈ $${fmt(usd.totalUsd, 2)}; price = total × proof level` : `No exchange rate for ${cost.currency}`}</div>
+      <div className="mt-2 font-semibold">{usd ? `Total ≈ $${fmt(usd.totalUsd, 2)}; price = IV × rate × proof × E (E up to 1.5 from this cost)` : `No exchange rate for ${cost.currency}`}</div>
       <p className="mt-1 text-xs text-subtle">The minimum wage is a reference, not a limit. Ask the group if something looks off.</p>
     </div>
   );

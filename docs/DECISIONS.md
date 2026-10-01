@@ -333,7 +333,7 @@ Append-only record of significant choices, why we made them, and the trade-offs 
 - **Rubric:** not used to set weights; kept as a documented cross-check (see the owner discussion of 2026-09-28).
 - **Deploy:** owner approved deploying v0.2 before the Arbitrum deadline, after a check on a server copy.
 
-## 2026-09-28 — Price from declared, evidenced cost (replaces IV × rate for new reports)
+## 2026-09-28 — Price from declared, evidenced cost (SUPERSEDED 2026-10-01: wrong, see the correction below)
 - **What:** `cost-v02.ts`: price USD = (volunteer hours × declared value of an hour + money spent) × P. The form's
   complexity step became "What it took". Validators see the country's statutory minimum hourly wage next to the
   declared hourly value (`MIN_WAGE_REFERENCE`, reference only). Amounts are converted with a dated FX table.
@@ -344,3 +344,12 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   survey (rejected); platform-set hourly values by country (rejected: the minimum wage is shown, the group decides).
 - **Fragile:** FX and minimum wage tables need periodic updates (dated in code); cost inflation is caught only by the
   validator and by buyers comparing impact per $100.
+
+## 2026-10-01 — Correction: price comes from Impact Value; costs are a coefficient
+- **What:** price USD = IV × rate × P × E. E = 1 + 0.5 × min(1, declared cost ÷ (IV × rate)), so declared costs raise
+  the price by at most 50% (`price-v02.ts`). Reports without costs: E = 1.0. Complexity C removed from the price.
+- **Correction of the 2026-09-28 entry "Price from declared, evidenced cost":** that entry was wrong. "Price = cost × P"
+  was Claude's proposal; the owner never decided to replace impact with cost. Owner, 2026-10-01: the impact value is
+  the main weight of the price; costs are only an additional coefficient, and spending $1000 does not add $1000.
+- **Fragile:** the +50% cap and the $1 rate are set for this methodology version, not calibrated. Unsold editions of
+  v0.2 listings were repriced in the database; sold editions keep the price they were bought at.

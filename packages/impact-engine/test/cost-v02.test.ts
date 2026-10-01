@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { FX_USD, MIN_WAGE_REFERENCE, costToUsd, labourCheck, priceFromCost } from "../src/cost-v02.ts";
+import { FX_USD, MIN_WAGE_REFERENCE, costToUsd, labourCheck } from "../src/cost-v02.ts";
 
 // Test-only entries (ISO 4217 "XTS" is reserved for testing; "ZZ" is not a country).
 FX_USD.XTS = { value: 0.03, status: "sourced", source: "test" };
@@ -13,19 +13,6 @@ test("cost in USD = (hours × hourly value + money spent) × FX", () => {
   assert.equal(c.labourUsd, 72); // 40 × 60 × 0.03
   assert.equal(c.spentUsd, 54); // 1800 × 0.03
   assert.equal(c.totalUsd, 126);
-});
-
-test("price = cost × P, split across editions; impact does not enter", () => {
-  const p = priceFromCost(decl, "P2", 100)!;
-  assert.equal(p.totalUsd, 100.8); // 126 × 0.8
-  assert.equal(p.perEditionUsd, 1.008);
-  assert.equal(priceFromCost(decl, "P4", 100)!.totalUsd, 126);
-});
-
-test("not priced without a listable proof level or a known currency", () => {
-  assert.equal(priceFromCost(decl, "P0"), null);
-  assert.equal(priceFromCost(decl, null), null);
-  assert.equal(priceFromCost({ ...decl, currency: "ABC" }, "P2"), null);
 });
 
 test("negative, NaN and absurd amounts are ignored or bounded", () => {

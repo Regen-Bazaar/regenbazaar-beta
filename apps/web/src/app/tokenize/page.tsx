@@ -11,7 +11,7 @@ import {
   computeImpactValueV02,
   costToUsd,
   isCommunityAction,
-  priceFromCost,
+  computePriceV02,
   ruleBasedExtract as extractAll,
   type CostCategory,
   type CostDeclaration,
@@ -181,7 +181,7 @@ export default function Tokenize() {
   if (periodStart && periodEnd && periodEnd < periodStart) problems.push("The end date is before the start date (step 3).");
   if (!proofLinks.length) problems.push("Add at least one public link as proof (step 4). Reports without proof (P0) are not listed.");
   if (proofLinks.some((u) => !u.startsWith("https://"))) problems.push("Proof links must start with https:// (step 4).");
-  if (!cost || !costUsd || costUsd.totalUsd <= 0) problems.push("Tell us what the work took: hours and money spent, in your currency (step 5).");
+  if (cost && !costUsd) problems.push("Choose a currency for what the work took (step 5).");
 
   function fillExample() {
     setTitle(EXAMPLE.title);
@@ -496,8 +496,8 @@ export default function Tokenize() {
           {step === 4 && (
             <div className="space-y-6">
               <p className="text-sm text-subtle">
-                What the work took sets the price. It does not change the impact score. Count everyone&apos;s time and the
-                money you spent; photos of receipts help the validator.
+                The price comes from your impact. What the work took can raise it by up to 50%; it does not change the impact
+                score. Count everyone&apos;s time and the money you spent; photos of receipts help the validator.
               </p>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div>
@@ -627,11 +627,13 @@ export default function Tokenize() {
               <div className="rounded-xl bg-raised p-4">
                 <div className="label-mono">Price</div>
                 {(() => {
-                  const est = cost ? priceFromCost(cost, expectedP === "P0" ? "P1" : expectedP) : null;
+                  const est = computePriceV02(iv.impactValue, expectedP === "P0" ? "P1" : expectedP, cost);
                   return (
                     <>
-                      <div className="mt-1 text-xl font-semibold">{est ? `≈ $${fmt(est.totalUsd, 2)}` : "add costs"}</div>
-                      <div className="text-xs text-subtle">what it took × proof level; final after review</div>
+                      <div className="mt-1 text-xl font-semibold">≈ ${fmt(est?.totalUsd ?? 0, 2)}</div>
+                      <div className="text-xs text-subtle">
+                        impact × rate × proof{est && est.e > 1 ? ` × ${fmt(est.e, 2)} for costs` : ""}; final after review
+                      </div>
                     </>
                   );
                 })()}
