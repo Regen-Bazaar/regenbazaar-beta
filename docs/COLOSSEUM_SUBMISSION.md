@@ -90,10 +90,12 @@ Links: X https://x.com/RegenBazaar · Telegram https://t.me/regen_bazaar · GitH
     Community layer: 22 volunteer actions scored, 12 that need capital or specialists kept aside.
   - Proof levels P0 to P4 set by a validator; the server checks public links (hash snapshot, date, number and
     place flags). Nothing below P1 is listed.
-  - Price in USD: IV × rate × P × complexity; primary sale in USDG. The rate is provisional, pending a cost
-    survey with pilot groups.
+  - Price in USD: IV × rate × P × E. The Impact Value sets the price; the rate is $1 per IV point for now; P is
+    the proof level factor; E is a cost coefficient (1.0 to 1.5) from the work the group declares, so declared
+    costs raise the price by at most 50% and never replace the impact. Primary sale in USDG.
   - Every score is stamped with its methodology version and never rescored; v0.1 reports keep their v0.1 value.
-- **Not yet:** weights marked "assumption" await a cost survey and expert review. Not a certification, not a
+- **Not yet:** weights marked "assumption" await a review by independent domain experts; the 50% cost cap is not
+  calibrated yet. Not a certification, not a
   carbon credit.
 
 ---
@@ -122,7 +124,7 @@ Links: X https://x.com/RegenBazaar · Telegram https://t.me/regen_bazaar · GitH
 - Capped royalty on secondary sales (max 10%), paid back to the NGO.
 - Later: verification services for organisations that need a higher proof level, and an API for funders and
   agents that allocate at volume.
-- Path to mainnet: multisig and timelock on admin roles, external audit, cost survey for the v0.2 weights, then Arbitrum One and
+- Path to mainnet: multisig and timelock on admin roles, external audit, expert review of the v0.2 weights, then Arbitrum One and
   Robinhood Chain mainnet.
 
 ---
@@ -197,8 +199,8 @@ Celo Sepolia: same v3 contracts at other addresses, `packages/contracts/deployme
 
 **"Where do the weights come from?"**
 v0.2 is live: each weight has a public card with its source status (sourced, derived, assumption) and a
-sensitivity test; environment uses IPCC 2019 and Bernal 2018. Weights marked "assumption" await a cost survey and
-expert review. Every score records its methodology version, so nothing is hidden. Note: the video was recorded
+sensitivity test; environment uses IPCC 2019 and Bernal 2018. Weights marked "assumption" await a review by
+independent experts. Every score records its methodology version, so nothing is hidden. Note: the video was recorded
 before v0.2.
 
 **"Why not just donate?"** A donation gives a receipt. tRWI gives a transferable, retirable asset tied to an
