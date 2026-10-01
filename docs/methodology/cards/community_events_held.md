@@ -11,7 +11,7 @@ Methodology v0.2, Community layer. Domain: social. Part of Regen Bazaar's own re
 | Anchor | None (v0.1 value 0.1). |
 | Calculation | events × 0.1. |
 | Status | assumption (needs check). Source: v0.1 value |
-| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
+| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0 (categories not compared) |
 | Sensitivity (±50%) | stable (ranking moves at −50%: 0, at +50%: 0) |
 | Five Dimensions rubric | depth 1, duration 1, vulnerability 1 → product 1; rubric-implied weight 0.024 (0.24× current) |
 | Proof that fits | P1 post; P2 photos. |

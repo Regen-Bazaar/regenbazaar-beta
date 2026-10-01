@@ -53,7 +53,7 @@ for (const [k, w] of Object.entries(ACTION_WEIGHTS_V02)) {
     `| Calculation | ${c.calc} |`,
     `| Status | ${statusLabel[w.aw.status]}. Source: ${w.aw.source} |`,
     ...(w.s ? [`| Survival factor S | ${w.s.value}, ${statusLabel[w.s.status]}. Source: ${w.s.source} |`] : []),
-    `| Multipliers | SM (area factor): ${w.areaFactor ? "yes" : "no, 1.0"}. ESM: ${w.domain === "environment" ? "yes, 1.0–1.3" : "no, 1.0"}. Domain coefficient k: 1.0, pending cost survey |`,
+    `| Multipliers | SM (area factor): ${w.areaFactor ? "yes" : "no, 1.0"}. ESM: ${w.domain === "environment" ? "yes, 1.0–1.3" : "no, 1.0"}. Domain coefficient k: 1.0 (categories not compared) |`,
     `| Sensitivity (±50%) | ${sens.get(k) ?? "not in the sample set"} |`,
     ...(r && !w.parked ? [`| Five Dimensions rubric | depth ${r[0]}, duration ${r[1]}, vulnerability ${r[2]} → product ${r[0] * r[1] * r[2]}; rubric-implied weight ${imp} (${ratio!.toFixed(2)}× current) |`] : []),
     `| Proof that fits | ${c.evidence} |`,

@@ -13,7 +13,7 @@ Methodology v0.2, Community layer. Domain: poverty. Part of Regen Bazaar's own r
 | Anchor | None (v0.1 value 1.5). Headcount must be converted to FTE. |
 | Calculation | FTE × 1.5. |
 | Status | assumption (needs check). Source: v0.1 value; full-time equivalents |
-| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
+| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0 (categories not compared) |
 | Sensitivity (±50%) | not in the sample set |
 | Proof that fits | P3 employer letter; P4 payroll record. |
 | SDG tags (contributes to) | SDG-1, SDG-8 |

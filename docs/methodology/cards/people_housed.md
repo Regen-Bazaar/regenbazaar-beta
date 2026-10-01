@@ -13,7 +13,7 @@ Methodology v0.2, Community layer. Domain: poverty. Part of Regen Bazaar's own r
 | Anchor | None (v0.1 value 1.0). |
 | Calculation | people × 1.0. |
 | Status | assumption (needs check). Source: v0.1 value |
-| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0, pending cost survey |
+| Multipliers | SM (area factor): no, 1.0. ESM: no, 1.0. Domain coefficient k: 1.0 (categories not compared) |
 | Sensitivity (±50%) | not in the sample set |
 | Proof that fits | P2 photos; P3 local authority letter; P4 tenancy or handover record. |
 | SDG tags (contributes to) | SDG-1 |
