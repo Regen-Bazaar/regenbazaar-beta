@@ -73,6 +73,7 @@
     ],
     "trwiMinter": true,
     "verified": "blockscout: verified 2026-10-06",
-    "status": "live on the web since 2026-10-06 (networks.ts primarySaleVersion 2); v1 keeps MINTER_ROLE until the live purchase test"
+    "status": "live on the web since 2026-10-06 (networks.ts primarySaleVersion 2); v1 MINTER_ROLE on TRWI revoked 2026-10-06",
+    "v1MinterRevokeTx": "0xeb8d39ecfd704c43c98095298d66f41411acb43d318296dfa7326ddcfaed0448"
   }
 }

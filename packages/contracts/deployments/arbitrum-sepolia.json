@@ -86,6 +86,13 @@
     ],
     "trwiMinter": true,
     "verified": "not yet: blockscout API behind a Cloudflare challenge",
-    "status": "live on the web since 2026-10-06 (networks.ts primarySaleVersion 2); v1 keeps MINTER_ROLE until the live purchase test"
+    "status": "live on the web since 2026-10-06 (networks.ts primarySaleVersion 2); v1 MINTER_ROLE on TRWI revoked 2026-10-06",
+    "v1MinterRevokeTx": "0xabb9445bb6d41515976c8dfeea0263a4a6f5137554341acb2f6488ba6b58dc8a",
+    "e2eLiveApp": {
+      "date": "2026-10-06",
+      "listingId": "767d5e69-1c24-4ce7-8d3e-3ffc07412341",
+      "redeemTx": "0xe3d24389b2144ef5fb4311772f538a8d1424ca34e6ddd18e43ebcfd76924c33e",
+      "result": "2 editions for 0.456 tUSDG via the live voucher API (v2, no partner); indexed in indexer_arbsep_v3"
+    }
   }
 }
