@@ -130,6 +130,17 @@ export const tokenizations = pgTable("tokenizations", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Partner that brings impact to the platform (e.g. DeCleanup) and takes a share of each primary sale.
+// The share is signed into the voucher (RegenPrimarySale v2); caps are enforced on-chain and in the voucher route.
+export const partners = pgTable("partners", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 120 }).notNull(),
+  payoutAddress: varchar("payout_address", { length: 42 }).notNull(),
+  feeBps: integer("fee_bps").notNull(), // share of the primary sale price, basis points (<= 1000)
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // Off-chain primary listing for a v2 "impact collection": registered at approve-time (no mint), an
 // EIP-712 voucher is signed on demand from these fields, and the buyer lazily mints on redeem.
 export const listings = pgTable("listings", {
@@ -148,6 +159,7 @@ export const listings = pgTable("listings", {
   metadataUri: text("metadata_uri").notNull(),
   priceUsd: numeric("price_usd", { precision: 30, scale: 4 }), // v0.2 total price in USD (null = v0.1 listing)
   priceModelVersion: varchar("price_model_version", { length: 40 }),
+  partnerId: uuid("partner_id").references(() => partners.id), // null = no partner share
   nonce: integer("nonce").notNull().default(0),
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

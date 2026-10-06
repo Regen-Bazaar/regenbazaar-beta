@@ -110,3 +110,31 @@ vouchers for the live contracts. Must land together with the redeploy: `apps/web
 (redeem ABI tuple), `apps/web/src/components/BuyButton.tsx`, regenerated `packages/contracts/abis/`. Order:
 deploy v2 → `setCurrencyAllowed` → `MINTER_ROLE` on TRWI → `SIGNER_ROLE` → switch web → test purchase with and
 without partner → revoke `MINTER_ROLE` from v1.
+
+### 2026-10-06: web side of the partner share (A3–A5, not switched on)
+
+**Change.** `partners` table (name, payout address, share in bps, active) and `listings.partner_id`
+(migration `0005_partners.sql`). Each network carries `primarySaleVersion` (1 or 2) next to `primarySale`
+in `apps/web/src/lib/networks.ts`; all networks stay on 1, so merging this changes nothing on-chain. The
+signer (`onchain.ts`) picks the EIP-712 domain and field list from that version; a v1 signature is
+byte-identical to the previous code. The voucher route adds `partner` / `partnerFeeBps` and `version`;
+`BuyButton` and `scripts/buy-via-api.ts` send the matching tuple (`redeemAbiV1` / `redeemAbiV2`).
+A validator attaches a partner at approval with an optional `partnerId` in `POST /api/verifications`.
+The submission page shows the split (creator, partner, platform); marketplace cards show it when a partner
+is attached.
+
+**Server checks (mirror the contract).** Partner share 1–1000 bps, platform + partner ≤ 1500 bps, non-zero
+payout address, partner active. A listing with a partner is refused (409) on a v1 network instead of being
+sold without the partner's share. A partner address with contract code is refused for native-currency
+listings (residual risk above).
+
+**Verified (local anvil, throwaway chain).** Server v2 signature recovers the operator through the deployed
+v2 `hashVoucher`; tampered `partnerFeeBps` does not; v1 signature identical to the old field list; v1 with a
+partner throws; `redeemAbiV2` matches the regenerated contract ABI; `forge test` 75 passed.
+
+**Switch (A6, needs the owner's yes).** Deploy v2 per network → `setCurrencyAllowed` → `MINTER_ROLE` on
+TRWI → `SIGNER_ROLE` to the operator → set `primarySale` to the v2 address and `primarySaleVersion: 2` →
+update the indexer's RegenPrimarySale address (the `Sold` event is unchanged; `PartnerPaid` is new) →
+apply migration 0005 → test purchase with and without partner (`scripts/test-v2-flow.ts` with
+`PARTNER` / `PARTNER_FEE_BPS`) → revoke `MINTER_ROLE` from v1. Unsold v1 listings keep working after the
+switch: vouchers are signed fresh on each purchase.

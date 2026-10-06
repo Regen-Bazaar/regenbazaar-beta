@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { and, desc, eq, inArray } from "drizzle-orm";
-import { impactSubmissions, listings, organizations } from "@rb/db/schema";
+import { impactSubmissions, listings, organizations, partners } from "@rb/db/schema";
 import { getDb } from "../../lib/db";
 import { BuyButton } from "../../components/BuyButton";
+import { SaleSplit } from "../../components/SaleSplit";
 import { TestTokens } from "../../components/TestTokens";
 import { currentNetwork } from "../../lib/network-server";
 import { DEFAULT_NETWORK_KEY, getNetwork } from "../../lib/networks";
@@ -58,8 +59,11 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
       pricePerEdition: listings.pricePerEdition,
       maxEditions: listings.maxEditions,
       priceUsd: listings.priceUsd,
+      partnerName: partners.name,
+      partnerFeeBps: partners.feeBps,
     })
     .from(listings)
+    .leftJoin(partners, eq(listings.partnerId, partners.id))
     .where(and(eq(listings.active, true), eq(listings.chainId, NETWORK.chain.id)));
   const listingBySubmission = new Map(listingRows.map((r) => [r.submissionId, r]));
 
@@ -301,7 +305,12 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
                     </div>
                   </div>
                   {listing ? (
-                    <BuyButton listingId={listing.id} />
+                    <>
+                      {listing.partnerName != null && listing.partnerFeeBps != null && (
+                        <SaleSplit partner={{ name: listing.partnerName, feeBps: listing.partnerFeeBps }} />
+                      )}
+                      <BuyButton listingId={listing.id} />
+                    </>
                   ) : (
                     <button disabled className="btn btn-sm mt-4 w-full whitespace-normal">
                       {l.status === "tokenized" ? `Not yet listed on ${NETWORK.chain.name}` : "Awaiting verification"}

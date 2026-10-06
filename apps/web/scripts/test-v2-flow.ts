@@ -3,12 +3,13 @@
 // off-chain signing matches RegenPrimarySale (redeem reverts BadSignature otherwise). Placeholder metadataURI.
 //   NEXT_PUBLIC_NETWORK=arbitrum-sepolia OPERATOR_PRIVATE_KEY=0x.. TRWI_ADDRESS=0x.. \
 //     node --import tsx scripts/test-v2-flow.ts
-import { createPublicClient, createWalletClient, http, type Hex } from "viem";
+// With primarySaleVersion 2, PARTNER=0x.. PARTNER_FEE_BPS=500 tests the partner share (default: no partner).
+import { createPublicClient, createWalletClient, http, zeroAddress, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { attestImpact, signVoucher, ivToWei, operatorAddress, type ImpactVoucher } from "../src/lib/onchain.ts";
 import { getNetwork, NATIVE } from "../src/lib/networks.ts";
 const NETWORK = getNetwork(process.env.NEXT_PUBLIC_NETWORK);
-import { erc20Abi } from "../src/lib/chain.ts";
+import { erc20Abi, redeemAbiV1, redeemAbiV2 } from "../src/lib/chain.ts";
 
 const PRIMARY_SALE = NETWORK.primarySale;
 const TRWI = process.env.TRWI_ADDRESS as Hex;
@@ -36,40 +37,14 @@ const voucher: ImpactVoucher = {
   metadataURI,
   royaltyBps: 500n,
   feeBps: 250n,
+  partner: (process.env.PARTNER as Hex | undefined) ?? zeroAddress,
+  partnerFeeBps: BigInt(process.env.PARTNER_FEE_BPS ?? "0"),
   nonce: 0n,
   deadline: BigInt(Math.floor(Date.now() / 1000) + 3600),
 };
 const sig = await signVoucher(NETWORK, voucher);
 console.log("voucher signed for tokenId", voucher.tokenId.toString());
 
-const voucherComponents = [
-  { name: "tokenId", type: "uint256" },
-  { name: "creator", type: "address" },
-  { name: "totalIV", type: "uint256" },
-  { name: "maxEditions", type: "uint256" },
-  { name: "pricePerEdition", type: "uint256" },
-  { name: "currency", type: "address" },
-  { name: "beneficiary", type: "address" },
-  { name: "easUID", type: "bytes32" },
-  { name: "metadataURI", type: "string" },
-  { name: "royaltyBps", type: "uint96" },
-  { name: "feeBps", type: "uint96" },
-  { name: "nonce", type: "uint256" },
-  { name: "deadline", type: "uint256" },
-] as const;
-const saleAbi = [
-  {
-    type: "function",
-    name: "redeem",
-    stateMutability: "payable",
-    inputs: [
-      { name: "v", type: "tuple", components: voucherComponents },
-      { name: "amount", type: "uint256" },
-      { name: "sig", type: "bytes" },
-    ],
-    outputs: [],
-  },
-] as const;
 const trwiAbi = [
   { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ name: "a", type: "address" }, { name: "id", type: "uint256" }], outputs: [{ type: "uint256" }] },
   { type: "function", name: "impactValueOf", stateMutability: "view", inputs: [{ name: "id", type: "uint256" }, { name: "amt", type: "uint256" }], outputs: [{ type: "uint256" }] },
@@ -90,15 +65,12 @@ if (currency !== NATIVE) {
   await pub.waitForTransactionReceipt({ hash: approveHash });
   console.log(`approved ${total} (${symbol} smallest units):`, approveHash);
 }
-const txHash = await wallet.writeContract({
-  address: PRIMARY_SALE,
-  abi: saleAbi,
-  functionName: "redeem",
-  args: [voucher, amount, sig],
-  value: currency === NATIVE ? total : 0n,
-  account,
-  chain,
-});
+const common = { address: PRIMARY_SALE, functionName: "redeem", value: currency === NATIVE ? total : 0n, account, chain } as const;
+const { partner: _p, partnerFeeBps: _f, ...voucherV1 } = voucher;
+const txHash =
+  NETWORK.primarySaleVersion === 2
+    ? await wallet.writeContract({ ...common, abi: redeemAbiV2, args: [voucher, amount, sig] })
+    : await wallet.writeContract({ ...common, abi: redeemAbiV1, args: [voucherV1, amount, sig] });
 const receipt = await pub.waitForTransactionReceipt({ hash: txHash });
 console.log("redeem tx:", txHash, "status:", receipt.status);
 

@@ -13,6 +13,7 @@ import {
   encodeAbiParameters,
   parseUnits,
   parseEventLogs,
+  zeroAddress,
   zeroHash,
   type Hex,
 } from "viem";
@@ -66,22 +67,31 @@ const easAbi = [
   },
 ] as const;
 
-// EIP-712 voucher type — MUST match RegenPrimarySale's VOUCHER_TYPEHASH field order.
-const VOUCHER_TYPES = {
+// EIP-712 voucher types — MUST match RegenPrimarySale's VOUCHER_TYPEHASH field order (v1 and v2 contracts).
+const VOUCHER_FIELDS_HEAD = [
+  { name: "tokenId", type: "uint256" },
+  { name: "creator", type: "address" },
+  { name: "totalIV", type: "uint256" },
+  { name: "maxEditions", type: "uint256" },
+  { name: "pricePerEdition", type: "uint256" },
+  { name: "currency", type: "address" },
+  { name: "beneficiary", type: "address" },
+  { name: "easUID", type: "bytes32" },
+  { name: "metadataURI", type: "string" },
+  { name: "royaltyBps", type: "uint96" },
+  { name: "feeBps", type: "uint96" },
+] as const;
+const VOUCHER_FIELDS_TAIL = [
+  { name: "nonce", type: "uint256" },
+  { name: "deadline", type: "uint256" },
+] as const;
+const VOUCHER_TYPES_V1 = { Voucher: [...VOUCHER_FIELDS_HEAD, ...VOUCHER_FIELDS_TAIL] } as const;
+const VOUCHER_TYPES_V2 = {
   Voucher: [
-    { name: "tokenId", type: "uint256" },
-    { name: "creator", type: "address" },
-    { name: "totalIV", type: "uint256" },
-    { name: "maxEditions", type: "uint256" },
-    { name: "pricePerEdition", type: "uint256" },
-    { name: "currency", type: "address" },
-    { name: "beneficiary", type: "address" },
-    { name: "easUID", type: "bytes32" },
-    { name: "metadataURI", type: "string" },
-    { name: "royaltyBps", type: "uint96" },
-    { name: "feeBps", type: "uint96" },
-    { name: "nonce", type: "uint256" },
-    { name: "deadline", type: "uint256" },
+    ...VOUCHER_FIELDS_HEAD,
+    { name: "partner", type: "address" },
+    { name: "partnerFeeBps", type: "uint96" },
+    ...VOUCHER_FIELDS_TAIL,
   ],
 } as const;
 
@@ -97,6 +107,9 @@ export interface ImpactVoucher {
   metadataURI: string;
   royaltyBps: bigint;
   feeBps: bigint;
+  // v2 only (partner share). Must be zero address / 0 when there is no partner.
+  partner: Hex;
+  partnerFeeBps: bigint;
   nonce: bigint;
   deadline: bigint;
 }
@@ -155,14 +168,29 @@ export async function attestImpact(
   return { uid, txHash };
 }
 
-/** Sign an ImpactVoucher (EIP-712) with the operator key. The buyer redeems it at RegenPrimarySale. */
+/** True when `addr` is a contract on this network (a contract partner may reject native payouts). */
+export async function hasCode(net: Network, addr: Hex): Promise<boolean> {
+  const pub = createPublicClient({ chain: net.chain, transport: http(rpcFor(net)) });
+  const code = await pub.getCode({ address: addr });
+  return !!code && code !== "0x";
+}
+
+/**
+ * Sign an ImpactVoucher (EIP-712) with the operator key. The buyer redeems it at RegenPrimarySale.
+ * The network's primarySaleVersion picks the domain and field list; a v1 contract cannot pay a partner.
+ */
 export async function signVoucher(net: Network, v: ImpactVoucher): Promise<Hex> {
   const { account, wallet } = clients(net);
-  return wallet.signTypedData({
-    account,
-    domain: { name: "RegenPrimarySale", version: "1", chainId: net.chain.id, verifyingContract: net.primarySale },
-    types: VOUCHER_TYPES,
-    primaryType: "Voucher",
-    message: v,
-  });
+  const domain = {
+    name: "RegenPrimarySale",
+    version: String(net.primarySaleVersion),
+    chainId: net.chain.id,
+    verifyingContract: net.primarySale,
+  };
+  if (net.primarySaleVersion === 2) {
+    return wallet.signTypedData({ account, domain, types: VOUCHER_TYPES_V2, primaryType: "Voucher", message: v });
+  }
+  if (v.partner !== zeroAddress || v.partnerFeeBps !== 0n) throw new Error("partner share needs RegenPrimarySale v2");
+  const { partner: _p, partnerFeeBps: _f, ...v1 } = v;
+  return wallet.signTypedData({ account, domain, types: VOUCHER_TYPES_V1, primaryType: "Voucher", message: v1 });
 }

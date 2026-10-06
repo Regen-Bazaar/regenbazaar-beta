@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { verifications, impactSubmissions, organizations, listings } from "@rb/db/schema";
+import { verifications, impactSubmissions, organizations, listings, partners } from "@rb/db/schema";
 import { buildTokenMetadata, renderImpactCard } from "@rb/pipeline";
 import {
   clampEsm,
@@ -20,8 +20,9 @@ import { eq, sql } from "drizzle-orm";
 import { parseUnits } from "viem";
 import { getDb } from "../../../lib/db";
 import { pinFile, pinJson } from "../../../lib/ipfs";
-import { onchainEnabled, attestImpact, ivToWei } from "../../../lib/onchain";
-import { DEFAULT_NETWORK_KEY, ENABLED_NETWORKS, getNetwork, networkByChainId, usdPerUnit, type Network } from "../../../lib/networks";
+import { onchainEnabled, attestImpact, hasCode, ivToWei } from "../../../lib/onchain";
+import { partnerShareError } from "../../../lib/partner-share";
+import { DEFAULT_NETWORK_KEY, ENABLED_NETWORKS, NATIVE, getNetwork, networkByChainId, usdPerUnit, type Network } from "../../../lib/networks";
 import type { DB } from "@rb/db";
 import { isAdmin } from "../../../lib/admin";
 import { cardHeadline } from "../../../lib/impact-view";
@@ -30,12 +31,13 @@ import { siteUrl } from "../../../lib/site";
 export const runtime = "nodejs";
 
 const MAX_EDITIONS = 100;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type Hex = `0x${string}`;
 
 // On approve (v2 lazy mint): pin metadata -> EAS attest (platform) -> register an off-chain primary
 // LISTING (no mint; the buyer lazily mints on redeem via a signed voucher). Returns the listing refs.
-async function registerListing(db: DB, net: Network, submissionId: string) {
+async function registerListing(db: DB, net: Network, submissionId: string, partnerId: string | null) {
   // One report, one listing: if this impact is already listed on ANY network, never list it again
   // (re-approving is idempotent and a report is never mirrored onto a second chain).
   const [existing] = await db.select().from(listings).where(eq(listings.submissionId, submissionId)).limit(1);
@@ -121,6 +123,7 @@ async function registerListing(db: DB, net: Network, submissionId: string) {
     metadataUri: metadataURI,
     priceUsd: priceV02 ? priceV02.totalUsd.toFixed(4) : null,
     priceModelVersion: priceV02 ? priceV02.modelVersion : null,
+    partnerId,
     nonce: 0,
     active: true,
   });
@@ -200,6 +203,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: `network ${sub.chainId} is not enabled` }, { status: 422 });
     }
   }
+  // Optional partner share for this listing (RegenPrimarySale v2 only). Checked before the decision is recorded.
+  let partnerId: string | null = null;
+  if (decision === "approve" && net && body.partnerId !== undefined && body.partnerId !== null) {
+    if (typeof body.partnerId !== "string" || !UUID_RE.test(body.partnerId)) {
+      return NextResponse.json({ error: "partnerId must be a partner id" }, { status: 422 });
+    }
+    const [p] = await db.select().from(partners).where(eq(partners.id, body.partnerId)).limit(1);
+    if (!p || !p.active) return NextResponse.json({ error: "partner not found or not active" }, { status: 422 });
+    const bad = partnerShareError(p);
+    if (bad) return NextResponse.json({ error: bad }, { status: 422 });
+    if (net.primarySaleVersion !== 2) {
+      return NextResponse.json({ error: `partner share is not available on ${net.chain.name} yet` }, { status: 422 });
+    }
+    // A contract partner may reject native payouts and block every sale of the listing (docs/AUDIT.md).
+    if (net.saleCurrency.address === NATIVE && (await hasCode(net, p.payoutAddress as Hex))) {
+      return NextResponse.json({ error: "a contract partner address needs a stablecoin listing" }, { status: 422 });
+    }
+    partnerId = p.id;
+  }
   await db.insert(verifications).values({
     submissionId,
     decision,
@@ -218,7 +240,7 @@ export async function POST(req: Request) {
   if (onchainEnabled() && net) {
     let result;
     try {
-      result = await registerListing(db, net, submissionId);
+      result = await registerListing(db, net, submissionId, partnerId);
     } catch (e) {
       // Keep it in the queue so the reviewer sees the failure and can retry (re-approving is idempotent).
       const error = e instanceof Error ? e.message.slice(0, 300) : "listing failed";
