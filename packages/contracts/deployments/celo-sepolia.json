@@ -7,7 +7,7 @@
   "schemaUID": "0xc9c7678fbad9ec95e2ef6f480b10391bb7dcb1df7feec189411a439fd850f64e",
   "impactClaimSchema": "address ngo,uint256 impactValue,string metadataURI",
   "explorer": "https://celo-sepolia.blockscout.com",
-  "verified": "blockscout — REBAZ, TRWI (impl + ERC1967 proxy), TRWIStaking, RegenMarketplace, RegenPrimarySale, AuthorizedAttesterResolver all source-verified",
+  "verified": "blockscout \u2014 REBAZ, TRWI (impl + ERC1967 proxy), TRWIStaking, RegenMarketplace, RegenPrimarySale, AuthorizedAttesterResolver all source-verified",
   "contracts": {
     "SchemaRegistry": "0x28747503194756DF51503902949c66D2F3579625",
     "EAS": "0x82448c9c9b95Da5dCe9905F9C59CcCA0DF346df8",
@@ -19,11 +19,43 @@
     "RegenMarketplace": "0xBE6E584F0eE49f99351E3bB05746cA469Db38C3a",
     "RegenPrimarySale": "0x2b4A3aE4E69771cdf2Fd4e2075A7B3Ab2e0498B2"
   },
-  "rebaz": { "cap": "1000000000000000000000000000", "capHuman": "1000000000 REBAZ" },
-  "marketplace": { "feeBps": 250, "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB", "maxRoyaltyBps": 1000 },
-  "primarySale": { "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB", "signer": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB", "note": "feeBps is now per-voucher (signed), not a contract field" },
+  "rebaz": {
+    "cap": "1000000000000000000000000000",
+    "capHuman": "1000000000 REBAZ"
+  },
+  "marketplace": {
+    "feeBps": 250,
+    "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB",
+    "maxRoyaltyBps": 1000
+  },
+  "primarySale": {
+    "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB",
+    "signer": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB",
+    "note": "feeBps is now per-voucher (signed), not a contract field"
+  },
   "roles": {
     "note": "Testnet refresh: roles default to the deployer EOA EXCEPT the deployer is NOT a TRWI MINTER (minting only via RegenPrimarySale). Set ADMIN_MULTISIG/SIGNER_ADDR/ATTESTER_ADDR/UPGRADER_ADDR/PAUSER_ADDR/FEE_RECIPIENT envs + RENOUNCE_DEPLOYER_ADMIN before mainnet."
   },
-  "note": "v3 hardened (security/gas audit, docs/AUDIT.md) supersedes v2. Changes affecting integrators: REBAZ is capped (ERC20Capped); the EIP-712 Voucher gained a `feeBps` field (uint96, after royaltyBps, before nonce) so VOUCHER_TYPEHASH changed; all contracts are Pausable; TRWIStaking adds emergencyUnstake and uses a reward-index accumulator; TRWI setURI removed (metadata immutable). Off-chain signer + frontend EIP-712 types MUST include feeBps or redeem reverts BadSignature."
+  "note": "v3 hardened (security/gas audit, docs/AUDIT.md) supersedes v2. Changes affecting integrators: REBAZ is capped (ERC20Capped); the EIP-712 Voucher gained a `feeBps` field (uint96, after royaltyBps, before nonce) so VOUCHER_TYPEHASH changed; all contracts are Pausable; TRWIStaking adds emergencyUnstake and uses a reward-index accumulator; TRWI setURI removed (metadata immutable). Off-chain signer + frontend EIP-712 types MUST include feeBps or redeem reverts BadSignature.",
+  "primarySaleV2": {
+    "address": "0x02f8F96aDFCBF07b4D028318eBD76bf8e4D24f76",
+    "deployedAt": "2026-10-06",
+    "startBlock": 38014860,
+    "deployTx": "0xc72a8557c569a98cb35c06fee7fe058c045a4a4b49f44dbb0d49f8446334ed32",
+    "eip712Version": "2",
+    "script": "script/DeployPrimarySaleV2.s.sol",
+    "signer": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB",
+    "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB",
+    "currenciesAllowed": [
+      "NATIVE"
+    ],
+    "trwiMinter": true,
+    "verified": "blockscout: verified 2026-10-06",
+    "status": "live on the web since 2026-10-06 (networks.ts primarySaleVersion 2); v1 keeps MINTER_ROLE until the live purchase test",
+    "e2e": {
+      "date": "2026-10-06",
+      "redeemTx": "0x4282c307e9d16875492cd5591fe3eca19adb79479cb84193568869594318937e",
+      "result": "10 editions for 0.1 CELO, partner 0x\u2026dEaD paid 0.005 CELO (5%), PartnerPaid emitted"
+    }
+  }
 }

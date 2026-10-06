@@ -69,5 +69,23 @@
     "approveTx": "0xdb05ecb1ab39f0ee37a21c0feca820282f20ef284da7e619edfa8b9a074f098d",
     "redeemTx": "0x9b4a1d72107faf1dcc218754e3e3a419a34f31c92fde71d60a496166cd65ceb5",
     "result": "2 editions bought for 1.245 tUSDG via the app's voucher API; indexed by Ponder (indexer_arbsep_v1)"
+  },
+  "primarySaleV2": {
+    "address": "0xf405669244d45E1C9d65C4af059921Dde76493F4",
+    "deployedAt": "2026-10-06",
+    "startBlock": 316400740,
+    "deployTx": "0xab4ad8c9135beb3f1e0224c3e6a8adbc3196a6d8901986fc64f22ab5d855b387",
+    "eip712Version": "2",
+    "script": "script/DeployPrimarySaleV2.s.sol",
+    "signer": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB",
+    "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB",
+    "currenciesAllowed": [
+      "NATIVE",
+      "USDG",
+      "tUSDG"
+    ],
+    "trwiMinter": true,
+    "verified": "not yet: blockscout API behind a Cloudflare challenge",
+    "status": "live on the web since 2026-10-06 (networks.ts primarySaleVersion 2); v1 keeps MINTER_ROLE until the live purchase test"
   }
 }
