@@ -57,5 +57,22 @@
     "split": "1.245 USDG paid: 1.213875 to NGO beneficiary 0x7380a42137d16a0e7684578d8b3d32e1fbd021b5, 0.031125 platform fee (2.5%)",
     "gas": "518212 gas, 0.00000518 ETH",
     "indexed": "indexer_rh_v1.sale"
+  },
+  "primarySaleV2": {
+    "address": "0x7E8bE9B2278EF55c3C05316035d0F9BA35757FCf",
+    "deployedAt": "2026-10-06",
+    "startBlock": 129934415,
+    "deployTx": "0x3cf1e041af8c920459dfc10e265ed67b08c0c94c07ab62081f94c238070f4bee",
+    "eip712Version": "2",
+    "script": "script/DeployPrimarySaleV2.s.sol",
+    "signer": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB",
+    "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB",
+    "currenciesAllowed": [
+      "NATIVE",
+      "USDG"
+    ],
+    "trwiMinter": true,
+    "verified": "blockscout: verified 2026-10-06",
+    "status": "deployed, NOT used by the web yet (apps/web/src/lib/networks.ts still points at v1); v1 keeps MINTER_ROLE until the switch and a test purchase"
   }
 }
