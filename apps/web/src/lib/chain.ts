@@ -2,38 +2,48 @@
 // Network-specific addresses come from useNetwork() (client) or currentNetwork() (server).
 export { NATIVE } from "./networks";
 
-// RegenPrimarySale.redeem ABI (Voucher tuple must match the contract field order).
-export const redeemAbi = [
-  {
-    type: "function",
-    name: "redeem",
-    stateMutability: "payable",
-    inputs: [
-      {
-        name: "v",
-        type: "tuple",
-        components: [
-          { name: "tokenId", type: "uint256" },
-          { name: "creator", type: "address" },
-          { name: "totalIV", type: "uint256" },
-          { name: "maxEditions", type: "uint256" },
-          { name: "pricePerEdition", type: "uint256" },
-          { name: "currency", type: "address" },
-          { name: "beneficiary", type: "address" },
-          { name: "easUID", type: "bytes32" },
-          { name: "metadataURI", type: "string" },
-          { name: "royaltyBps", type: "uint96" },
-          { name: "feeBps", type: "uint96" },
-          { name: "nonce", type: "uint256" },
-          { name: "deadline", type: "uint256" },
-        ],
-      },
-      { name: "amount", type: "uint256" },
-      { name: "sig", type: "bytes" },
-    ],
-    outputs: [],
-  },
+// RegenPrimarySale.redeem ABIs (Voucher tuple must match the contract field order). v2 adds the partner share.
+const VOUCHER_HEAD = [
+  { name: "tokenId", type: "uint256" },
+  { name: "creator", type: "address" },
+  { name: "totalIV", type: "uint256" },
+  { name: "maxEditions", type: "uint256" },
+  { name: "pricePerEdition", type: "uint256" },
+  { name: "currency", type: "address" },
+  { name: "beneficiary", type: "address" },
+  { name: "easUID", type: "bytes32" },
+  { name: "metadataURI", type: "string" },
+  { name: "royaltyBps", type: "uint96" },
+  { name: "feeBps", type: "uint96" },
 ] as const;
+const VOUCHER_TAIL = [
+  { name: "nonce", type: "uint256" },
+  { name: "deadline", type: "uint256" },
+] as const;
+
+function redeemAbiFor<const C extends readonly { name: string; type: string }[]>(components: C) {
+  return [
+    {
+      type: "function",
+      name: "redeem",
+      stateMutability: "payable",
+      inputs: [
+        { name: "v", type: "tuple", components },
+        { name: "amount", type: "uint256" },
+        { name: "sig", type: "bytes" },
+      ],
+      outputs: [],
+    },
+  ] as const;
+}
+
+export const redeemAbiV1 = redeemAbiFor([...VOUCHER_HEAD, ...VOUCHER_TAIL] as const);
+export const redeemAbiV2 = redeemAbiFor([
+  ...VOUCHER_HEAD,
+  { name: "partner", type: "address" },
+  { name: "partnerFeeBps", type: "uint96" },
+  ...VOUCHER_TAIL,
+] as const);
 
 export const erc20Abi = [
   {

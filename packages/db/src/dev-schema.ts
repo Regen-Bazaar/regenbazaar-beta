@@ -93,6 +93,14 @@ CREATE TABLE IF NOT EXISTS "tokenizations" (
   "tx_hash" varchar(66),
   "created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
+CREATE TABLE IF NOT EXISTS "partners" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "name" varchar(120) NOT NULL,
+  "payout_address" varchar(42) NOT NULL,
+  "fee_bps" integer NOT NULL,
+  "active" boolean DEFAULT true NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
 CREATE TABLE IF NOT EXISTS "listings" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   "submission_id" uuid NOT NULL REFERENCES "impact_submissions"("id"),
@@ -107,6 +115,7 @@ CREATE TABLE IF NOT EXISTS "listings" (
   "metadata_uri" text NOT NULL,
   "price_usd" numeric(30, 4),
   "price_model_version" varchar(40),
+  "partner_id" uuid REFERENCES "partners"("id"),
   "nonce" integer DEFAULT 0 NOT NULL,
   "active" boolean DEFAULT true NOT NULL,
   "created_at" timestamp with time zone DEFAULT now() NOT NULL

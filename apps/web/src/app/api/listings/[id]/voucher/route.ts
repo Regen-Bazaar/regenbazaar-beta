@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import { listings } from "@rb/db/schema";
+import { listings, partners } from "@rb/db/schema";
 import { eq } from "drizzle-orm";
+import { zeroAddress } from "viem";
 import { getDb } from "../../../../../lib/db";
 import { onchainEnabled, signVoucher, type ImpactVoucher } from "../../../../../lib/onchain";
 import { networkByChainId } from "../../../../../lib/networks";
+import { PLATFORM_FEE_BPS, partnerShareError } from "../../../../../lib/partner-share";
 
 export const runtime = "nodejs";
 
 const ROYALTY_BPS = 500; // secondary-sale royalty to the NGO creator (<= TRWI MAX_ROYALTY_BPS = 1000)
-const FEE_BPS = 250; // platform fee for the primary sale, now part of the SIGNED voucher (<= MAX_FEE_BPS = 1000)
 const DEADLINE_SECS = 3600;
 
 // GET /api/listings/<id>/voucher — return a freshly platform-signed EIP-712 voucher for a primary listing.
@@ -23,6 +24,21 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   const net = networkByChainId(l.chainId);
   if (!net) return NextResponse.json({ error: "listing network not supported" }, { status: 404 });
 
+  // Partner share (RegenPrimarySale v2). A listing with a partner is never sold without the partner's share.
+  let partner = zeroAddress as `0x${string}`;
+  let partnerFeeBps = 0n;
+  if (l.partnerId) {
+    const [p] = await db.select().from(partners).where(eq(partners.id, l.partnerId)).limit(1);
+    if (!p || !p.active) return NextResponse.json({ error: "listing partner is not active" }, { status: 409 });
+    const bad = partnerShareError(p);
+    if (bad) return NextResponse.json({ error: bad }, { status: 409 });
+    if (net.primarySaleVersion !== 2) {
+      return NextResponse.json({ error: "partner share is not available on this network yet" }, { status: 409 });
+    }
+    partner = p.payoutAddress as `0x${string}`;
+    partnerFeeBps = BigInt(p.feeBps);
+  }
+
   const deadline = BigInt(Math.floor(Date.now() / 1000) + DEADLINE_SECS);
   const voucher: ImpactVoucher = {
     tokenId: BigInt(l.tokenId),
@@ -35,7 +51,9 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     easUID: l.easUid as `0x${string}`,
     metadataURI: l.metadataUri,
     royaltyBps: BigInt(ROYALTY_BPS),
-    feeBps: BigInt(FEE_BPS),
+    feeBps: BigInt(PLATFORM_FEE_BPS),
+    partner,
+    partnerFeeBps,
     nonce: BigInt(l.nonce),
     deadline,
   };
@@ -45,6 +63,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   return NextResponse.json({
     contract: net.primarySale,
     chainId: net.chain.id,
+    version: net.primarySaleVersion,
     signature,
     voucher: {
       tokenId: voucher.tokenId.toString(),
@@ -58,6 +77,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       metadataURI: voucher.metadataURI,
       royaltyBps: voucher.royaltyBps.toString(),
       feeBps: voucher.feeBps.toString(),
+      partner: voucher.partner,
+      partnerFeeBps: voucher.partnerFeeBps.toString(),
       nonce: voucher.nonce.toString(),
       deadline: voucher.deadline.toString(),
     },

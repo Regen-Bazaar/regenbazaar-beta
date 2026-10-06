@@ -170,3 +170,6 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
 - **Cost-based price tables are dated** (`cost-v02.ts`, FX as of 2026-09-28, minimum wages checked 2026-09-28,
   details in `docs/methodology/minimum-wages.md`). India's figure is an advisory national floor from secondary
   sources; Laos may have raised its rate in 2026; Cambodia has only a garment-sector rate. Refresh before mainnet.
+- **Partner share has no admin screen** (2026-10-06): partners are inserted with SQL; `partnerId` is only
+  accepted by the approval API, not shown in the validator UI. A deactivated partner blocks its listings'
+  sales until `listings.partner_id` is cleared. Partner name is shown to buyers as stored; keep it short.

@@ -61,6 +61,32 @@
   },
   {
     "type": "function",
+    "name": "MAX_PARTNER_FEE_BPS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint96",
+        "internalType": "uint96"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX_TOTAL_FEE_BPS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint96",
+        "internalType": "uint96"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "NATIVE",
     "inputs": [],
     "outputs": [
@@ -331,6 +357,16 @@
             "internalType": "uint96"
           },
           {
+            "name": "partner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "partnerFeeBps",
+            "type": "uint96",
+            "internalType": "uint96"
+          },
+          {
             "name": "nonce",
             "type": "uint256",
             "internalType": "uint256"
@@ -433,6 +469,16 @@
           },
           {
             "name": "feeBps",
+            "type": "uint96",
+            "internalType": "uint96"
+          },
+          {
+            "name": "partner",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "partnerFeeBps",
             "type": "uint96",
             "internalType": "uint96"
           },
@@ -621,6 +667,37 @@
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PartnerPaid",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "partner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "currency",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
       }
     ],
     "anonymous": false

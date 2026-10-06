@@ -353,3 +353,15 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   the main weight of the price; costs are only an additional coefficient, and spending $1000 does not add $1000.
 - **Fragile:** the +50% cap and the $1 rate are set for this methodology version, not calibrated. Unsold editions of
   v0.2 listings were repriced in the database; sold editions keep the price they were bought at.
+
+## 2026-10-06 — Partner share on the web: version flag per network
+
+- **What:** partners table, `listings.partner_id`, v1/v2 voucher signing chosen by `primarySaleVersion` per
+  network, split shown next to the buy button (details in `docs/AUDIT.md`, 2026-10-06).
+- **Why a flag:** the earlier plan said the web change must land on the same day as the contract redeploy.
+  A per-network flag lets the code merge first with no effect, and each network switches separately
+  (one line) once its v2 contract is deployed and tested.
+- **Partner is chosen at approval** (API field `partnerId`), not by the submitter. No admin screen yet:
+  partners are added with SQL until DeCleanup import (part B) needs more.
+- **Trade-off:** a listing whose partner is deactivated stops selling (409) rather than silently paying the
+  partner nothing; to sell it without a partner, clear `listings.partner_id`.

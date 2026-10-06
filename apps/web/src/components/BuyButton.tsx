@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { NO_WALLET_HINT } from "../lib/wallet";
-import { NATIVE, erc20Abi, feeOverrides, redeemAbi } from "../lib/chain";
+import { NATIVE, erc20Abi, feeOverrides, redeemAbiV1, redeemAbiV2 } from "../lib/chain";
 import { useNetwork } from "./NetworkProvider";
 import { useConnectWallet } from "./useConnectWallet";
 import { ErrorNote } from "./ErrorNote";
@@ -20,6 +20,8 @@ type VoucherJson = {
   metadataURI: string;
   royaltyBps: string;
   feeBps: string;
+  partner: `0x${string}`;
+  partnerFeeBps: string;
   nonce: string;
   deadline: string;
 };
@@ -49,7 +51,11 @@ export function BuyButton({ listingId }: { listingId: string }) {
       if (chainId !== chain.id) await switchChainAsync({ chainId: chain.id });
       const res = await fetch(`/api/listings/${listingId}/voucher`);
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "voucher unavailable");
-      const { voucher, signature } = (await res.json()) as { voucher: VoucherJson; signature: `0x${string}` };
+      const { voucher, signature, version } = (await res.json()) as {
+        voucher: VoucherJson;
+        signature: `0x${string}`;
+        version: 1 | 2;
+      };
 
       const v = {
         tokenId: BigInt(voucher.tokenId),
@@ -66,6 +72,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
         nonce: BigInt(voucher.nonce),
         deadline: BigInt(voucher.deadline),
       };
+      const partner = { partner: voucher.partner, partnerFeeBps: BigInt(voucher.partnerFeeBps) };
       const amount = 1n;
       const total = v.pricePerEdition * amount;
       if (v.currency !== NATIVE) {
@@ -90,15 +97,18 @@ export function BuyButton({ listingId }: { listingId: string }) {
           setMsg("");
         }
       }
-      const hash = await writeContractAsync({
+      const common = {
         address: PRIMARY_SALE,
-        abi: redeemAbi,
         functionName: "redeem",
-        args: [v, amount, signature],
         value: v.currency === NATIVE ? total : 0n,
         chainId: chain.id,
         ...(await feeOverrides(publicClient)),
-      });
+      } as const;
+      // The server signs for the contract version deployed on this network; send the matching tuple.
+      const hash =
+        version === 2
+          ? await writeContractAsync({ ...common, abi: redeemAbiV2, args: [{ ...v, ...partner }, amount, signature] })
+          : await writeContractAsync({ ...common, abi: redeemAbiV1, args: [v, amount, signature] });
       setTx(hash);
       setState("done");
     } catch (e) {

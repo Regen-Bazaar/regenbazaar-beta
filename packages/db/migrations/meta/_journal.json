@@ -36,6 +36,13 @@
       "when": 1790558813412,
       "tag": "0004_methodology_v02",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791298025853,
+      "tag": "0005_partners",
+      "breakpoints": true
     }
   ]
 }

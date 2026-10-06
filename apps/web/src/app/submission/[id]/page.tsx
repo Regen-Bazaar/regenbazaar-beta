@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { and, desc, eq } from "drizzle-orm";
-import { impactSubmissions, listings, verifications } from "@rb/db/schema";
+import { impactSubmissions, listings, partners, verifications } from "@rb/db/schema";
 import { currentNetwork } from "../../../lib/network-server";
 import { networkByChainId } from "../../../lib/networks";
 import { getDb } from "../../../lib/db";
 import { BuyButton } from "../../../components/BuyButton";
+import { SaleSplit } from "../../../components/SaleSplit";
 import { CopyValue } from "../../../components/CopyValue";
 import { formatUnits } from "viem";
 import { FrameworkTag } from "../../../components/FrameworkTag";
@@ -77,6 +78,13 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
     .from(listings)
     .where(and(eq(listings.submissionId, id), eq(listings.chainId, NETWORK.chain.id)))
     .limit(1);
+  const [partner] = listing?.partnerId
+    ? await db
+        .select({ name: partners.name, feeBps: partners.feeBps })
+        .from(partners)
+        .where(eq(partners.id, listing.partnerId))
+        .limit(1)
+    : [];
   // One report, one network: if it is listed elsewhere, point there instead of "not listed".
   const [elsewhere] = listing
     ? []
@@ -292,6 +300,7 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
                         <span className="text-base font-normal text-muted">{NETWORK.saleCurrency.symbol}</span>
                       </span>
                     </div>
+                    <SaleSplit partner={partner ?? null} />
                     <BuyButton listingId={listing.id} />
                     <p className="mt-3 text-sm text-subtle">
                       Need test tokens or a wallet? See the <Link href="/guide" className="link">guide</Link>.
