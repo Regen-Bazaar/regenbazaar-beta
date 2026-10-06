@@ -54,8 +54,8 @@ function celoSepolia(): Network {
     }),
     eas: "0x82448c9c9b95Da5dCe9905F9C59CcCA0DF346df8",
     schemaUID: "0xc9c7678fbad9ec95e2ef6f480b10391bb7dcb1df7feec189411a439fd850f64e",
-    primarySale: "0x2b4A3aE4E69771cdf2Fd4e2075A7B3Ab2e0498B2",
-    primarySaleVersion: 1,
+    primarySale: "0x02f8F96aDFCBF07b4D028318eBD76bf8e4D24f76", // v2 (partner share), 2026-10-06
+    primarySaleVersion: 2,
     trwi: "0xA1A10570534681606eF67Bc8DDeda6061Dd8a8f0",
     saleCurrency: { address: NATIVE, symbol: "CELO", decimals: 18 },
   };
@@ -76,8 +76,8 @@ function arbitrumSepolia(): Network {
     }),
     eas: "0x95cD0E3bDbC670e057416D65C89B584a9a24d95d",
     schemaUID: "0xa702ff6a03caf077d7c3d9631cca826721f83f0b62c7d9c73640bf2bb749d983",
-    primarySale: "0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030",
-    primarySaleVersion: 1,
+    primarySale: "0xf405669244d45E1C9d65C4af059921Dde76493F4", // v2 (partner share), 2026-10-06
+    primarySaleVersion: 2,
     trwi: "0x6F2C6F81DDd35199d2e015710c61CC6D8B5de9da",
     // NEXT_PUBLIC_SALE_CURRENCY=tUSDG switches to the stand-in while the Paxos testnet faucet is not
     // dispensing; both tokens are allowlisted on RegenPrimarySale.
@@ -105,8 +105,8 @@ function robinhoodTestnet(): Network {
     }),
     eas: "0x95cD0E3bDbC670e057416D65C89B584a9a24d95d",
     schemaUID: "0xa702ff6a03caf077d7c3d9631cca826721f83f0b62c7d9c73640bf2bb749d983",
-    primarySale: "0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030",
-    primarySaleVersion: 1,
+    primarySale: "0x7E8bE9B2278EF55c3C05316035d0F9BA35757FCf", // v2 (partner share), 2026-10-06
+    primarySaleVersion: 2,
     trwi: "0x6F2C6F81DDd35199d2e015710c61CC6D8B5de9da",
     // Paxos Global Dollar (USDG) on Robinhood Chain testnet (the Paxos faucet dispenses here).
     saleCurrency: { address: "0x7E955252E15c84f5768B83c41a71F9eba181802F", symbol: "USDG", decimals: 6 },

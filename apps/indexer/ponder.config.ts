@@ -27,7 +27,8 @@ export default createConfig({
     RegenPrimarySale: {
       network: "chain",
       abi: PrimarySaleAbi,
-      address: process.env.PRIMARY_SALE_ADDRESS as `0x${string}`,
+      // Comma-separated: keep the v1 sale next to v2 so past Sold events stay indexed.
+      address: (process.env.PRIMARY_SALE_ADDRESS ?? "").split(",").map((a) => a.trim()) as `0x${string}`[],
       startBlock: Number(process.env.TRWI_START_BLOCK ?? 0),
     },
     TRWIStaking: {

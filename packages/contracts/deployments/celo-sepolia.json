@@ -51,6 +51,11 @@
     ],
     "trwiMinter": true,
     "verified": "blockscout: verified 2026-10-06",
-    "status": "deployed, NOT used by the web yet (apps/web/src/lib/networks.ts still points at v1); v1 keeps MINTER_ROLE until the switch and a test purchase"
+    "status": "live on the web since 2026-10-06 (networks.ts primarySaleVersion 2); v1 keeps MINTER_ROLE until the live purchase test",
+    "e2e": {
+      "date": "2026-10-06",
+      "redeemTx": "0x4282c307e9d16875492cd5591fe3eca19adb79479cb84193568869594318937e",
+      "result": "10 editions for 0.1 CELO, partner 0x\u2026dEaD paid 0.005 CELO (5%), PartnerPaid emitted"
+    }
   }
 }

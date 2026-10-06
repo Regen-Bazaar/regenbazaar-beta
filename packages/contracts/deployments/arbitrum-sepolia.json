@@ -86,6 +86,6 @@
     ],
     "trwiMinter": true,
     "verified": "not yet: blockscout API behind a Cloudflare challenge",
-    "status": "deployed, NOT used by the web yet (apps/web/src/lib/networks.ts still points at v1); v1 keeps MINTER_ROLE until the switch and a test purchase"
+    "status": "live on the web since 2026-10-06 (networks.ts primarySaleVersion 2); v1 keeps MINTER_ROLE until the live purchase test"
   }
 }
