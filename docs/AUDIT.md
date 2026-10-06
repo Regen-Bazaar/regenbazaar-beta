@@ -138,3 +138,13 @@ update the indexer's RegenPrimarySale address (the `Sold` event is unchanged; `P
 apply migration 0005 → test purchase with and without partner (`scripts/test-v2-flow.ts` with
 `PARTNER` / `PARTNER_FEE_BPS`) → revoke `MINTER_ROLE` from v1. Unsold v1 listings keep working after the
 switch: vouchers are signed fresh on each purchase.
+
+### 2026-10-06: v2 live on all three testnets
+
+v2 deployed with `script/DeployPrimarySaleV2.s.sol` (addresses in `deployments/*.json`, `primarySaleV2`), web
+switched (PR #52), migration 0005 applied by the migrate container, indexers read v1 + v2 (`PRIMARY_SALE_ADDRESS`
+comma list, schemas `indexer_arbsep_v3` / `indexer_rh_v2`). Checks: Celo Sepolia redeem with a 5% partner paid
+the partner exactly 5% (`PartnerPaid`); live-app purchase on Arbitrum Sepolia through the voucher API; v1
+`MINTER_ROLE` revoked on all three. Rollback: image `regenbazaar_web:pre-partner`, `.env.bak-pre-partner-20261006`,
+DB dump `/root/regenbazaar-backups/regenbazaar-pre-partner-20261006.sql` (v1 would need its MINTER_ROLE back).
+Open: Arbitrum Sepolia Blockscout source verification (API behind a Cloudflare challenge).
