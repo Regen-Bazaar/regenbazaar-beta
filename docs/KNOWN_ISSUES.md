@@ -10,9 +10,12 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   diverge. So drift is caught by CI rather than discovered at runtime.
 - _Better fix later:_ apply the real migrations to PGlite in dev too, removing the snapshot entirely.
 
-## IV reference tables are seed values, not certified
-- Weights and multipliers in `impact-engine/src/tables.ts` are placeholders spanning the full spectrum.
-  They are explicitly labelled "platform-assessed, not third-party certified" in the UI and methodology.
+## IV reference tables are Regen Bazaar's own index, not certified
+- **Updated 2026-09-28:** new reports use the v0.2 tables (`impact-engine/src/tables-v02.ts`); every weight has a
+  justification card with its source status (sourced, derived or assumption). The v0.1 seed tables (`tables.ts`)
+  stay only so old reports recompute.
+- Many v0.2 weights are still labelled assumptions (see the methodology v0.2 item below). Impact Value is labelled
+  as Regen Bazaar's own index, not a certification, in the UI and methodology.
 - Must be calibrated with domain experts before any "certified" claim or real-money use.
 
 ## Rule-based extractor is best-effort
@@ -20,26 +23,29 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   wording may be missed or mis-bucketed. The DeepSeek LLM path is the canonical extractor; rule-based is
   the no-API-key fallback. Quantities are read but units/synonyms are limited.
 
-## On-chain layer: deployed on Celo Sepolia and Arbitrum Sepolia (2026-09)
-- Both run the v3 contracts. The hosted app targets one network per build (`NEXT_PUBLIC_NETWORK`,
-  default Arbitrum Sepolia). Submissions are off-chain and shared; listings are per chain (`listings.chain_id`).
-  A submission approved on Celo has no Arbitrum listing until re-approved on an Arbitrum build.
+## On-chain layer: three testnets, one site (resolved 2026-09)
+- **Resolved:** "one network per build" is gone. One site, app.regenbazaar.com, serves Arbitrum Sepolia,
+  Robinhood Chain testnet and Celo Sepolia with a network switcher in the header. All three run the v3 contracts
+  and, since 2026-10-06, RegenPrimarySale v2. Listings are per chain (`listings.chain_id`); a report is listed on
+  exactly one network.
 
-## Deploy artifacts are unvalidated
-- `deploy/` (Dockerfile, compose, nginx, runbook) is code-ready but has **not been built on a Docker host**
-  (no local Docker daemon). Expect first-deploy iteration: standalone tracing for the pnpm monorepo, the
-  one-shot migrate service, and the nginx subdomain/TLS wiring should be verified on the VPS.
+## Deploy artifacts are unvalidated (resolved 2026-09)
+- **Resolved:** `deploy/` runs on the shared VPS (Docker compose: web, migrate, postgres, ipfs, two Ponder
+  indexers; nginx with TLS).
 
-## No authentication yet
-- There is no wallet/SIWE or embedded-wallet login. Submissions are attributed to a demo NGO
-  (`getDemoOrgId`). Onboarding (Privy/thirdweb embedded, gasless) is a later phase.
+## No authentication yet (partly resolved)
+- **Resolved:** submissions are no longer attributed to a demo NGO; each creator is a name plus payout wallet
+  (see "Organisation profiles" below). Validator screens and APIs require a shared access code (`ADMIN_TOKEN`).
+- **Still open:** no wallet/SIWE login for creators or buyers, and no personal validator accounts (on the
+  roadmap). Gasless onboarding for non-crypto users is a later phase; thirdweb is not used.
 
-## Indexer not yet present
-- Leaderboard and marketplace read the off-chain DB. Once contracts are live, an indexer (Ponder) should
-  feed on-chain events (mint/list/sale/stake) into Postgres so these views reflect chain truth.
+## Indexer not yet present (resolved)
+- **Resolved:** Ponder indexers run for Arbitrum Sepolia and Robinhood Chain testnet. Leaderboard and marketplace
+  still read the off-chain DB (see "Indexers are per chain" below).
 
-## Buyer dashboard / purchases absent
-- There is no buyer-side dashboard because purchases require the on-chain marketplace, which is pending.
+## Buyer dashboard / purchases absent (resolved)
+- **Resolved:** purchases run through RegenPrimarySale; `/portfolio` shows the connected wallet's tRWI, read from
+  the chain, with retire.
 
 ## Contract dependencies are fetched, not vendored
 - `packages/contracts/lib/` (OpenZeppelin, EAS, forge-std) is git-ignored, not committed and not a git
@@ -62,10 +68,9 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   later — the token's `ipfs://<cid>` does not change.
 - **Operator is a hot key.** The web server signs attest/mint with the operator key (= deployer for beta).
   Use a dedicated operator key and keep admin offline; rotate + multisig before mainnet.
-- **Marketplace buy + non-crypto onboarding not built.** "Fund" needs thirdweb Marketplace V3 + an
-  embedded-wallet onboarding provider (client IDs pending from owner).
-- **Deploy artifacts not Docker-validated.** `deploy/` (compose: web+migrate+ipfs+indexer+postgres) is
-  code-ready but unrun on a Docker host; expect first-deploy iteration on the VPS.
+- **Resolved: marketplace buy.** Buying works through our own contracts (RegenPrimarySale, RegenMarketplace);
+  thirdweb is not used. Non-crypto onboarding (embedded wallet, gasless) is still a later phase.
+- **Resolved: deploy artifacts.** The compose stack runs on the VPS.
 - **Ponder reads `.env.local`** (not `.env`); contract addresses + start blocks must be set there (or in the
   process env) or it syncs from block 0.
 
@@ -76,8 +81,7 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   signer + frontend EIP-712 updated with `feeBps` and pointed at v3. Branch merged to local `main`.
 - **Superseded (2026-09):** the old HelpRent VPS 62.72.44.6 was decommissioned 2026-07-12; the app now runs on
   169.58.27.199 against the Arbitrum Sepolia deployment (see "Arbitrum buildathon deployment" below).
-- **NOT DONE — push to remote.** `main` is merged locally only; not pushed to `origin`
-  (`Regen-Bazaar/regenbazaar-beta`) per the never-push-to-main policy. Push the branch + open a PR instead.
+- **Resolved: push to remote.** The repo is on GitHub (`Regen-Bazaar/regenbazaar-beta`); changes go through PRs.
 - **Emissions still mint-on-claim (now capped).** REBAZ has a hard cap, but staking still mints rewards on
   demand; once the cap is hit, normal `claim`/`unstake` revert (principal still exits via `emergencyUnstake`).
   A funded-reserve emission model is the intended longer-term replacement.
@@ -100,9 +104,9 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
 - **Live at https://app.regenbazaar.com** (VPS 169.58.27.199, nginx `regenbazaar.conf`, Let's Encrypt via webroot,
   renew hook reloads nginx). Cloudflare record `app` is **DNS-only (not proxied)**: proxying would break the
   HTTP-01 webroot renewal unless the challenge path is also served on 443 or the cert moves to dns-cloudflare.
-- **`/api/verifications` has no auth** and the app is now public: anyone can approve a submission, which makes
-  the operator key pay gas for an EAS attestation. Testnet-only risk (burner key, ~0.00002 ETH per attest), but
-  add validator auth before any real use. Watch the operator balance during judging.
+- **Resolved: `/api/verifications` auth.** Approve, reject, proof checks and partner changes require the shared
+  validator access code (`ADMIN_TOKEN`, server env; unset means nobody has access). Personal validator accounts
+  are still open.
 - **Demo sells in tUSDG** (`SALE_CURRENCY=tUSDG`) because the Paxos testnet faucet stopped dispensing
   (no outgoing transfers from `0xcc96…70a3` after 2026-09-22). Real USDG is allowlisted; switch = unset
   `SALE_CURRENCY` + rebuild. Listings are priced in the currency active at approve time.
@@ -113,7 +117,7 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   The first name typed for a wallet is kept; later names for the same wallet are ignored silently.
 - **Double counting** is guarded by human review + heuristics, not by cryptographic uniqueness. Cross-registry
   checks (other platforms, Hypercerts) and evidence requirements (geotagged photos) are not built.
-- **Indexers are per chain** (`indexer_arbsep_v2`, `indexer_rh_v1`; none for Celo); public RPCs
+- **Indexers are per chain** (`indexer_arbsep_v3`, `indexer_rh_v2` since 2026-10-06; none for Celo); public RPCs
   occasionally throw transient BlockNotFound errors that Ponder retries. The web app does not read these tables yet.
 - **Legacy double listings:** reports approved before 2026-09-25 are listed on both Arbitrum Sepolia and Robinhood
   Chain testnet (test data, intentionally left). New reports are listed on one network only.
@@ -123,7 +127,7 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
 ## Operational reminders
 - Rotate the GitHub `admin:org` token used during earlier org operations (it appeared in chat).
 - Secrets (DeepSeek, deployer, DB) live only in server env / local `.env` files, never committed.
-- The next version-control step is pushing this monorepo to a GitHub repo (name/visibility TBD by owner).
+- Resolved: the monorepo is on GitHub (`Regen-Bazaar/regenbazaar-beta`).
 
 ## Intermittent React hydration error #418 on /marketplace (found 2026-09-25)
 - About 1 in 10 fresh loads of `/marketplace` in headless Chrome throw React error #418 (server HTML does not
@@ -143,7 +147,7 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   do not list.
 - The WalletConnect domain must be allowlisted for the project id at cloud.reown.com, or connections fail.
 
-## 2026-09-28 — Methodology v0.2 (branch feat/methodology-v02, not deployed)
+## 2026-09-28 — Methodology v0.2 (live since 2026-09-28)
 - **Provisional numbers.** All six domain coefficients k are 1.0 and most non-environment weights are labelled
   assumptions until the expert round. The ±50% sensitivity test
   (`docs/methodology/sensitivity.md`) shows most assumption weights change the ranking of sample reports.
@@ -173,3 +177,7 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
 - **Partner share** (updated 2026-10-07): partners are managed at `/verify/partners` (validators only) and
   attached at approval. A paused partner blocks its lots' sales until resumed or detached. Detaching does not
   revoke a voucher signed in the last hour; that voucher still pays the partner until it expires.
+
+## Validator rewards (open)
+- Validator rewards: not designed. An earlier plan used the REBAZ token; needs separate design (token model, legal
+  review, incentives). Owner: revisit later. Do not promise rewards in public texts.
