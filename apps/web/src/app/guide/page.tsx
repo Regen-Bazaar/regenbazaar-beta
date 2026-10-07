@@ -4,7 +4,7 @@ import { currentNetwork } from "../../lib/network-server";
 
 export const metadata = {
   title: "How to try Regen Bazaar",
-  description: "A plain-language walkthrough: browse, fund an impact with test tokens, or tokenize your own report.",
+  description: "A plain-language walkthrough: browse, buy impact with test tokens, or tokenize your own report.",
 };
 
 // Plain-language walkthrough for first-time visitors (judges, testers). Faucet links differ per network.
@@ -25,7 +25,7 @@ const GAS_FAUCETS: Record<string, { name: string; url: string }[]> = {
 
 const TOC = [
   { id: "look", label: "Just looking" },
-  { id: "fund", label: "Fund an impact" },
+  { id: "buy", label: "Buy impact" },
   { id: "tokens", label: "Test tokens by network" },
   { id: "tokenize", label: "Tokenize your impact" },
   { id: "words", label: "Words you will see" },
@@ -94,7 +94,7 @@ export default async function Guide() {
         </ul>
       </Section>
 
-      <Section id="fund" title={`Fund an impact (about 5 minutes)`}>
+      <Section id="buy" title={`Buy impact (about 5 minutes)`}>
         <ol className="list-decimal space-y-4 pl-5 marker:font-semibold marker:text-accent">
           <li>
             <b>Get a wallet.</b> On a computer, install the{" "}
@@ -138,14 +138,14 @@ export default async function Guide() {
           </li>
           )}
           <li>
-            <b>Fund.</b> In the <Link href="/marketplace" className="link">Marketplace</Link>, click{" "}
-            <i>Fund this impact</i>.{" "}
+            <b>Buy.</b> In the <Link href="/marketplace" className="link">Marketplace</Link>, click{" "}
+            <i>Buy this impact</i>.{" "}
             {native
               ? "Your wallet asks once, to confirm the purchase."
               : `Your wallet asks twice: first to allow ${cur.symbol} to be spent (approve), then to confirm the purchase.`} If the network is missing in your wallet, it will offer to add it.
           </li>
           <li>
-            <b>See what you funded</b> on <Link href="/portfolio" className="link">My impact</Link>. You can
+            <b>See what you bought</b> on <Link href="/portfolio" className="link">My impact</Link>. You can
             retire an edition to permanently claim its share of the impact.
           </li>
         </ol>
@@ -239,7 +239,7 @@ export default async function Guide() {
             <b>tRWI</b>: tokenized real-world impact, a token that represents a verified piece of work.
           </li>
           <li>
-            <b>Edition</b>: one share of an impact. Each impact is split into 100 editions, so you can fund a small part.
+            <b>Edition</b>: one share of an impact. Each impact is split into 100 editions, so you can buy a small part.
           </li>
           <li>
             <b>Domain score</b>: the score for one impact area (environment, animal welfare, education, poverty, social,
@@ -260,11 +260,11 @@ export default async function Guide() {
           </li>
           {native ? (
             <li>
-              <b>Confirm</b>: the one wallet pop-up when funding; it sends {cur.symbol} and makes the purchase.
+              <b>Confirm</b>: the one wallet pop-up when buying; it sends {cur.symbol} and makes the purchase.
             </li>
           ) : (
             <li>
-              <b>Approve / Confirm</b>: the two wallet pop-ups when funding. The first lets the site use your{" "}
+              <b>Approve / Confirm</b>: the two wallet pop-ups when buying. The first lets the site use your{" "}
               {cur.symbol} for this purchase, the second makes the purchase.
             </li>
           )}

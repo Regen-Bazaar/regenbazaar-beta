@@ -375,3 +375,15 @@ Append-only record of significant choices, why we made them, and the trade-offs 
 - **Owner decision:** a partner's share cannot be changed after creation. The share is signed into every
   voucher, so editing it would silently change the split of lots already listed. For a different share, create
   a new partner record; existing lots keep the old one.
+
+## 2026-10-07 — Wording: buying created impact, not funding
+
+- **Owner:** Regen Bazaar sells impact that has already been created and verified. It is not funding of future
+  work and not a donation platform. The money goes to the creator, which may motivate more impact, but the
+  transaction is a purchase.
+- **Changed:** "Fund this impact" → "Buy this impact", "Funded ✓" → "Bought ✓", "Impact Value funded" → "Impact
+  Value owned", funder → buyer across the app, guide, roadmap and metadata. Kept: "grant funding" of the platform's
+  own milestones and legal "foreign funding" wording.
+- **Roadmap:** the organisation dashboard item now covers organisations and individuals and lets creators pause
+  or withdraw their own listings (impact already used in a listing stays used). Owner decision R6: until then,
+  creator (via admin) and admin can withdraw a listing.

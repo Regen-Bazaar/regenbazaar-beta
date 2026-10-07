@@ -11,8 +11,8 @@ export const dynamic = "force-dynamic";
 const CYCLE = [
   { k: "Report", d: "An NGO describes its work in plain language: what, how many, where, when." },
   { k: "Evaluate", d: "AI extracts the actions, a published formula scores Impact Value, a validator attests it on-chain." },
-  { k: "List", d: "The attested impact is listed as tRWI editions. Nothing is minted until someone funds it." },
-  { k: "Fund", d: "A funder pays in the network's currency (USDG stablecoin, or CELO on Celo): tRWI is minted to them and the NGO is paid in the same transaction." },
+  { k: "List", d: "The attested impact is listed as tRWI editions. Nothing is minted until someone buys it." },
+  { k: "Buy", d: "A buyer pays in the network's currency (USDG stablecoin, or CELO on Celo): tRWI is minted to them and the NGO is paid in the same transaction." },
 ];
 
 export default async function Home() {
@@ -88,11 +88,11 @@ export default async function Home() {
             </h1>
             <p className="mt-6 max-w-[40ch] text-[clamp(1.1875rem,1.5vw,1.375rem)] text-muted">
               For NGOs and communities to tokenize their impact, across environment, animal welfare, education,
-              poverty and beyond; for funders to back it with stablecoins, with proof on-chain.
+              poverty and beyond; for buyers to purchase it with stablecoins, with proof on-chain.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link href="/marketplace" className="btn btn-primary">
-                Fund impact
+                Buy impact
               </Link>
               <Link href="/tokenize" className="btn btn-secondary">
                 Tokenize impact (NGOs)

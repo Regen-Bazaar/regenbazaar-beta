@@ -12,7 +12,7 @@ export interface Phase {
 }
 
 export const ROADMAP_INTRO =
-  "Regen Bazaar turns verified real-world impact into tRWI tokens that anyone can fund in a stablecoin, with the " +
+  "Regen Bazaar turns verified real-world impact into tRWI tokens that anyone can buy in a stablecoin, with the " +
   "organisation paid in the same transaction. This roadmap is ordered by priority, has no dates, and marks the " +
   "milestones we would take on with grant funding. Everything today runs on test networks.";
 
@@ -37,7 +37,7 @@ export const DONE: { text: string; proof?: string }[] = [
   { text: "Proof levels P0 to P4 set by a validator; proof links fetched safely on the server, saved as a dated snapshot and checked for dates, numbers and place" },
   { text: "Prices in US dollars from the Impact Value, the proof level and the difficulty of the work, paid in a dollar stablecoin on Arbitrum Sepolia and Robinhood Chain testnet" },
   { text: "Generated artwork for every tRWI, pinned to IPFS as the token image" },
-  { text: "Funder page with holdings and retirement; step-by-step guide", proof: "https://app.regenbazaar.com/guide" },
+  { text: "Buyer page with holdings and retirement; step-by-step guide", proof: "https://app.regenbazaar.com/guide" },
   { text: "Public-beta safety: content moderation, rate limits, reviewer-only approvals, duplicate hints for reviewers" },
 ];
 
@@ -62,7 +62,7 @@ export const PHASES: Phase[] = [
     title: "Trust: methodology v0.2 and proof of impact",
     status: "now",
     grant: true,
-    goal: "Make the Impact Value a number a funder can rely on, and make double counting hard.",
+    goal: "Make the Impact Value a number a buyer can rely on, and make double counting hard.",
     items: [
       "Dated and geotagged photos read on upload, and a second-party witness flow, as evidence for proof levels P2 and P3",
       "Automatic ecosystem sensitivity at the site coordinates, read on demand from open global maps (ESA WorldCover land cover including mangroves, Allen Coral Atlas reefs, Global Forest Watch data) with no local copy of the maps; today a validator checks the site on the maps by hand",
@@ -75,7 +75,7 @@ export const PHASES: Phase[] = [
       "Every attestation states its proof level (from self-reported to independently verified), who verified it, the evidence used and when it is re-checked",
       "Follow-up monitoring: a dated re-check of the same site (for example survival after 12 and 36 months), attested and linked to the original report",
       "Retiring a tRWI records an on-chain contribution statement: who retired it, how much Impact Value, which project",
-      "Wording across the site says what was funded and contributed, never offsetting or carbon neutrality, in line with EU consumer rules on green claims (Directive 2024/825)",
+      "Wording across the site says what was bought and contributed, never offsetting or carbon neutrality, in line with EU consumer rules on green claims (Directive 2024/825)",
     ],
     doneWhen: [
       "Every scoring weight has a published rationale and cites a source or is marked as a platform estimate",
@@ -92,11 +92,11 @@ export const PHASES: Phase[] = [
     goal: "Let any NGO or community group join in minutes, without knowing what a wallet is.",
     items: [
       "Sign in by email or Telegram, with a wallet created for the organisation behind the scenes; existing wallets still work",
-      "Organisation profile: mission, country, website, all reports, total funded",
+      "Organisation profile: mission, country, website, all reports, total sold",
       "Teams: several people per organisation with roles (owner, editor, viewer)",
       "Proof of control before anyone can edit a profile or change the payout wallet",
       "Payout options for organisations without crypto experience",
-      "Organisation dashboard: reports, listings, sales, funds received",
+      "Creator dashboard for an organisation or a person: reports, listings, sales and payouts received; pause or withdraw their own listings (impact already used in a listing stays used)",
       "First partner integration: DeCleanup users list bundles of 10 or more verified cleanups, checked against DeCleanup's records on Celo, with a share of each sale going to DeCleanup as the tool that verified them",
     ],
     doneWhen: [
@@ -107,23 +107,23 @@ export const PHASES: Phase[] = [
   },
   {
     id: "funders",
-    title: "Funders, companies and AI agents",
+    title: "Buyers, companies and AI agents",
     status: "later",
-    goal: "Make funding impact as easy as a card payment, for individuals, companies and software.",
+    goal: "Make buying impact as easy as a card payment, for individuals, companies and software.",
     items: [
       "Mobile wallets without the in-app browser, gasless checkout, and card payment for people without crypto",
-      "Shareable impact certificates and a full history of what you funded, downloadable as CSV or PDF with links to each attestation",
+      "Shareable impact certificates and a full history of what you bought, downloadable as CSV or PDF with links to each attestation",
       "Company portal: buy across many small projects at once, invoices, and exportable impact reports for sustainability teams",
       "Secondary market on the existing resale contract, with a capped royalty back to the organisation",
-      "AI-agent funding: a documented API for software that discovers, evaluates and funds impact",
-      "Funder ranks and a public leaderboard, ranked by Impact Value funded and retired rather than money spent, so a rank cannot simply be bought; weighted by proof level, and joining is opt-in",
-      "Levels and badges per impact domain and SDG, streaks for regular funding, and a personal impact dashboard showing what your funding achieved",
+      "AI-agent purchases: a documented API for software that discovers, evaluates and buys impact",
+      "Buyer ranks and a public leaderboard, ranked by Impact Value bought and retired rather than money spent, so a rank cannot simply be bought; weighted by proof level, and joining is opt-in",
+      "Levels and badges per impact domain and SDG, streaks for regular purchases, and a personal impact dashboard showing what your purchases stand for",
       "Organisation leaderboard by verified impact delivered, so the most effective groups get seen first",
     ],
     doneWhen: [
-      "A person can fund impact with a card on a phone in under two minutes",
+      "A person can buy impact with a card on a phone in under two minutes",
       "A company can buy a portfolio of impact and download a report for its records",
-      "Every funder has a rank and badges computed from on-chain purchases and retirements, visible on a public leaderboard",
+      "Every buyer has a rank and badges computed from on-chain purchases and retirements, visible on a public leaderboard",
     ],
   },
   {
@@ -137,7 +137,7 @@ export const PHASES: Phase[] = [
       "Accountability: reputation that rewards careful reviews and consequences for false approvals",
       "Disputes: organisations can appeal a decision to a review panel",
       "Community governance over methodology changes and platform rules",
-      "Community funding rounds where funders pool support for many projects at once",
+      "Community buying rounds where buyers pool money to buy impact from many projects at once",
     ],
     doneWhen: [
       "Most reports are verified by community validators, not by the core team",
@@ -153,14 +153,14 @@ export const PHASES: Phase[] = [
       "External security audit of the contracts",
       "Admin roles held by a multisig with a timelock; separate operating keys",
       "Legal review of the tRWI model; terms of use and privacy policy",
-      "Terms that make each organisation and funder responsible for their own country's rules on foreign funding, tax and reporting; organisations confirm at sign-up that they may receive foreign funds, including in stablecoins",
-      "Sanctions screening of organisation and funder wallets",
+      "Terms that make each organisation and buyer responsible for their own country's rules on foreign funding, tax and reporting; organisations confirm at sign-up that they may receive foreign funds, including in stablecoins",
+      "Sanctions screening of organisation and buyer wallets",
       "Checkout only in regulated stablecoins issued natively on each network (for example USDC, and euro stablecoins such as EURe or EURAU), never bridged copies",
       "Launch with pilot partners first, with their consent",
     ],
     doneWhen: [
       "Audit report published and all findings addressed",
-      "First real funding reaches a partner organisation on mainnet",
+      "First real sale pays a partner organisation on mainnet",
     ],
   },
 ];
@@ -169,5 +169,5 @@ export const EXPLORING: string[] = [
   "Outcome-based lending to organisations, tied to measured impact",
   "Interoperability with other on-chain regen platforms and registries (Hypercerts and other open impact standards), so impact tokenized here is recognised and counted there, and never counted twice",
   "More networks, only where a stablecoin and real demand exist",
-  "Proof-only collections: shares that can be retired but not resold, for funders who want a record rather than a tradable token",
+  "Proof-only collections: shares that can be retired but not resold, for buyers who want a record rather than a tradable token",
 ];
