@@ -44,8 +44,8 @@ forge script script/SmokeArc.s.sol --rpc-url $RPC --broadcast 2>&1 | tee -a $LOG
 export SMOKE_EAS_UID=$(python3 -c "import json;r=json.load(open('broadcast/SmokeArc.s.sol/5042/run-latest.json'))['receipts'][-1];print(r['logs'][-1]['data'][:66])")
 [[ -n "$SMOKE_EAS_UID" ]] || { echo "No attestation UID. Stopping."; exit 1; }
 
-echo "== 3/3 buy one share for 0.01 USDC"
-forge script script/SmokeArc.s.sol --rpc-url $RPC --broadcast 2>&1 | tee -a $LOG
+echo "== 3/3 buy: forge cannot simulate Arc USDC transfers; run scripts/arc-mainnet-buy.sh (update its addresses/UID first)"
+echo "attestation UID: $SMOKE_EAS_UID"
 
 unset DEPLOYER_PRIVATE_KEY
 echo "DONE. Tell Claude: done (log: packages/contracts/$LOG)"

@@ -10,6 +10,9 @@ import { TRWI } from "../src/TRWI.sol";
 /// @notice Two-phase live smoke on Arc mainnet, one share paid in USDC (ERC-20, 6 decimals).
 ///         Phase 1 (SMOKE_EAS_UID unset): attest, log the on-chain UID.
 ///         Phase 2 (SMOKE_EAS_UID=<uid>): sign voucher, approve USDC, redeem 1 share, assert balance == 1.
+///         NOTE: on Arc, phase 2 reverts in forge's local EVM (no USDC blocklist precompile 0x1800..01).
+///         Use scripts/arc-mainnet-buy.sh (cast) for the purchase. The UID logged by phase 1 is simulated;
+///         take the real one from the Attested event in the broadcast receipt.
 ///         Env: DEPLOYER_PRIVATE_KEY, ARC_EAS, ARC_SCHEMA_UID, ARC_TRWI, ARC_SALE, ARC_USDC,
 ///         optional SMOKE_PRICE (USDC base units, default 10000 = 0.01 USDC), SMOKE_URI.
 ///         Deployer = ATTESTER + SIGNER + buyer + beneficiary, so the USDC returns to the deployer minus nothing
