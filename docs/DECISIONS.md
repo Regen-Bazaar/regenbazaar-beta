@@ -387,3 +387,15 @@ Append-only record of significant choices, why we made them, and the trade-offs 
 - **Roadmap:** the organisation dashboard item now covers organisations and individuals and lets creators pause
   or withdraw their own listings (impact already used in a listing stays used). Owner decision R6: until then,
   creator (via admin) and admin can withdraw a listing.
+
+## 2026-10-07 — Resale split 2.5 / 2.5 / 2.5; creator royalty 2.5% now
+
+- **Owner:** on resale the creator gets 2.5% royalty, Regen Bazaar 2.5%, and the partner the impact came through
+  2.5%. Regen Bazaar and partners such as DeCleanup are non-profit or volunteer projects; this gives them a small
+  ongoing income.
+- **Now:** `ROYALTY_BPS` 500 → 250 in the voucher route. TRWI stores the royalty when a collection is first minted
+  and does not compare it on later mints, so collections already minted keep 5%; every collection minted from
+  now on (including listed but unsold ones) gets 2.5%.
+- **Later (with the secondary market):** the 2.5% platform part already exists as the RegenMarketplace fee. The
+  partner part needs a new RegenMarketplace version, because ERC-2981 names one royalty receiver per token.
+- **Roadmap:** added team accounts with roles and an action log, validator onboarding and a validator workspace.
