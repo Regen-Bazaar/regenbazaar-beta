@@ -22,7 +22,7 @@ import { getDb } from "../../../lib/db";
 import { pinFile, pinJson } from "../../../lib/ipfs";
 import { onchainEnabled, attestImpact, hasCode, ivToWei } from "../../../lib/onchain";
 import { partnerShareError } from "../../../lib/partner-share";
-import { DEFAULT_NETWORK_KEY, ENABLED_NETWORKS, NATIVE, getNetwork, networkByChainId, usdPerUnit, type Network } from "../../../lib/networks";
+import { DEFAULT_NETWORK_KEY, NATIVE, getNetwork, isNetworkKey, networkByChainId, usdPerUnit, type Network } from "../../../lib/networks";
 import type { DB } from "@rb/db";
 import { isAdmin } from "../../../lib/admin";
 import { cardHeadline } from "../../../lib/impact-view";
@@ -199,7 +199,7 @@ export async function POST(req: Request) {
       .limit(1);
     if (!sub) return NextResponse.json({ error: "submission not found" }, { status: 404 });
     net = sub.chainId == null ? getNetwork(DEFAULT_NETWORK_KEY) : networkByChainId(sub.chainId);
-    if (!net || !ENABLED_NETWORKS.includes(net.key)) {
+    if (!net || !isNetworkKey(net.key)) {
       return NextResponse.json({ error: `network ${sub.chainId} is not enabled` }, { status: 422 });
     }
   }

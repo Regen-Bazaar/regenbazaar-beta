@@ -51,9 +51,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             First child of <body>, not in <head>: a hand-written <head> script is the suspected cause of React error #418. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         <Providers networkKey={network.key}>
+          {!network.chain.testnet && (
+            <p className="border-b border-line bg-raised px-4 py-2 text-center text-sm text-fg">
+              Mainnet experiment on {network.chain.name}: purchases here use real {network.saleCurrency.symbol}.
+            </p>
+          )}
           <Nav />
           <div className="flex-1">{children}</div>
-          <Footer />
+          <Footer mainnet={!network.chain.testnet} />
         </Providers>
       </body>
     </html>

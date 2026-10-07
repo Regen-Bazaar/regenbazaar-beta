@@ -81,7 +81,7 @@ export default async function Home() {
           <div>
             <p className="label-mono flex items-center gap-3 !text-accent">
               <span className="inline-block h-px w-7 bg-current" aria-hidden="true" />
-              Beta · {NETWORK.chain.name} (testnet)
+              Beta · {NETWORK.chain.name} ({NETWORK.chain.testnet ? "testnet" : "mainnet experiment"})
             </p>
             <h1 className="mt-5 text-[clamp(2.6rem,5.4vw,5.25rem)]">
               We turn verified real-world impact into a <span className="text-accent">tradable asset class</span>.

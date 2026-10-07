@@ -1,9 +1,9 @@
 import { createConfig, http } from "wagmi";
 import { injected, walletConnect } from "wagmi/connectors";
 import type { Chain } from "viem";
-import { enabledNetworks } from "./networks";
+import { allNetworks } from "./networks";
 
-const chains = enabledNetworks().map((n) => n.chain) as [Chain, ...Chain[]];
+const chains = allNetworks().map((n) => n.chain) as [Chain, ...Chain[]];
 
 // Public Reown project id (inlined at build time); without it the QR / mobile option is hidden.
 export const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "";
