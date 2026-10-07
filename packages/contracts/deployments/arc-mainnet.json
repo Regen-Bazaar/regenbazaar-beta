@@ -44,8 +44,15 @@
   },
   "deployCost": "14 txs, 0.2045 USDC gas",
   "smoke": {
+    "date": "2026-10-07",
     "attestTx": "0xdeadd7d04dae29d212799f3b105492d53b06b2db6ac7df8c1fccfb31351c1311",
     "attestationUID": "0x2b4c9374b8cdab10b8aba0c35f3a3bbffe47b011898ea3eab69b2ef998176ce5",
-    "redeemTx": "pending"
+    "approveTx": "0x5b881c89c5feb12cbac307d97771b60b3bc1be72e1b84ff30ac4f80ecf26fdfe",
+    "redeemTx": "0x3f168361af0e580ade9bc6849d8df46e03adbf6c91c0ca54852adfa7fd502be3",
+    "redeemBlock": 24691261,
+    "listingTokenId": "1",
+    "result": "1 tRWI share for 0.01 USDC; 3 USDC transfers (buyer->sale, 2.5% fee, NGO payout), sale holds 0 after; buyer balance 1",
+    "gas": "419472 gas, 0.0084 USDC",
+    "note": "Self-purchase: deployer is attester, signer, buyer, beneficiary and fee recipient. Sent via cast (scripts/arc-mainnet-buy.sh): forge's local EVM lacks Arc's USDC blocklist precompile 0x1800..01, so forge script reverts on any USDC transfer before broadcast."
   }
 }
