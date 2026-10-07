@@ -114,7 +114,7 @@ export const PHASES: Phase[] = [
       "Mobile wallets without the in-app browser, gasless checkout, and card payment for people without crypto",
       "Shareable impact certificates and a full history of what you bought, downloadable as CSV or PDF with links to each attestation",
       "Company portal: buy across many small projects at once, invoices, and exportable impact reports for sustainability teams",
-      "Secondary market on the existing resale contract, with a capped royalty back to the organisation",
+      "Secondary market on the existing resale contract: on each resale 2.5% royalty to the creator, 2.5% platform fee, and 2.5% to the partner the impact came through",
       "AI-agent purchases: a documented API for software that discovers, evaluates and buys impact",
       "Buyer ranks and a public leaderboard, ranked by Impact Value bought and retired rather than money spent, so a rank cannot simply be bought; weighted by proof level, and joining is opt-in",
       "Levels and badges per impact domain and SDG, streaks for regular purchases, and a personal impact dashboard showing what your purchases stand for",
@@ -132,6 +132,9 @@ export const PHASES: Phase[] = [
     status: "later",
     goal: "Move verification from our team to an open, accountable community.",
     items: [
+      "Personal accounts for the core team with roles (admin, reviewer) instead of one shared access code, and a log of every approval, rejection and partner change",
+      "Validator sign-up and onboarding: application, short training on proof levels with sample reports, and a first period in which the core team double-checks each decision",
+      "Validator workspace: assigned reports, a checklist per proof level, questions to the creator, and a history of one's own decisions",
       "Validator accounts with a public track record",
       "An open task pool: several independent validators review each report",
       "Accountability: reputation that rewards careful reviews and consequences for false approvals",

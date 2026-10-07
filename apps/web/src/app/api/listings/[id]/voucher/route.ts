@@ -9,7 +9,7 @@ import { PLATFORM_FEE_BPS, partnerShareError } from "../../../../../lib/partner-
 
 export const runtime = "nodejs";
 
-const ROYALTY_BPS = 500; // secondary-sale royalty to the NGO creator (<= TRWI MAX_ROYALTY_BPS = 1000)
+const ROYALTY_BPS = 250; // secondary-sale royalty to the creator, owner decision 2026-10-07 (<= TRWI MAX_ROYALTY_BPS = 1000)
 const DEADLINE_SECS = 3600;
 
 // GET /api/listings/<id>/voucher — return a freshly platform-signed EIP-712 voucher for a primary listing.
