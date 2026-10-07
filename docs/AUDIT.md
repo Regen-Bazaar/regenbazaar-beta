@@ -148,3 +148,21 @@ the partner exactly 5% (`PartnerPaid`); live-app purchase on Arbitrum Sepolia th
 `MINTER_ROLE` revoked on all three. Rollback: image `regenbazaar_web:pre-partner`, `.env.bak-pre-partner-20261006`,
 DB dump `/root/regenbazaar-backups/regenbazaar-pre-partner-20261006.sql` (v1 would need its MINTER_ROLE back).
 Open: Arbitrum Sepolia Blockscout source verification (API behind a Cloudflare challenge).
+
+### 2026-10-07: partner share tested end to end on all three networks
+
+Through the live site: TEST report submitted in the tokenize wizard on each network (org wallet and partner wallet
+are fresh test keys, kept outside git), partner "TEST Partner (share test)" 5% created on `/verify/partners`,
+each report approved with that partner at P1, then 2 editions bought through the voucher API
+(`scripts/buy-via-api.ts`). Payouts measured as balance changes of the org and partner wallets:
+
+| Network | redeem tx | paid | org | partner |
+|---|---|---|---|---|
+| Celo Sepolia (CELO) | 0x9c3c3d4e…6b12 | 0.8092 | 0.74851 (92.5%) | 0.04046 (5%) |
+| Robinhood testnet (USDG) | 0xea018465…b338 | 0.8092 | 0.74851 (92.5%) | 0.04046 (5%) |
+| Arbitrum Sepolia (tUSDG) | 0x122e4dfb…e66d | 0.8092 | 0.74851 (92.5%) | 0.04046 (5%) |
+
+Platform received the 2.5% remainder. Lot pages and marketplace cards showed "creator 92.5% · TEST Partner
+(share test) 5% · platform 2.5%". Pausing the partner made the voucher API refuse all three lots (409). Form
+checks: a 12% share is refused before submit. Afterwards the three TEST listings were set inactive and the test
+partner left paused. Not tested in the browser: "Detach" (uses a confirm dialog).
