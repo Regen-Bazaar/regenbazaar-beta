@@ -96,7 +96,9 @@ async function registerListing(db: DB, net: Network, submissionId: string, partn
     .select({ m: sql<string>`coalesce(max(${listings.tokenId}), 0)` })
     .from(listings)
     .where(eq(listings.chainId, net.chain.id));
-  const tokenId = (BigInt(m ?? "0") + 1n).toString();
+  const last = BigInt(m ?? "0");
+  const floor = BigInt(net.tokenIdFloor ?? 0);
+  const tokenId = ((last > floor ? last : floor) + 1n).toString();
 
   const { address: currency, decimals } = net.saleCurrency;
   // v0.2 (D4): price in USD = IV × rate × P × C, settled in the sale currency at its USD value.

@@ -35,6 +35,8 @@ export interface Network {
   primarySaleVersion: 1 | 2;
   trwi: Hex;
   saleCurrency: SaleCurrency;
+  // Token ids already used on-chain outside the app (scripts); the app's next tokenId starts above this.
+  tokenIdFloor?: number;
 }
 
 export type NetworkKey = "celo-sepolia" | "arbitrum-sepolia" | "robinhood-testnet" | "arc-mainnet";
@@ -134,6 +136,7 @@ function arcMainnet(): Network {
     primarySale: "0x1D4513a40a8DF2046899d72a6634c8eEa9ffbDdE",
     primarySaleVersion: 2,
     trwi: "0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030",
+    tokenIdFloor: 1, // tokenId 1 = script smoke purchase 2026-10-07 (tx 0x3f16…2be3)
     // Circle USDC (ERC-20 interface of native USDC), docs.arc.io/arc/references/contract-addresses
     saleCurrency: { address: "0x3600000000000000000000000000000000000000", symbol: "USDC", decimals: 6 },
   };
