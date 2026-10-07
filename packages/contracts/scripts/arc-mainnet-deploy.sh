@@ -40,7 +40,8 @@ echo "EAS=$ARC_EAS TRWI=$ARC_TRWI SALE=$ARC_SALE SCHEMA=$ARC_SCHEMA_UID"
 
 echo "== 2/3 attest"
 forge script script/SmokeArc.s.sol --rpc-url $RPC --broadcast 2>&1 | tee -a $LOG
-export SMOKE_EAS_UID=$(grep -A1 'PHASE1 attested' $LOG | grep -oE '0x[0-9a-fA-F]{64}' | tail -1)
+# the UID logged by forge is from the simulation; take the real one from the mined Attested event (data word)
+export SMOKE_EAS_UID=$(python3 -c "import json;r=json.load(open('broadcast/SmokeArc.s.sol/5042/run-latest.json'))['receipts'][-1];print(r['logs'][-1]['data'][:66])")
 [[ -n "$SMOKE_EAS_UID" ]] || { echo "No attestation UID. Stopping."; exit 1; }
 
 echo "== 3/3 buy one share for 0.01 USDC"
