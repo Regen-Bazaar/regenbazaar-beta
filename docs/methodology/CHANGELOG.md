@@ -1,8 +1,8 @@
 # Methodology changelog
 
-## v0.2 (Community layer), in development
+## v0.2 (Community layer), live since 2026-09-28
 
-Tables version `v0.2-community-2026-09`. Old reports keep `v0.1-seed-2026-06` and their minted IV.
+Tables version `v0.2-community-2026-09`. Reports scored before keep their v0.1 score (`v0.1-seed-2026-06`) and their minted IV.
 v0.1 and v0.2 numbers are on different scales and should not be compared directly.
 
 | Item | v0.1 | v0.2 | Why |
@@ -22,3 +22,6 @@ v0.1 and v0.2 numbers are on different scales and should not be compared directl
 | Schools | 50 per school | 0.1 per m² of classroom space | IRIS+ unit |
 | Scope | all 34 actions scored | 22 community actions scored; 12 that need capital, a licence or professionals kept aside (score 0) | the Community layer is for work volunteers can do |
 | Price | IV × 0.5 in the sale currency | IV × rate × P × E in USD; E = 1.0 to 1.5 from declared costs | impact sets the price; costs only raise it |
+| Resale | not specified | resale prices are set by the seller | the methodology prices the first sale only |
+
+Paying for delivered impact rewards the creator after the fact: a purchase is not pre-funding or a donation.

@@ -1,3 +1,6 @@
+> **Historical snapshot from June 2026.** For the current state see README.md, docs/ARCHITECTURE.md and
+> docs/KNOWN_ISSUES.md.
+
 # Handover — Regen Bazaar beta (state, what's needed from you, what's next)
 
 _Single page to read at the end of this build phase. Plain language._
@@ -17,7 +20,7 @@ end-to-end against real contracts and real IPFS:
 | Buyer redeem (voucher → pay → lazy mint) | ✅ live-proven on Celo Sepolia |
 | Self-host IPFS metadata pinning | ✅ proven (uri resolves to pinned JSON) |
 | Indexer (Ponder, v2 events) | ✅ live-validated (CollectionRegistered/ImpactMinted/Sold → GraphQL) |
-| Web app + **wallet connect + Fund (buy) UI** | ✅ renders; buy needs a real wallet (MetaMask) to click through |
+| Web app + **wallet connect + Buy UI** | ✅ renders; buy needs a real wallet (MetaMask) to click through |
 | Deploy artifacts (Docker/compose/nginx/ipfs/indexer) | 🟡 code-ready, not yet run on a Docker host |
 | Marketplace **own contracts** (thirdweb dropped — went paid) | ✅ built (primary voucher + secondary escrow) |
 | **Live VPS deploy** | ⚠️ was live at app.regenbazaar.com; that VPS is gone and the DNS record was removed 2026-09-07. Needs redeploying. |
@@ -61,7 +64,7 @@ Deployed addresses + explorer links: `packages/contracts/deployments/celo-sepoli
 ---
 
 ## 2. What I'll do once you unblock each item
-- **You give A1 (+ A2)** → I build **W6**: deploy thirdweb Marketplace V3, wire list + buy ("Fund this impact"), embedded-wallet onboarding so non-crypto users can buy.
+- **You give A1 (+ A2)** → I build **W6**: deploy thirdweb Marketplace V3, wire list + buy ("Buy"), embedded-wallet onboarding so non-crypto users can buy.
 - **You give B3 + B4 (DNS + "go")** → I run the **VPS deploy**: ship the isolated `regenbazaar_*` stack (web + indexer + IPFS + Postgres) via Docker, new nginx server-block + TLS, smoke-test on the live subdomain. (A3/A4 get set in the server `.env`.)
 - **You push to GitHub (B2)** → CI starts gating every change; I can then open PRs instead of local commits.
 
@@ -96,7 +99,7 @@ buy frontend, indexer, IPFS — all proven end-to-end on Celo Sepolia; the hoste
 ### ▶ YOUR side (manual / decisions)
 1. 🔴 **Rotate the GitHub token** `ghp_RZyH…` (compromised — pasted in chat).
 2. **Test a real purchase**: connect MetaMask (add Celo Sepolia, get testnet CELO from a faucet), open the
-   marketplace, click **Fund** on a listing, confirm the tx. (Needs a real wallet — I can't click it headless;
+   marketplace, click **Buy** on a listing, confirm the tx. (Needs a real wallet — I can't click it headless;
    the on-chain redeem itself is already proven.)
 3. **Decide & tell me**: seed the prod DB with demo NGOs/impacts (so the live site isn't empty)? listing
    currency (CELO vs a test-stablecoin)? wallet-less-NGO proceeds (payout address vs custodial ledger)?

@@ -296,9 +296,9 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   carries one `impactValue`, now v0.2.
 - **Alternatives:** dropping SM entirely (rejected by owner; fixed as an area factor instead); pricing from
   NGO cost (rejected; cost only calibrates the rate); rubric-derived weights now (deferred: units inside a
-  domain differ in size, so v0.1 weights stay as labelled assumptions until the cost survey).
+  domain differ in size, so v0.1 weights stay as labelled assumptions until the cost survey (superseded 2026-10-01)).
 - **Trade-offs / fragile:** all k = 1.0 and most non-environment weights are assumptions pending the cost
-  survey (D6); tree counts without area score 0; the default mangrove survival 0.72 is a proxy. The price
+  survey (D6) (superseded 2026-10-01); tree counts without area score 0; the default mangrove survival 0.72 is a proxy. The price
   formula (D4) is not implemented until the owner approves it separately. Staking rewards scale with IV, so
   the v0.2 scale must be considered before mainnet.
 
@@ -323,7 +323,7 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   kept in the tables and cards, score 0 with `out_of_scope`, not offered to the extractor or the form. Registered
   carbon work scores no carbon here. Owner: community groups do not do these for free.
 - **Price (D4 approved):** `price-v02.ts`, USD = IV × rate × P × C; rate $1 per point provisional until the cost
-  survey. First sales settle in USDG at that price; test CELO counted as $1 on Celo Sepolia until a stablecoin is
+  survey (superseded 2026-10-01). First sales settle in USDG at that price; test CELO counted as $1 on Celo Sepolia until a stablecoin is
   added before mainnet. Listings store `price_usd` and `price_model_version`. Alternative (native token) rejected
   for primary sales: NGO revenue would follow the token price; trading lives on the secondary market.
 - **Maps:** validators check the site on satellite, Global Mangrove Watch and Allen Coral Atlas links. Local
