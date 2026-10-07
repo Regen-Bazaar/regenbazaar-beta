@@ -7,6 +7,7 @@ import { FrameworkTag } from "../../components/FrameworkTag";
 import { ErrorNote } from "../../components/ErrorNote";
 import { ReviewV02, type ReviewChoice, type SubmissionV02 } from "./ReviewV02";
 import { fmt, headline, impactView } from "../../lib/impact-view";
+import { bpsToPercent } from "../../lib/partner-share";
 
 type Submission = {
   id: string;
@@ -35,6 +36,8 @@ type Approved = {
   existing?: boolean;
 };
 
+type PartnerOption = { id: string; name: string; feeBps: number; active: boolean };
+
 const netOf = (s: Submission) => (s.chainId == null ? getNetwork(DEFAULT_NETWORK_KEY) : networkByChainId(s.chainId));
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 
@@ -48,6 +51,8 @@ export default function Verify() {
   const [error, setError] = useState("");
   const [approved, setApproved] = useState<Approved[]>([]);
   const [choices, setChoices] = useState<Record<string, ReviewChoice>>({});
+  const [partnerList, setPartnerList] = useState<PartnerOption[]>([]);
+  const [partnerOf, setPartnerOf] = useState<Record<string, string>>({});
 
   useEffect(() => {
     try {
@@ -60,6 +65,10 @@ export default function Verify() {
     const res = await fetch("/api/submissions?status=pending_verification", { headers: { "x-admin-token": token } });
     setDenied(res.status === 401);
     setSubs(res.ok ? await res.json() : []);
+    if (res.ok) {
+      const pr = await fetch("/api/partners", { headers: { "x-admin-token": token } });
+      setPartnerList(pr.ok ? ((await pr.json()) as PartnerOption[]).filter((p) => p.active) : []);
+    }
     setLoading(false);
   }, [token]);
 
@@ -80,6 +89,7 @@ export default function Verify() {
         note: notes[id]?.trim() || undefined,
         proofLevel: c?.proofLevel || undefined,
         esm: c?.esm ? Number(c.esm) : undefined,
+        partnerId: decision === "approve" && partnerOf[id] ? partnerOf[id] : undefined,
       }),
     });
     const body = await res.json().catch(() => ({}));
@@ -95,7 +105,12 @@ export default function Verify() {
 
   return (
     <main className="page-wrap py-10 md:py-14">
-      <h1 className="text-[clamp(2.5rem,4vw,3.5rem)]">Verification queue</h1>
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <h1 className="text-[clamp(2.5rem,4vw,3.5rem)]">Verification queue</h1>
+        <Link href="/verify/partners" className="btn btn-secondary btn-sm">
+          Partners
+        </Link>
+      </div>
       <p className="mt-3 max-w-[70ch] text-lg text-muted">
         Validator review by the Regen Bazaar team. Approving attests the claim on-chain and lists it in the
         Marketplace of the one network it was submitted on. Submitted a report? It will appear in the Marketplace once reviewed.
@@ -270,6 +285,23 @@ export default function Verify() {
                   choice={choices[s.id] ?? { proofLevel: "", esm: "" }}
                   onChoice={(c) => setChoices((m) => ({ ...m, [s.id]: c }))}
                 />
+              )}
+              {partnerList.length > 0 && (
+                <label className="mt-5 block text-sm">
+                  <span className="text-subtle">Partner (optional): receives its share of every sale of this lot</span>
+                  <select
+                    value={partnerOf[s.id] ?? ""}
+                    onChange={(e) => setPartnerOf((m) => ({ ...m, [s.id]: e.target.value }))}
+                    className="field mt-1"
+                  >
+                    <option value="">No partner</option>
+                    {partnerList.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} · {bpsToPercent(p.feeBps)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               )}
               <textarea
                 value={notes[s.id] ?? ""}

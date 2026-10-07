@@ -365,3 +365,13 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   partners are added with SQL until DeCleanup import (part B) needs more.
 - **Trade-off:** a listing whose partner is deactivated stops selling (409) rather than silently paying the
   partner nothing; to sell it without a partner, clear `listings.partner_id`.
+
+## 2026-10-07 — Partners screen; partner share is fixed
+
+- **What:** `/verify/partners` (validators only): list partners with their lots, add a partner (name, payout
+  wallet, share with a live split preview), pause/resume, detach a partner from a lot. The approval queue has a
+  "Partner (optional)" dropdown. APIs: `GET/POST /api/partners`, `PATCH /api/partners/<id>` (active only),
+  `DELETE /api/listings/<id>/partner`.
+- **Owner decision:** a partner's share cannot be changed after creation. The share is signed into every
+  voucher, so editing it would silently change the split of lots already listed. For a different share, create
+  a new partner record; existing lots keep the old one.
