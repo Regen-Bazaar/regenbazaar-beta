@@ -20,6 +20,8 @@ bracket_spacing = true
 celo_sepolia = "${CELO_SEPOLIA_RPC_URL}"
 arbitrum_sepolia = "${ARBITRUM_SEPOLIA_RPC_URL}"
 robinhood_testnet = "https://rpc.testnet.chain.robinhood.com"
+arc_mainnet = "https://rpc.mainnet.arc.io"
 
 [etherscan]
 celo_sepolia = { key = "${CELOSCAN_API_KEY}", url = "https://api-sepolia.celoscan.io/api", chain = 11142220 }
+arc_mainnet = { key = "blockscout", url = "https://explorer.arc.io/api/" }
