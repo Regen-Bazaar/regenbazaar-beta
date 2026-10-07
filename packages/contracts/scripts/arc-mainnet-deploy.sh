@@ -10,6 +10,9 @@ EXPECTED=0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB
 MIN_BASE_UNITS=400000 # 0.40 USDC: ~0.22 needed + forge's 130% gas estimate margin
 
 read -s "DEPLOYER_PRIVATE_KEY?Deployer private key (hidden): "; echo
+DEPLOYER_PRIVATE_KEY=${DEPLOYER_PRIVATE_KEY//[[:space:]]/}
+# forge's vm.envUint needs the 0x prefix; cast accepts either
+[[ "$DEPLOYER_PRIVATE_KEY" == 0x* ]] || DEPLOYER_PRIVATE_KEY="0x$DEPLOYER_PRIVATE_KEY"
 export DEPLOYER_PRIVATE_KEY
 ME=$(cast wallet address "$DEPLOYER_PRIVATE_KEY")
 echo "Deployer: $ME"
