@@ -7,7 +7,7 @@ import { DOMAIN_KEYS, DOMAIN_LABEL, fmt, impactView, physicalText } from "../../
 
 export const metadata = {
   title: "Impact leaderboard",
-  description: "Organizations ranked by verified impact, per impact area and overall.",
+  description: "Creators ranked by verified impact, per impact area and overall.",
 };
 
 export const dynamic = "force-dynamic";
@@ -74,7 +74,7 @@ export default async function Leaderboard({ searchParams }: { searchParams: Prom
     <main className="page-wrap py-10 md:py-14">
       <h1 className="text-[clamp(2.5rem,4vw,3.5rem)]">Impact leaderboard</h1>
       <p className="mt-3 max-w-[70ch] text-lg text-muted">
-        Organizations ranked by verified impact. Only verified and on-chain claims count.{" "}
+        Creators ranked by verified impact. Only verified and on-chain claims count.{" "}
         {domain
           ? `${DOMAIN_LABEL[domain]} uses the domain score and physical units of methodology v0.2 reports.`
           : "All (IV) adds up Impact Value; v0.1 and v0.2 scores are on different scales."}

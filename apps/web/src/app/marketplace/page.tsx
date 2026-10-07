@@ -189,7 +189,8 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
     <main className="page-wrap py-10 md:py-14">
       <h1 className="text-[clamp(2.5rem,4vw,3.5rem)]">Marketplace</h1>
       <p className="mt-3 max-w-[70ch] text-lg text-muted">
-        Buy verified real-world impact. Each edition is a fractional share of the claim. Paid in{" "}
+        Buy verified real-world impact. Each purchase pays the creator directly. Each edition is a fractional share of
+        the claim. Paid in{" "}
         {NETWORK.saleCurrency.symbol} on {NETWORK.chain.name}.{" "}
         <Link href="/guide" className="link">
           New here? How to buy →

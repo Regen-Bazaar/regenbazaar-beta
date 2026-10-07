@@ -7,7 +7,7 @@ import { Portfolio, type PortfolioItem } from "../../components/Portfolio";
 
 export const metadata = {
   title: "My impact",
-  description: "The tRWI you hold, read live from the chain. Retire editions to claim the impact they represent.",
+  description: "The tRWI you hold, read live from the chain. Retire editions to keep them in your name for good.",
 };
 
 export const dynamic = "force-dynamic";

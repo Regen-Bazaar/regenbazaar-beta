@@ -9,10 +9,10 @@ import { DEFAULT_NETWORK_KEY, NATIVE, enabledNetworks } from "../lib/networks";
 export const dynamic = "force-dynamic";
 
 const CYCLE = [
-  { k: "Report", d: "An NGO describes its work in plain language: what, how many, where, when." },
+  { k: "Report", d: "A creator (an NGO, a group or a person) describes work already done, in plain language: what, how many, where, when." },
   { k: "Evaluate", d: "AI extracts the actions, a published formula scores Impact Value, a validator attests it on-chain." },
   { k: "List", d: "The attested impact is listed as tRWI editions. Nothing is minted until someone buys it." },
-  { k: "Buy", d: "A buyer pays in the network's currency (USDG stablecoin, or CELO on Celo): tRWI is minted to them and the NGO is paid in the same transaction." },
+  { k: "Buy", d: "A buyer pays in the network's currency (USDG stablecoin, or CELO on Celo): tRWI is minted to them and the creator is paid in the same transaction." },
 ];
 
 export default async function Home() {
@@ -69,7 +69,7 @@ export default async function Home() {
     ...(physicalStats.length
       ? physicalStats.slice(0, 3)
       : [{ v: Number(stats?.totalIv ?? 0).toLocaleString("en-US", { maximumFractionDigits: 0 }), k: "total Impact Value" }]),
-    { v: Number(stats?.orgs ?? 0).toLocaleString("en-US"), k: "organisations" },
+    { v: Number(stats?.orgs ?? 0).toLocaleString("en-US"), k: "creators" },
     { v: Number(listed?.n ?? 0).toLocaleString("en-US"), k: "reports listed on-chain" },
     { v: String(enabledNetworks().length), k: "test networks" },
   ];
@@ -87,15 +87,15 @@ export default async function Home() {
               We turn verified real-world impact into a <span className="text-accent">tradable asset class</span>.
             </h1>
             <p className="mt-6 max-w-[40ch] text-[clamp(1.1875rem,1.5vw,1.375rem)] text-muted">
-              For NGOs and communities to tokenize their impact, across environment, animal welfare, education,
-              poverty and beyond; for buyers to purchase it with stablecoins, with proof on-chain.
+              For NGOs, community groups and individuals to sell impact they already created, across environment, animal
+              welfare, education, poverty and beyond; for buyers to purchase it with stablecoins, with proof on-chain.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link href="/marketplace" className="btn btn-primary">
                 Buy impact
               </Link>
               <Link href="/tokenize" className="btn btn-secondary">
-                Tokenize impact (NGOs)
+                Tokenize impact (creators)
               </Link>
               <Link href="/guide" className="link px-2 py-3">
                 How to try the demo →
@@ -193,7 +193,11 @@ export default async function Home() {
               </li>
             ))}
           </ol>
-          <p className="mt-10">
+          <p className="mt-10 max-w-[60ch] text-muted">
+            You buy impact that already happened. The money goes straight to the people who created it, and that is how
+            more impact gets funded: after the result, not before.
+          </p>
+          <p className="mt-6">
             <Link href="/methodology" className="link">How impact is scored →</Link>
             <span className="mx-3 text-subtle">·</span>
             <Link href="/roadmap" className="link">Roadmap →</Link>

@@ -7,7 +7,7 @@ import { ProofBadge } from "../../components/ImpactBadges";
 import { DOMAIN_LABEL, headline, impactView, physicalText, sumPhysical } from "../../lib/impact-view";
 
 export const metadata = {
-  title: "NGO dashboard",
+  title: "Creator dashboard",
   description: "Approved impact reports on Regen Bazaar, with their Impact Value and on-chain status.",
 };
 
@@ -42,7 +42,7 @@ export default async function Dashboard() {
     <main className="page-wrap py-10 md:py-14">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[clamp(2.5rem,4vw,3.5rem)]">NGO dashboard</h1>
+          <h1 className="text-[clamp(2.5rem,4vw,3.5rem)]">Creator dashboard</h1>
           <p className="mt-3 text-lg text-muted">Approved impact reports. New submissions appear here after review.</p>
         </div>
         <Link href="/tokenize" className="btn btn-primary">

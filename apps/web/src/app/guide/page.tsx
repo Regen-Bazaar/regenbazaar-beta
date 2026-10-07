@@ -146,7 +146,7 @@ export default async function Guide() {
           </li>
           <li>
             <b>See what you bought</b> on <Link href="/portfolio" className="link">My impact</Link>. You can
-            retire an edition to permanently claim its share of the impact.
+            retire an edition in your name: it is burned, can never be resold, and the chain records that you retired it.
           </li>
         </ol>
       </Section>
@@ -197,7 +197,7 @@ export default async function Guide() {
         </p>
       </Section>
 
-      <Section id="tokenize" title="Tokenize your impact (NGOs)">
+      <Section id="tokenize" title="Tokenize your impact (creators)">
         <ol className="list-decimal space-y-4 pl-5 marker:font-semibold marker:text-accent">
           <li>
             Open <Link href="/tokenize" className="link">Tokenize impact</Link> and describe what you did in
@@ -216,8 +216,10 @@ export default async function Guide() {
             without proof are not listed.
           </li>
           <li>
-            Enter your organisation name and a <b>payout wallet</b> (your MetaMask address). Every sale pays this wallet
-            directly in {cur.symbol}. No wallet? Leave both empty and it is submitted as a demo.
+            Enter your name or organisation name and a <b>payout wallet</b> (your MetaMask address; a personal wallet is
+            fine). Every sale pays this wallet directly in {cur.symbol}, minus the 2.5% platform fee and any partner
+            share. Each sale is income for work you already did; you decide how to use it, including for your next
+            project. No wallet? Leave both empty and it is submitted as a demo.
           </li>
           <li>
             Press <i>Submit for verification</i>. Reports are checked automatically for inappropriate content, and you
@@ -255,8 +257,8 @@ export default async function Guide() {
             score.
           </li>
           <li>
-            <b>Retire</b>: permanently claim the impact of an edition you own. The edition is burned and cannot be
-            resold.
+            <b>Retire</b>: keep an edition you own for good, in your name. The edition is burned, can never be resold,
+            and the chain records that you retired it.
           </li>
           {native ? (
             <li>

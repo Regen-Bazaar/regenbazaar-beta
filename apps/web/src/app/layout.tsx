@@ -25,7 +25,7 @@ if(t!=="light"&&t!=="dark"){t=matchMedia("(prefers-color-scheme: light)").matche
 document.documentElement.dataset.theme=t})()`;
 
 const DESCRIPTION =
-  "We turn verified real-world impact into a tradable asset class, for NGOs to tokenize impact and for buyers to purchase it. Testnet beta.";
+  "We turn verified real-world impact into a tradable asset class, for creators to tokenize impact and for buyers to purchase it. Testnet beta.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

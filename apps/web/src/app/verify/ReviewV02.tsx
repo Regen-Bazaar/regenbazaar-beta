@@ -117,7 +117,7 @@ export function ReviewV02({
 
       {c.aiActions && (
         <div className={`rounded-xl p-4 text-sm ${c.submitterEdited ? "border border-line-strong bg-accent-tint" : "bg-raised"}`}>
-          <b>{c.submitterEdited ? "The organisation corrected the AI reading" : "The organisation confirmed the AI reading"}</b>
+          <b>{c.submitterEdited ? "The creator corrected the AI reading" : "The creator confirmed the AI reading"}</b>
           <div className="mt-1 grid gap-2 sm:grid-cols-2">
             <div>
               <div className="label-mono">AI read</div>
@@ -126,7 +126,7 @@ export function ReviewV02({
               ))}
             </div>
             <div>
-              <div className="label-mono">Scored (organisation)</div>
+              <div className="label-mono">Scored (creator)</div>
               {(s.extractedActions ?? []).map((a, i) => (
                 <div key={i}>{actionText(a)}</div>
               ))}

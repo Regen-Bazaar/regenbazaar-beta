@@ -115,8 +115,8 @@ export default function Methodology() {
           <div className="mt-12 space-y-10">
             <Section id="status" title="Status: what this is and is not">
               <p>
-                Impact Value is <b>Regen Bazaar&apos;s own relative index</b> for comparing reports from small NGOs and
-                community groups. It is <b>not a certification</b>, not a carbon or biodiversity credit, and it does not
+                Impact Value is <b>Regen Bazaar&apos;s own relative index</b> for comparing reports from small NGOs,
+                community groups and individual creators. It is <b>not a certification</b>, not a carbon or biodiversity credit, and it does not
                 let a buyer claim any emissions result. Weights marked &quot;assumption&quot; are platform judgement awaiting an
                 expert review. Projects certified by a registry can declare their
                 serial number, which prevents double claiming.
@@ -143,7 +143,7 @@ export default function Methodology() {
 
             <Section id="extraction" title="Extraction: the AI reads, it never scores">
               <p>
-                A language model reads the report and lists actions (type, quantity, unit). The organisation checks and
+                A language model reads the report and lists actions (type, quantity, unit). The creator checks and
                 corrects that list; the validator sees both. The score is a pure function of the numbers and the
                 published tables. Report text is treated as data, so instructions hidden in it are ignored.
               </p>
@@ -279,7 +279,7 @@ export default function Methodology() {
                 a reference frame, not a limit. The 50% cap is set for this methodology version and is not calibrated yet.
               </p>
               <p>
-                First sales settle in a dollar stablecoin (USDG) at that price; resale is free. On the Celo test network
+                First sales settle in a dollar stablecoin (USDG) at that price; resale prices are set by the seller. On the Celo test network
                 test CELO is counted as $1 until a stablecoin is added before mainnet. v0.1 reports keep IV ×{" "}
                 {PRICE_RATE_PER_IV} in the sale currency.
               </p>

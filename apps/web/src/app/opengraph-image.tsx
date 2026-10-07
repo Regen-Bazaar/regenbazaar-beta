@@ -14,7 +14,7 @@ export default async function Image() {
             We turn verified real-world impact into a&nbsp;<span style={{ color: GOLD }}>tradable asset class.</span>
           </div>
           <div style={{ display: "flex", marginTop: 28, fontSize: 32, color: MUTED, lineHeight: 1.4 }}>
-            NGOs tokenize their impact as tRWI; buyers purchase it with stablecoins, with proof on-chain.
+            Creators tokenize their impact as tRWI; buyers purchase it with stablecoins, with proof on-chain.
           </div>
         </div>
       </OgFrame>
