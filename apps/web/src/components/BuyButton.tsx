@@ -125,7 +125,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
         rel="noopener noreferrer"
         className="btn btn-sm mt-4 w-full border-ok/40 bg-ok-tint text-ok"
       >
-        Funded ✓ · view tx
+        Bought ✓ · view tx
       </a>
     );
   }
@@ -136,7 +136,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
         disabled={state === "busy"}
         className="btn btn-primary w-full"
       >
-        {state === "busy" ? "Confirm in wallet…" : isConnected ? "Fund this impact" : "Connect to fund"}
+        {state === "busy" ? "Confirm in wallet…" : isConnected ? "Buy this impact" : "Connect to buy"}
       </button>
       {msg && <ErrorNote text={msg} className={`mt-2 text-xs ${state === "error" ? "text-danger" : "text-subtle"}`} />}
     </div>

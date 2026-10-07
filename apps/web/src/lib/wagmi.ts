@@ -19,7 +19,7 @@ export const wagmiConfig = createConfig({
             showQrModal: true,
             metadata: {
               name: "Regen Bazaar",
-              description: "Fund verified real-world impact",
+              description: "Buy verified real-world impact",
               url: "https://app.regenbazaar.com",
               icons: ["https://app.regenbazaar.com/apple-icon.png"],
             },

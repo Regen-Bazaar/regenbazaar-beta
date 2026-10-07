@@ -49,7 +49,7 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
   if (!isConnected) {
     return (
       <div className="card mt-10 max-w-[640px] p-8">
-        <p className="text-lg text-muted">Connect the wallet you funded with to see its tRWI and retire editions.</p>
+        <p className="text-lg text-muted">Connect the wallet you bought with to see its tRWI and retire editions.</p>
         <button
           onClick={() => connectAny() || setMsg(NO_WALLET_HINT)}
           className="btn btn-primary mt-5"
@@ -96,7 +96,7 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
       <div className="grid gap-5 sm:grid-cols-3">
         <Stat label="Collections held" value={String(held.length)} />
         <Stat label="Editions held" value={held.reduce((s, i) => s + i.balance, 0n).toString()} />
-        <Stat label="Impact Value funded" value={totalIV.toLocaleString(undefined, { maximumFractionDigits: 2 })} />
+        <Stat label="Impact Value owned" value={totalIV.toLocaleString(undefined, { maximumFractionDigits: 2 })} />
       </div>
 
       {isLoading ? (
@@ -105,7 +105,7 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
         <p className="card mt-10 p-8 text-muted">
           No tRWI on {chain.name} for {address?.slice(0, 6)}…{address?.slice(-4)} yet.{" "}
           <Link href="/marketplace" className="link">
-            Fund an impact
+            Buy impact
           </Link>
         </p>
       ) : (

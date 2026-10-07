@@ -32,7 +32,7 @@ export function Footer() {
             </span>
           </Link>
           <p className="mt-4 text-muted">
-            Verified real-world impact as a tradable asset class, for NGOs and the people who fund them.
+            Verified real-world impact as a tradable asset class, for the people who create it and the people who buy it.
           </p>
           <p className="mt-4 text-sm text-subtle">
             Testnet beta: test networks and test tokens only, no real money moves. Impact Value is Regen Bazaar&apos;s
