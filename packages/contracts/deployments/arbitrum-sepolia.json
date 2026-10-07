@@ -85,7 +85,7 @@
       "tUSDG"
     ],
     "trwiMinter": true,
-    "verified": "not yet: blockscout API behind a Cloudflare challenge",
+    "verified": "blockscout: verified (exact match) 2026-10-07 via the web form",
     "status": "live on the web since 2026-10-06 (networks.ts primarySaleVersion 2); v1 MINTER_ROLE on TRWI revoked 2026-10-06",
     "v1MinterRevokeTx": "0xabb9445bb6d41515976c8dfeea0263a4a6f5137554341acb2f6488ba6b58dc8a",
     "e2eLiveApp": {

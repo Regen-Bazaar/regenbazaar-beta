@@ -66,7 +66,7 @@ docs/         POSITIONING.md · ARCHITECTURE.md · DECISIONS.md · KNOWN_ISSUES.
 - **Storage** (later): Cloudflare R2 + CDN primary, self-hosted IPFS (kubo) backup.
 
 ## Deployed (v3, testnets)
-Source-verified on Blockscout (RegenPrimarySale v2 on Arbitrum Sepolia: pending, see the deployment record).
+Source-verified on Blockscout on all three networks.
 Full records, including proof transactions: `packages/contracts/deployments/*.json`. Design:
 `docs/SMART_CONTRACT_DESIGN.md`.
 
