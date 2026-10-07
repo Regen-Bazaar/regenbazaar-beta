@@ -37,7 +37,7 @@ export interface Network {
   saleCurrency: SaleCurrency;
 }
 
-export type NetworkKey = "celo-sepolia" | "arbitrum-sepolia" | "robinhood-testnet";
+export type NetworkKey = "celo-sepolia" | "arbitrum-sepolia" | "robinhood-testnet" | "arc-mainnet";
 
 function celoSepolia(): Network {
   const rpc = process.env.NEXT_PUBLIC_CELO_SEPOLIA_RPC ?? "https://forno.celo-sepolia.celo-testnet.org";
@@ -113,19 +113,48 @@ function robinhoodTestnet(): Network {
   };
 }
 
+// Arc mainnet: REAL USDC. Market-only deployment (packages/contracts/deployments/arc-mainnet.json). Link-only:
+// reachable via ?network=arc-mainnet, not offered in the switcher (owner decision 2026-10-07).
+function arcMainnet(): Network {
+  const rpc = process.env.NEXT_PUBLIC_ARC_MAINNET_RPC ?? "https://rpc.mainnet.arc.io";
+  return {
+    key: "arc-mainnet",
+    appUrl: "",
+    chain: defineChain({
+      id: 5042,
+      name: "Arc",
+      // Gas is native USDC with 18 decimals; transfers go through the 6-decimals ERC-20 view below.
+      nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
+      rpcUrls: { default: { http: [rpc] } },
+      blockExplorers: { default: { name: "Arcscan", url: "https://explorer.arc.io" } },
+      testnet: false,
+    }),
+    eas: "0x6446Cf9161F58A3FadEf2f3711265054c5DA84aC",
+    schemaUID: "0xfe0a11249a41ddf3f879036e89b0c82d2e954b625467cb189461b0897494e2fc",
+    primarySale: "0x1D4513a40a8DF2046899d72a6634c8eEa9ffbDdE",
+    primarySaleVersion: 2,
+    trwi: "0x79E4bEAF41F415cE3DF55DaDe3F86423e5399030",
+    // Circle USDC (ERC-20 interface of native USDC), docs.arc.io/arc/references/contract-addresses
+    saleCurrency: { address: "0x3600000000000000000000000000000000000000", symbol: "USDC", decimals: 6 },
+  };
+}
+
 const BUILDERS: Record<NetworkKey, () => Network> = {
   "celo-sepolia": celoSepolia,
   "arbitrum-sepolia": arbitrumSepolia,
   "robinhood-testnet": robinhoodTestnet,
+  "arc-mainnet": arcMainnet,
 };
 
 /** Networks offered in the site's network switcher. Each report is listed on ONE of them (chosen at submission). */
 export const ENABLED_NETWORKS: NetworkKey[] = ["arbitrum-sepolia", "robinhood-testnet", "celo-sepolia"];
+/** Selectable only by link (?network=<key>), never listed in the switcher or the network counts. */
+export const LINK_ONLY_NETWORKS: NetworkKey[] = ["arc-mainnet"];
 export const DEFAULT_NETWORK_KEY: NetworkKey = "arbitrum-sepolia";
 export const NETWORK_COOKIE = "rb_network";
 
 export function isNetworkKey(v: unknown): v is NetworkKey {
-  return typeof v === "string" && (ENABLED_NETWORKS as string[]).includes(v);
+  return typeof v === "string" && ([...ENABLED_NETWORKS, ...LINK_ONLY_NETWORKS] as string[]).includes(v);
 }
 
 /** Resolve a (possibly untrusted) key to an enabled network; unknown -> default. */
@@ -139,4 +168,9 @@ export function networkByChainId(chainId: number): Network | undefined {
 
 export function enabledNetworks(): Network[] {
   return ENABLED_NETWORKS.map((k) => BUILDERS[k]());
+}
+
+/** Every selectable network, link-only ones included (wallet config, approvals). */
+export function allNetworks(): Network[] {
+  return [...ENABLED_NETWORKS, ...LINK_ONLY_NETWORKS].map((k) => BUILDERS[k]());
 }

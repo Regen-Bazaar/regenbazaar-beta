@@ -20,7 +20,7 @@ const ELSEWHERE = [
   { href: "https://github.com/Regen-Bazaar/regenbazaar-beta", label: "GitHub" },
 ];
 
-export function Footer() {
+export function Footer({ mainnet = false }: { mainnet?: boolean }) {
   return (
     <footer className="mt-24 border-t border-line bg-surface">
       <div className="page-wrap grid gap-10 py-14 md:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
@@ -35,8 +35,10 @@ export function Footer() {
             Verified real-world impact as a tradable asset class, for the people who create it and the people who buy it.
           </p>
           <p className="mt-4 text-sm text-subtle">
-            Testnet beta: test networks and test tokens only, no real money moves. Impact Value is Regen Bazaar&apos;s
-            own relative index (methodology v0.2), not a certification.
+            {mainnet
+              ? "Mainnet experiment: purchases on this network use real USDC. "
+              : "Testnet beta: test networks and test tokens only, no real money moves. "}
+            Impact Value is Regen Bazaar&apos;s own relative index (methodology v0.2), not a certification.
           </p>
         </div>
         <FooterCol title="Product" links={PRODUCT} />

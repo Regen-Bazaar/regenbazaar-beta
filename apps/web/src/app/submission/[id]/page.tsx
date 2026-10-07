@@ -303,7 +303,7 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
                     <SaleSplit partner={partner ?? null} />
                     <BuyButton listingId={listing.id} />
                     <p className="mt-3 text-sm text-subtle">
-                      Need test tokens or a wallet? See the <Link href="/guide" className="link">guide</Link>.
+                      {NETWORK.chain.testnet ? "Need test tokens or a wallet?" : "Need a wallet?"} See the <Link href="/guide" className="link">guide</Link>.
                     </p>
                   </div>
                 ) : (
