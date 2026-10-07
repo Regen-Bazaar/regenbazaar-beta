@@ -96,7 +96,7 @@ export default function Roadmap() {
       </section>
 
       <p className="mt-8 text-subtle">
-        Want to help with any of this, or fund a milestone? Try the <Link href="/guide" className="link">beta</Link>{" "}
+        Want to help with any of this, or take on a milestone with us? Try the <Link href="/guide" className="link">beta</Link>{" "}
         and tell us in our community.
       </p>
       </div>

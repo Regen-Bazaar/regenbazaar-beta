@@ -143,7 +143,7 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
                   </li>
                 ))}
               </ul>
-              <p className="mt-2 text-sm text-subtle">External links provided by the organisation, not hosted or checked by us.</p>
+              <p className="mt-2 text-sm text-subtle">External links provided by the creator, not hosted or checked by us.</p>
             </Section>
           )}
           {proofLinks.length > 0 && (
@@ -158,7 +158,7 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
                 ))}
               </ul>
               <p className="mt-2 text-sm text-subtle">
-                Links given by the organisation. A validator reviews them and sets the proof level (
+                Links given by the creator. A validator reviews them and sets the proof level (
                 <a href="/methodology#proof" className="link">P0 to P4</a>).
               </p>
             </Section>
