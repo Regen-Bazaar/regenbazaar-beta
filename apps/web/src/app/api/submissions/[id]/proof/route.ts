@@ -4,6 +4,7 @@ import { impactSubmissions, organizations } from "@rb/db/schema";
 import {
   checkProofLink,
   createDeepSeekFactExtractor,
+  llmConfigured,
   duplicateFlags,
   type ProofCheckResult,
 } from "@rb/pipeline";
@@ -50,7 +51,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     periodEnd: c.periodEnd,
     placeNames: [...typed, ...(org?.region ? [org.region] : [])],
   };
-  const factExtractor = process.env.DEEPSEEK_API_KEY ? createDeepSeekFactExtractor() : undefined;
+  const factExtractor = llmConfigured() ? createDeepSeekFactExtractor() : undefined;
 
   const results: ProofCheckResult[] = [];
   for (const url of links) results.push(await checkProofLink(url, claim, { factExtractor }));

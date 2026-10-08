@@ -181,3 +181,9 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
 ## Validator rewards (open)
 - Validator rewards: not designed. An earlier plan used the REBAZ token; needs separate design (token model, legal
   review, incentives). Owner: revisit later. Do not promise rewards in public texts.
+
+## LLM providers
+- The fallback to OpenRouter happens per call: when Claude credits run out mid-month, every call first tries Claude
+  (fast 400) and then OpenRouter, adding one round trip. Fine at current volume.
+- Moderation can differ between providers on borderline text; a rejection from whichever answered is final.
+- `extract-eval.ts` expectations predate methodology v0.2 (tonnes case, health case); scores are understated.
