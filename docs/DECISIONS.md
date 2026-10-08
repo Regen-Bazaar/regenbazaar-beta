@@ -399,3 +399,23 @@ Append-only record of significant choices, why we made them, and the trade-offs 
 - **Later (with the secondary market):** the 2.5% platform part already exists as the RegenMarketplace fee. The
   partner part needs a new RegenMarketplace version, because ERC-2981 names one royalty receiver per token.
 - **Roadmap:** added team accounts with roles and an action log, validator onboarding and a validator workspace.
+
+## 2026-10-08 — Claude first, OpenRouter as fallback
+- **What:** moderation, report extraction and proof-page facts go through one helper
+  (`packages/pipeline/src/llm.ts` `callStructured`): Claude (`ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, default
+  `claude-sonnet-5-5`) first, then the existing OpenAI-compatible provider (`DEEPSEEK_*`, OpenRouter in production)
+  when Claude is unset, out of credit, rate-limited, down, refuses, or returns nothing parseable. Official SDK
+  `@anthropic-ai/sdk` pinned at 0.124.0 (newest release older than one month).
+- **Why:** the Max plan includes monthly Claude API credits ($100 or $200, not carried over); they are spent first,
+  so the LLM costs nothing until they run out.
+- **Structured outputs, not forced tool calls:** Sonnet 5.5 rejects `tool_choice` `tool`/`any` (400), so Claude
+  returns JSON through `output_config.format` (json_schema, `additionalProperties: false` added by `strictSchema`).
+  The OpenRouter path keeps forced tool calls. Effort `low`; about 960 input / 70 output tokens per report,
+  about $0.0026 per report on Sonnet 5.5.
+- **Why this model (eval 2026-10-08, current v0.2 prompt):** Sonnet 5.5 made no real error; its "misses" are eval
+  cases written before v0.2 (tonnes are no longer converted to kg; human patients are no longer a Community action,
+  and it correctly left them out). Haiku 5.5 ($0.10/$0.50, about 20x cheaper) mapped 310 human patients to
+  `animals_treated`; Haiku 4.5 and Sonnet 4.6 made the same mistake. A wrong number goes into the price, so the
+  stronger model was chosen; the cost is negligible at current volume.
+- **Revisit:** update `extract-eval.ts` expectations to v0.2 (tonnes, health cases); re-run Haiku 5.5 when volume
+  grows; consider Message Batches (50% cheaper) if extraction ever becomes asynchronous.

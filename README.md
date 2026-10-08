@@ -140,7 +140,8 @@ pnpm web:build                             # production build
 
 ## Configuration
 Secrets live only in `.env` (never committed); see each package's `.env.example`.
-- `DEEPSEEK_API_KEY` (web): optional; without it, extraction uses the deterministic rule-based fallback.
+- `ANTHROPIC_API_KEY` (web): optional; Claude (`ANTHROPIC_MODEL`, default `claude-sonnet-5-5`) runs moderation and extraction first.
+- `DEEPSEEK_API_KEY` (web): optional OpenAI-compatible fallback (OpenRouter in production) when Claude is unset or fails; with neither key, extraction uses the deterministic rule-based fallback.
 - `DATABASE_URL` (web): set to use Postgres; omit locally for the in-process dev DB.
 
 See `docs/ARCHITECTURE.md` for a plain-language overview and `docs/KNOWN_ISSUES.md` for current limitations.

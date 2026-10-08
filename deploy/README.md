@@ -31,7 +31,7 @@ Never run a global `docker system/volume/network/image prune` on this shared hos
 ```sh
 cd /root/regenbazaar           # our isolated dir (separate from /root/helprentbot)
 cp deploy/.env.example deploy/.env
-# edit deploy/.env: strong POSTGRES_PASSWORD, a free WEB_PORT, DEEPSEEK_API_KEY (optional)
+# edit deploy/.env: strong POSTGRES_PASSWORD, a free WEB_PORT, ANTHROPIC_API_KEY / DEEPSEEK_API_KEY (optional)
 ```
 
 ## Step 2 — Build & start (migrations run automatically, then web)
@@ -74,5 +74,5 @@ docker compose down -v              # IRREVERSIBLE: also deletes regenbazaar_pgd
 `down` targets only services in this compose project — it does not affect HelpRent.
 
 ## Secrets (never commit; server-side only)
-`POSTGRES_PASSWORD`, `DEEPSEEK_API_KEY`, and later the deployer/LLM/storage keys live only in
+`POSTGRES_PASSWORD`, `ANTHROPIC_API_KEY`, `DEEPSEEK_API_KEY`, and later the deployer/LLM/storage keys live only in
 `deploy/.env` on the server. `deploy/.env` is git-ignored. The browser never receives any of them.

@@ -116,3 +116,19 @@ test("parseContext: known values pass through, unknown values are rejected befor
   assert.equal(parseContext("string").ok, false);
   assert.equal(parseContext([1]).ok, false);
 });
+
+test("llm: configured by either key; no provider -> callStructured throws (no network)", async () => {
+  const { llmConfigured, callStructured } = await import("../src/llm.ts");
+  const saved = { a: process.env.ANTHROPIC_API_KEY, d: process.env.DEEPSEEK_API_KEY };
+  delete process.env.ANTHROPIC_API_KEY;
+  delete process.env.DEEPSEEK_API_KEY;
+  try {
+    assert.equal(llmConfigured(), false);
+    await assert.rejects(callStructured({ system: "s", user: "u", name: "n", description: "d", schema: { type: "object" } }));
+    process.env.ANTHROPIC_API_KEY = "sk-test";
+    assert.equal(llmConfigured(), true);
+  } finally {
+    if (saved.a === undefined) delete process.env.ANTHROPIC_API_KEY; else process.env.ANTHROPIC_API_KEY = saved.a;
+    if (saved.d === undefined) delete process.env.DEEPSEEK_API_KEY; else process.env.DEEPSEEK_API_KEY = saved.d;
+  }
+});

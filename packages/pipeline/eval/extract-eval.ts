@@ -1,5 +1,6 @@
-// Model eval for the LLM extractor (OpenRouter / any OpenAI-compatible endpoint). Not part of CI.
+// Model eval for the LLM extractor (Claude, or OpenRouter / any OpenAI-compatible endpoint). Not part of CI.
 //   LLM_EVAL_KEY=... node --import tsx packages/pipeline/eval/extract-eval.ts model1 model2 ...
+//   LLM_EVAL_PROVIDER=anthropic LLM_EVAL_KEY=... ... claude-sonnet-5-5 claude-haiku-5-5
 // Score per case: expected actions found with the right quantity (+1 each), extra/hallucinated actions (-1 each).
 import { createDeepSeekExtractor } from "../src/extractor-deepseek.ts";
 import { sanitizeActions } from "../src/pipeline.ts";
@@ -20,10 +21,11 @@ const CASES: { name: string; text: string; expect: Exp }[] = [
 
 const models = process.argv.slice(2);
 const apiKey = process.env.LLM_EVAL_KEY;
-const baseURL = process.env.LLM_EVAL_BASE_URL ?? "https://openrouter.ai/api/v1";
+const provider = process.env.LLM_EVAL_PROVIDER === "anthropic" ? "anthropic" : "openai-compatible";
+const baseURL = provider === "anthropic" ? undefined : (process.env.LLM_EVAL_BASE_URL ?? "https://openrouter.ai/api/v1");
 
 for (const model of models) {
-  const ex = createDeepSeekExtractor({ apiKey, baseURL, model });
+  const ex = createDeepSeekExtractor({ provider, apiKey, baseURL, model });
   let score = 0, max = 0, errors = 0;
   const notes: string[] = [];
   const t0 = Date.now();

@@ -10,6 +10,7 @@
     "test": "node --import tsx --test test/pipeline.test.ts test/token-metadata.test.ts test/pipeline-v02.test.ts test/proof-check.test.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.124.0",
     "@rb/db": "workspace:*",
     "@rb/impact-engine": "workspace:*",
     "openai": "^6.41.0"
