@@ -19,8 +19,8 @@ test networks and the reward model is not designed yet.
 > ничего не обещать.
 
 **3. Why EVM and several chains? Why not one?**
-We go where creators and buyers already are: Celo has many impact projects, Arbitrum has the users, Arc has native
-USDC. But one report is listed on exactly one network, so the same work is never sold twice across chains.
+We go where creators and buyers already are: Celo has many impact projects, Arbitrum has the users and
+stablecoin rails. But one report is listed on exactly one network, so the same work is never sold twice across chains.
 > RU: идём туда, где люди; но один отчёт = одна сеть.
 
 ## Trust and verification
@@ -90,10 +90,12 @@ impact marketplaces. For the next phase I want a domain expert for the methodolo
 organisations.
 > RU: всё сделано и выложено мной, код открыт и протестирован; дальше нужны эксперт и валидаторы-партнёры.
 
-**14. Is the mainnet safe? Who holds the keys?**
-Only the sale layer is on mainnet, on Arc, as an experiment with one purchase. Admin roles are on one key today.
-Before a real launch we plan an external audit and a multisig with a timelock, as stated on our roadmap.
-> RU: на mainnet только слой продажи, эксперимент; ключ сейчас один; аудит и мультисиг до запуска.
+**14. Are you on mainnet? Who holds the keys?**
+Not for real use: everything you saw runs on test networks, and admin roles sit on one key today. Before mainnet we
+plan an external audit, a multisig with a timelock and a legal review, as stated on our roadmap.
+> RU: для реального использования mainnet нет, всё на тестнетах; ключ сейчас один; аудит, мультисиг и юр. проверка
+> до mainnet. Если спросят про Arc (заявка на Arc Microgrants публична): «In October we ran a small sale-layer
+> experiment on Arc mainnet for a grant application. It is closed now; the contracts are still in a test phase.»
 
 **15. If you win, what do you do with the prize and incubation grant?**
 > ВОПРОС К PAUL: ответ твой (деньги). Черновик: «Onboarding the first real creators in Southeast Asia, wallet-free
@@ -103,6 +105,5 @@ Before a real launch we plan an external audit and a multisig with a timelock, a
 
 - App: app.regenbazaar.com · Methodology: app.regenbazaar.com/methodology · Roadmap: app.regenbazaar.com/roadmap
 - Code: github.com/Regen-Bazaar/regenbazaar-beta (75 Foundry tests incl. fuzz)
-- Arc mainnet purchase (real USDC): explorer.arc.io/tx/0x3f168361af0e580ade9bc6849d8df46e03adbf6c91c0ca54852adfa7fd502be3
 - Split: 97.5 / 2.5, or 95 / 2.5 / 2.5 with a partner; partner live on all 3 testnets since 06.10.2026
 - Price: IV × rate ($1 per point, provisional) × proof factor × cost coefficient 1.0–1.5

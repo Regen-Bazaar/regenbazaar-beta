@@ -125,25 +125,23 @@ approve: backup listing, Buy, Retire. Never drop Buy and Retire.
 
 - Handover line (end of slide 5): "Let me show it live." Then the demo's own first line (above).
 - Last screen of the demo: the retirement transaction in Blockscout (Arbitrum Sepolia).
-- Return line, back on slide 7: "That was the whole flow, live on a test network. The same sale contract already runs on mainnet. Here is what is live today, and you can check all of it."
+- Return line, back on slide 7: "That was the whole flow, live on a test network. Here is what is live today, and you can check all of it."
 - Backup if the live demo fails at any point: say "Zoom is not my friend today, here is the same flow recorded",
   and play the local recording `~/Desktop/RB_SMU_demo_backup.mov` (recorded 24.11) from the step where it broke. Do not debug live.
 
 > RU: Демо ведёт сессия smu-demo (Arbitrum Sepolia): рамка, отчёт создателя, валидатор P2 + EAS/IPFS, покупка с
-> делением оплаты, погашение (retire) издания, Финальный экран: транзакция погашения в Blockscout. Arc mainnet
-> в демо нет, он открывает слайд 7. При опоздании демо сокращается (см. правила выше), Buy и Retire не выкидываем. Если демо
+> делением оплаты, погашение (retire) издания. Финальный экран: транзакция погашения в Blockscout. При опоздании демо сокращается (см. правила выше), Buy и Retire не выкидываем. Если демо
 > ломается, не чинить вживую, а включить запись ~/Desktop/RB_SMU_demo_backup.mov с того же места.
 
 ---
 
 ## 7:30–9:00 · Live today, honest status, sustainability, next (slides 7, 8, 9)
 
-That was the whole flow, live on a test network. The same sale contract already runs on mainnet. Here is what is live today, and you can check all of it.
+That was the whole flow, live on a test network. Here is what is live today, and you can check all of it.
 
-In October we made our first mainnet experiment, on Arc: only the sale layer,
-six contracts source-verified, and one edition bought with real Circle USDC. The app itself runs on three test
-networks: Arbitrum Sepolia, Celo Sepolia and Robinhood Chain testnet. The partner share is live on all three. The
-contracts have 75 Foundry tests, including fuzz tests, and all the code is open source.
+The app runs on three test networks: Arbitrum Sepolia, Celo Sepolia and Robinhood Chain testnet. The contracts are
+source-verified, and the partner share, a three-way split in one transaction, is live on all three since October.
+The contracts have 75 Foundry tests, including fuzz tests, and all the code is open source.
 
 *[slide 8]*
 
@@ -160,9 +158,8 @@ What comes next: open testing with real creators, login without a crypto wallet,
 sale layer on mainnet where creators and buyers already are. Later, a community of validators, so verification
 does not depend on us.
 
-> RU: Что работает сейчас (всё проверяемо): тот же контракт продажи уже на Arc mainnet (октябрь,
-> только слой продажи, шесть верифицированных контрактов, одна покупка за настоящие USDC), три тестнета, доля
-> партнёра на всех трёх, 75 тестов Foundry, открытый код. Честно: бета, тестовые данные, нет пользователей и выручки, валидирует
+> RU: Что работает сейчас (всё проверяемо): три тестнета, верифицированные
+> контракты, доля партнёра (деление на троих в одной транзакции) на всех трёх с октября, 75 тестов Foundry, открытый код. Честно: бета, тестовые данные, нет пользователей и выручки, валидирует
 > наша команда, многие веса пока допущения. Устойчивость: 2,5% с каждой первичной продажи, партнёры так же;
 > оплата в стейблкоинах, токен покупать не нужно. Дальше: тест с реальными создателями, вход без кошелька, первые
 > реальные отчёты, mainnet; позже сообщество валидаторов.
