@@ -115,8 +115,9 @@ function robinhoodTestnet(): Network {
   };
 }
 
-// Arc mainnet: REAL USDC. Market-only deployment (packages/contracts/deployments/arc-mainnet.json). Link-only:
-// reachable via ?network=arc-mainnet, not offered in the switcher (owner decision 2026-10-07).
+// Arc mainnet: REAL USDC. Market-only deployment (packages/contracts/deployments/arc-mainnet.json).
+// Hidden since 2026-11-16 (owner decision): not in LINK_ONLY_NETWORKS, so ?network=arc-mainnet falls back to the default.
+// Kept as a record; to restore, add "arc-mainnet" back to LINK_ONLY_NETWORKS and revert the banner/footer copy.
 function arcMainnet(): Network {
   const rpc = process.env.NEXT_PUBLIC_ARC_MAINNET_RPC ?? "https://rpc.mainnet.arc.io";
   return {
@@ -152,7 +153,7 @@ const BUILDERS: Record<NetworkKey, () => Network> = {
 /** Networks offered in the site's network switcher. Each report is listed on ONE of them (chosen at submission). */
 export const ENABLED_NETWORKS: NetworkKey[] = ["arbitrum-sepolia", "robinhood-testnet", "celo-sepolia"];
 /** Selectable only by link (?network=<key>), never listed in the switcher or the network counts. */
-export const LINK_ONLY_NETWORKS: NetworkKey[] = ["arc-mainnet"];
+export const LINK_ONLY_NETWORKS: NetworkKey[] = [];
 export const DEFAULT_NETWORK_KEY: NetworkKey = "arbitrum-sepolia";
 export const NETWORK_COOKIE = "rb_network";
 
@@ -166,7 +167,7 @@ export function getNetwork(key?: string | null): Network {
 }
 
 export function networkByChainId(chainId: number): Network | undefined {
-  return (Object.keys(BUILDERS) as NetworkKey[]).map((k) => BUILDERS[k]()).find((n) => n.chain.id === chainId);
+  return allNetworks().find((n) => n.chain.id === chainId);
 }
 
 export function enabledNetworks(): Network[] {

@@ -419,3 +419,17 @@ Append-only record of significant choices, why we made them, and the trade-offs 
   stronger model was chosen; the cost is negligible at current volume.
 - **Revisit:** update `extract-eval.ts` expectations to v0.2 (tonnes, health cases); re-run Haiku 5.5 when volume
   grows; consider Message Batches (50% cheaper) if extraction ever becomes asynchronous.
+
+## 2026-11-16 — Arc mainnet hidden from the public app
+- **What:** the Arc mainnet deployment (chain 5042, 2026-10-07, market-only, made as an exception for the Arc
+  Microgrants application, which was not won) is no longer reachable from the web app. `LINK_ONLY_NETWORKS` is
+  empty, so `?network=arc-mainnet` and an old `rb_network=arc-mainnet` cookie fall back to the default network;
+  `networkByChainId` resolves only enabled networks, so no voucher or listing lookup can target chain 5042.
+  The real-USDC banner, the footer "mainnet experiment" copy and the home-page "mainnet experiment" label are removed.
+- **Why:** owner decision (Paul, 16.11.2026): the mainnet contracts are still in a test phase; Regen Bazaar is a
+  testnet beta. Public material must not present Arc as a live mainnet.
+- **Not changed:** on-chain contracts and funds (untouched, roles stay on the deployer EOA);
+  `packages/contracts/deployments/arc-mainnet.json` and the Arc deploy scripts stay as a record; the `arcMainnet()`
+  builder stays in `lib/networks.ts`.
+- **Rollback:** revert this PR, or add `"arc-mainnet"` back to `LINK_ONLY_NETWORKS` and restore the banner/footer
+  copy (commit 7c85134), then redeploy web.
