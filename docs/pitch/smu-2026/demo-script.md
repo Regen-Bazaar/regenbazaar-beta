@@ -79,6 +79,18 @@ actions in brackets.
   "Retiring burns the edition: the impact is claimed in the buyer's name, permanently, and cannot be sold again."
 - [**Retirement transaction ↗** → Blockscout. **End here**, hand back to the slides.]
 
+## If the demo starts late
+
+The demo still ends at talk 7:30, so cut in this order:
+
+| Late by | Drop | Saves |
+|---|---|---|
+| up to 20 s | the side trips: the Blockscout attestation tab (validator), the IPFS **open**, the purchase tx in Blockscout (say "the split is in this tx" and move on) | ~20 s |
+| 20–50 s | also the live creator form: say "this report was submitted this morning", go straight to T2 and approve the **backup** report | ~45 s |
+| over 50 s | also the live approve: open the backup listing, Buy, Retire, end on the retirement tx | ~90 s |
+
+Never drop the purchase and the retirement: they are the end of the demo and the claim of the talk.
+
 ## Fallbacks
 
 | If | Then | Cost |
