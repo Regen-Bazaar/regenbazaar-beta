@@ -187,3 +187,8 @@ Things that work but are brittle, edge cases not yet handled, and debt taken on 
   (fast 400) and then OpenRouter, adding one round trip. Fine at current volume.
 - Moderation can differ between providers on borderline text; a rejection from whichever answered is final.
 - `extract-eval.ts` expectations predate methodology v0.2 (tonnes case, health case); scores are understated.
+
+## Arc mainnet (hidden 2026-11-16)
+- The Arc market-only contracts (RegenPrimarySale 0x1D45…bDdE, tRWI proxy 0x79E4…9030) are still deployed and
+  callable on-chain; the app just no longer links to them. All roles are on the deployer EOA. Pausing or revoking
+  them is a separate on-chain action that needs the owner's yes and costs gas in USDC.
