@@ -11,14 +11,13 @@ Final: Thu 26.11.2026, Tech Track slot 7, 16:00–16:15 SGT (15:00 Da Nang), Zoo
    the token metadata to **IPFS**.
 3. **The price comes from the Impact Value** (IV × rate × proof level × bounded cost coefficient), and a purchase
    **splits the payment on-chain in one transaction**: creator 97.5% / platform 2.5% (or a partner share).
-4. **The buyer retires an edition in their name**: burned on-chain, permanent, visible in the explorer. (The Arc
-   mainnet real-USDC purchase is shown on the traction slide after the demo, not in the demo.)
+4. **The buyer retires an edition in their name**: it is burned, permanently, and the chain records who retired it.
 
 ## Network
 
 **Arbitrum Sepolia** (the app's default network). Why: fastest confirmations of our three testnets, the payment
 token is our tUSDG stand-in with a public `mint()`, so the demo wallet funds itself in one click and nothing waits
-on an external faucet. Arc mainnet is shown only as proof (an existing tx), no live mainnet action.
+on an external faucet.
 
 ## Pre-demo setup (do on Tue 24.11 and again 30 min before the slot)
 
@@ -31,7 +30,7 @@ on an external faucet. Arc mainnet is shown only as proof (an existing tx), no l
 | 5 | **Backup listing**: one report submitted and approved in advance (`Mangrove planting & beach cleanup, Da Nang (demo backup)`), not bought yet. Used if the live submit or approve hangs. | Claude |
 | 6 | **Backup holding**: the demo wallet already holds 1 edition of another listing, so *My impact → Retire* works even if the live buy fails. | Claude |
 | 7 | Open these tabs in order, in the "RB demo" profile, browser zoom 110%, window 1440×900, dark theme off: | Paul |
-|   | T1 `app.regenbazaar.com/tokenize` · T2 `app.regenbazaar.com/verify` (**unlocked** with the reviewer code, the code lives in the tab session) · T3 `app.regenbazaar.com/marketplace` · T4 `app.regenbazaar.com/portfolio` · T5 Arc proof tx `https://explorer.arc.io/tx/0x3f168361af0e580ade9bc6849d8df46e03adbf6c91c0ca54852adfa7fd502be3` · T6 the backup recording (local file) | |
+|   | T1 `app.regenbazaar.com/tokenize` · T2 `app.regenbazaar.com/verify` (**unlocked** with the reviewer code, the code lives in the tab session) · T3 `app.regenbazaar.com/marketplace` · T4 `app.regenbazaar.com/portfolio` · T5 the backup recording (local file) | |
 | 8 | Text to paste is in the clipboard manager or a notes window off-screen (below). MetaMask notifications on, other extensions' popups off, Do Not Disturb on. | Paul |
 | 9 | Zoom: share **the Chrome window only** (not the screen), so MetaMask popups show (they open as separate windows: share screen instead if they do not appear in rehearsal). | Paul |
 
@@ -46,8 +45,8 @@ Proof link: https://www.regenbazaar.com/
 ## Script
 
 Slot 3:30–7:30 of the 10-minute talk. The slides before already explain EAS, IPFS, the split and the IV formula,
-so the demo only shows them. The demo ends on the retirement tx in the explorer; the Arc mainnet tx moves to the
-traction slide right after. Timings below are from the start of the demo (cumulative). Spoken lines in quotes;
+so the demo only shows them. The demo ends on the retirement tx in the explorer; the next slide opens with "That was the whole flow, live
+on a test network." Timings below are from the start of the demo (cumulative). Spoken lines in quotes;
 actions in brackets.
 
 ### 0:00–0:10 · Handover (T1)
@@ -100,10 +99,10 @@ Never drop the purchase and the retirement: they are the end of the demo and the
 | MetaMask popup does not appear | Click the MetaMask icon in the toolbar; pending requests are there. | +5 s |
 | Buy tx pending > 20 s | Say "Arbitrum Sepolia is congested", go to T4 and retire the **backup holding**; open a past purchase tx from the listing's *token on explorer* link. | +10 s |
 | Retire hangs | Open the backup holding's past retirement tx (link kept in the notes) and hand back. | 0 s |
-| Site down or Zoom share fails | Play the backup recording (T6) and narrate over it. | 0 s |
+| Site down or Zoom share fails | Play the backup recording (T5) and narrate over it. | 0 s |
 
 ## Backup recording
 
 A full run of this script, recorded on Tue 24.11 after the second clean rehearsal: macOS **Cmd+Shift+5 → Record
 Selected Portion** (the Chrome window, 1440×900), microphone off, saved as `~/Desktop/RB_SMU_demo_backup.mov`.
-Narrate live over it if it is needed.
+Narrate live over it if it is needed. The recording shows only the Arbitrum Sepolia flow (no other networks).
