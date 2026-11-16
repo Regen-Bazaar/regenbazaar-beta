@@ -98,6 +98,28 @@ function Select({
   );
 }
 
+// Numeric field that keeps the typed text, so "0." or "1," survive until the next digit (a controlled input
+// bound to the parsed number drops the decimal point: "0.6" became 6).
+function DecimalInput({ value, onChange, placeholder }: { value: number | undefined; onChange: (v: number | undefined) => void; placeholder?: string }) {
+  const [text, setText] = useState(value === undefined ? "" : String(value));
+  useEffect(() => {
+    if (num(text.replace(",", ".")) !== value) setText(value === undefined ? "" : String(value));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+  return (
+    <input
+      inputMode="decimal"
+      value={text}
+      onChange={(e) => {
+        setText(e.target.value);
+        onChange(num(e.target.value.replace(",", ".")));
+      }}
+      placeholder={placeholder}
+      className="field"
+    />
+  );
+}
+
 function num(s: string): number | undefined {
   const n = Number(s);
   return s.trim() !== "" && Number.isFinite(n) ? n : undefined;
@@ -366,12 +388,7 @@ export default function Tokenize() {
                     <div className="mt-3 grid gap-3 sm:grid-cols-3">
                       <div>
                         <Label>Quantity</Label>
-                        <input
-                          inputMode="decimal"
-                          value={String(a.quantity)}
-                          onChange={(e) => updateAction(i, { quantity: Number(e.target.value) || 0 })}
-                          className="field"
-                        />
+                        <DecimalInput value={a.quantity} onChange={(v) => updateAction(i, { quantity: v ?? 0 })} />
                       </div>
                       <div>
                         <Label>Unit</Label>
@@ -381,13 +398,7 @@ export default function Tokenize() {
                       {AREA_ACTIONS.includes(a.actionType) && (
                         <div>
                           <Label>Planted area, ha</Label>
-                          <input
-                            inputMode="decimal"
-                            value={a.areaHa ?? ""}
-                            onChange={(e) => updateAction(i, { areaHa: num(e.target.value) })}
-                            placeholder="e.g. 1.2"
-                            className="field"
-                          />
+                          <DecimalInput value={a.areaHa} onChange={(v) => updateAction(i, { areaHa: v })} placeholder="e.g. 1.2" />
                         </div>
                       )}
                       {SURVIVAL_ACTIONS.includes(a.actionType) && (

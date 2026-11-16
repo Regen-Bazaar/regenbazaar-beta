@@ -34,6 +34,7 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
   const publicClient = usePublicClient({ chainId: chain.id });
   const [busy, setBusy] = useState<string>("");
   const [msg, setMsg] = useState<string>("");
+  const [retireTx, setRetireTx] = useState<string>("");
 
   const { data, refetch, isLoading } = useReadContracts({
     contracts: items.map((i) => ({
@@ -71,6 +72,7 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
   async function retire(tokenId: string, amount: bigint) {
     setBusy(tokenId);
     setMsg("");
+    setRetireTx("");
     try {
       if (chainId !== chain.id) await switchChainAsync({ chainId: chain.id });
       const hash = await writeContractAsync({
@@ -82,7 +84,8 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
         ...(await feeOverrides(publicClient)),
       });
       await publicClient?.waitForTransactionReceipt({ hash });
-      setMsg(`Retired ${amount} edition(s). Tx: ${hash}`);
+      setMsg(`Retired ${amount} edition${amount === 1n ? "" : "s"} in your name.`);
+      setRetireTx(hash);
       await refetch();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "retire failed");
@@ -146,7 +149,7 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
                   onClick={() => retire(i.tokenId, 1n)}
                   disabled={busy === i.tokenId}
                   className="btn btn-secondary btn-sm w-full sm:w-auto"
-                  title="Burn one edition to permanently claim its share of the impact"
+                  title="Burn one edition to retire its share of the impact in your name, permanently"
                 >
                   {busy === i.tokenId ? "Confirm in wallet…" : "Retire 1 edition"}
                 </button>
@@ -156,6 +159,11 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
         </ul>
       )}
       {msg && <ErrorNote text={msg} className="mt-4 text-sm text-muted" />}
+      {retireTx && EXPLORER && (
+        <a href={`${EXPLORER}/tx/${retireTx}`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm mt-3">
+          Retirement transaction ↗
+        </a>
+      )}
     </div>
   );
 }
