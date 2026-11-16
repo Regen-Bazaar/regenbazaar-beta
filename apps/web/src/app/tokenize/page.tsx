@@ -12,6 +12,8 @@ import {
   costToUsd,
   isCommunityAction,
   computePriceV02,
+  actionLabel,
+  actionPhrase,
   ruleBasedExtract as extractAll,
   type CostCategory,
   type CostDeclaration,
@@ -380,7 +382,7 @@ export default function Tokenize() {
                 return (
                   <div key={`${a.actionType}-${i}`} className="card p-4">
                     <div className="flex items-center justify-between gap-3">
-                      <span className="font-semibold capitalize">{a.actionType.replace(/_/g, " ")}</span>
+                      <span className="font-semibold">{actionLabel(a.actionType)}</span>
                       <button type="button" className="link text-sm" onClick={() => setActions((xs) => xs.filter((_, j) => j !== i))}>
                         Remove
                       </button>
@@ -560,7 +562,7 @@ export default function Tokenize() {
                 <dt className="text-subtle">Title</dt>
                 <dd>{title || "not given"}</dd>
                 <dt className="text-subtle">Actions</dt>
-                <dd>{scored.map((a) => `${fmt(a.quantity)} ${a.unit} ${a.actionType.replace(/_/g, " ")}`).join(", ") || "not given"}</dd>
+                <dd>{scored.map((a) => actionPhrase(a, fmt)).join("; ") || "not given"}</dd>
                 <dt className="text-subtle">Where</dt>
                 <dd>{[country, ecosystem.replace(/_/g, " "), lat && lon ? `${lat}, ${lon}` : ""].filter(Boolean).join(" · ") || "not given"}</dd>
                 <dt className="text-subtle">Period</dt>
@@ -625,7 +627,7 @@ export default function Tokenize() {
             {flags.length > 0 && (
               <ul className="mt-4 space-y-1 text-sm text-muted">
                 {flags.map((f, i) => (
-                  <li key={i}>⚠ {f.actionType ? `${f.actionType.replace(/_/g, " ")}: ` : ""}{f.detail}</li>
+                  <li key={i}>⚠ {f.actionType ? `${actionLabel(f.actionType)}: ` : ""}{f.detail}</li>
                 ))}
               </ul>
             )}
@@ -673,7 +675,7 @@ export default function Tokenize() {
                 {iv.breakdown.map((b) => (
                   <div key={b.actionType} className="rounded-xl bg-raised px-4 py-3">
                     <div className="flex justify-between gap-4">
-                      <span className="font-semibold capitalize">{b.actionType.replace(/_/g, " ")}</span>
+                      <span className="font-semibold">{actionLabel(b.actionType)}</span>
                       <span className="font-semibold text-accent">{fmt(b.raw, 2)}</span>
                     </div>
                     <div className="mt-1 font-mono text-xs text-subtle">

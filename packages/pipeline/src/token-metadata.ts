@@ -8,7 +8,7 @@
 // Shape is ERC-1155 / OpenSea-compatible (name/description/image/attributes) plus a machine-readable
 // `properties` block for AI-agent buyers.
 
-import type { DomainScoreV02, ExtractedAction, FrameworkTags, ProofLevel } from "@rb/impact-engine";
+import { actionPhrase, type DomainScoreV02, type ExtractedAction, type FrameworkTags, type ProofLevel } from "@rb/impact-engine";
 
 export interface TokenMetadataInput {
   title: string;
@@ -73,10 +73,10 @@ export function buildTokenMetadata(input: TokenMetadataInput): TokenMetadata {
   const region = input.regionCode ? pretty(input.regionCode) : undefined;
   const period = [year(input.periodStart), year(input.periodEnd)].filter(Boolean).join("–");
 
-  const deeds = input.actions.map((a) => `${a.quantity.toLocaleString("en-US")} ${pretty(a.actionType)}`);
+  const deeds = input.actions.map((a) => actionPhrase(a).replace(/^./, (c) => c.toLowerCase()));
   const v02 = input.methodologyVersion === "v0.2";
   const description =
-    (deeds.length ? `Verified real-world impact: ${deeds.join(", ")}.` : "Verified real-world impact.") +
+    (deeds.length ? `Verified real-world impact: ${deeds.join("; ")}.` : "Verified real-world impact.") +
     (v02
       ? " Impact Value is Regen Bazaar's own relative index (methodology v0.2, Community layer), not a certification or a carbon credit."
       : " Impact Value is platform-assessed (beta), not third-party certified.");

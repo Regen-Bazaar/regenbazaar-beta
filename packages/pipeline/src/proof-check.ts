@@ -14,7 +14,7 @@ import { lookup as dnsLookup } from "node:dns";
 import { request } from "node:https";
 import { isIP } from "node:net";
 import type { LookupAddress } from "node:dns";
-import { ACTION_WEIGHTS_V02, normaliseQuantity, type ProofFlag } from "@rb/impact-engine";
+import { ACTION_WEIGHTS_V02, actionLabel, normaliseQuantity, type ProofFlag } from "@rb/impact-engine";
 
 export const PROOF_FETCH_TIMEOUT_MS = 8000;
 export const PROOF_FETCH_MAX_BYTES = 1_000_000;
@@ -347,7 +347,7 @@ export function compareWithClaim(facts: PageFacts, claim: ProofClaim, pageText: 
     const comparable = facts.numbers
       .map((n) => ({ n, v: normaliseQuantity(n.value, n.unit, w.inputUnit) }))
       .filter((x): x is { n: { value: number; unit: string }; v: number } => x.v !== null);
-    const label = a.actionType.replace(/_/g, " ");
+    const label = actionLabel(a.actionType).toLowerCase();
     if (!comparable.length) {
       const other = facts.numbers.slice(0, 3).map((n) => `${n.value} ${n.unit}`).join(", ");
       flags.push({

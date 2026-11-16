@@ -12,7 +12,7 @@ import { formatUnits } from "viem";
 import { FrameworkTag } from "../../../components/FrameworkTag";
 import { DomainScores, ProofBadge, VersionBadge } from "../../../components/ImpactBadges";
 import { fmt, impactView } from "../../../lib/impact-view";
-import type { IVResultV02 } from "@rb/impact-engine";
+import { actionLabel, type IVResultV02 } from "@rb/impact-engine";
 
 export const dynamic = "force-dynamic";
 
@@ -169,8 +169,8 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
                 {iv02.breakdown.map((b) => (
                   <div key={b.actionType} className="card px-4 py-3">
                     <div className="flex justify-between gap-4">
-                      <a href={`/methodology/cards/${b.actionType}`} className="font-semibold capitalize hover:text-accent">
-                        {b.actionType.replace(/_/g, " ")}
+                      <a href={`/methodology/cards/${b.actionType}`} className="font-semibold hover:text-accent">
+                        {actionLabel(b.actionType)}
                       </a>
                       <span className="font-semibold text-accent">{fmt(b.raw, 2)}</span>
                     </div>
@@ -192,7 +192,7 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
               {(iv?.breakdown ?? []).map((b) => (
                 <div key={b.actionType} className="card px-4 py-3">
                   <div className="flex justify-between gap-4">
-                    <span className="font-semibold capitalize">{b.actionType.replace(/_/g, " ")}</span>
+                    <span className="font-semibold">{actionLabel(b.actionType)}</span>
                     <span className="font-semibold text-accent">{b.raw.toLocaleString()}</span>
                   </div>
                   <div className="mt-1 font-mono text-sm text-subtle">
