@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { IVResultV02, ProofFlag, ProofLevel } from "@rb/impact-engine";
-import { COST_CATEGORIES, PROOF_REQUIREMENTS, costToUsd, labourCheck, type CostDeclaration } from "@rb/impact-engine";
+import { COST_CATEGORIES, PROOF_REQUIREMENTS, actionLabel, actionPhrase, costToUsd, labourCheck, type CostDeclaration } from "@rb/impact-engine";
 import { DomainScores } from "../../components/ImpactBadges";
 import { fmt } from "../../lib/impact-view";
 
@@ -40,8 +40,7 @@ export interface ReviewChoice {
 const LEVELS: ProofLevel[] = ["P0", "P1", "P2", "P3", "P4"];
 const ESM_OPTIONS = ["1.0", "1.1", "1.2", "1.3"];
 const SEVERITY: Record<string, string> = { ok: "text-ok", warn: "text-accent", fail: "text-danger" };
-const actionText = (a: Action) =>
-  `${fmt(a.quantity, 2)} ${a.unit} ${a.actionType.replace(/_/g, " ")}${a.areaHa ? ` on ${a.areaHa} ha` : ""}${a.survivalRate !== undefined ? `, ${Math.round(a.survivalRate * 100)}% survived` : ""}`;
+const actionText = (a: Action) => actionPhrase(a, (n) => fmt(n, 2));
 
 export function ReviewV02({
   s,
@@ -87,8 +86,8 @@ export function ReviewV02({
             {iv.breakdown.map((b) => (
               <div key={b.actionType} className="rounded-lg bg-raised px-3 py-2 text-sm">
                 <div className="flex justify-between gap-3">
-                  <a href={`/methodology/cards/${b.actionType}`} target="_blank" rel="noopener noreferrer" className="capitalize hover:text-accent">
-                    {b.actionType.replace(/_/g, " ")} ({b.lines} line{b.lines > 1 ? "s" : ""})
+                  <a href={`/methodology/cards/${b.actionType}`} target="_blank" rel="noopener noreferrer" className="hover:text-accent">
+                    {actionLabel(b.actionType)} ({b.lines} line{b.lines > 1 ? "s" : ""})
                   </a>
                   <b className="text-accent">{fmt(b.raw, 2)}</b>
                 </div>
@@ -107,7 +106,7 @@ export function ReviewV02({
           <ul className="space-y-0.5 text-sm text-muted">
             {iv.flags.map((f, i) => (
               <li key={i}>
-                <span className="font-mono text-xs">{f.code}</span> {f.actionType ? `${f.actionType.replace(/_/g, " ")}: ` : ""}
+                <span className="font-mono text-xs">{f.code}</span> {f.actionType ? `${actionLabel(f.actionType)}: ` : ""}
                 {f.detail}
               </li>
             ))}

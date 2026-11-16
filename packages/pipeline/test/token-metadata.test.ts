@@ -23,8 +23,9 @@ const input: TokenMetadataInput = {
 test("embeds the impact data directly in the token metadata (self-describing)", () => {
   const m = buildTokenMetadata(input);
   assert.equal(m.name, input.title);
-  assert.match(m.description, /1,000 trees planted/);
-  assert.match(m.description, /1,500 waste collected kg/);
+  assert.match(m.description, /trees planted: 1,000 trees/);
+  assert.match(m.description, /waste collected: 1,500 kg/);
+  assert.doesNotMatch(m.description, /kg kg|waste collected kg/);
   const traits = m.attributes.map((a) => a.trait_type);
   for (const t of ["Impact domain", "trees planted", "Impact Value", "Editions", "Region (approximate)", "SDG", "EBF", "Methodology"]) {
     assert.ok(traits.includes(t), `missing attribute ${t}`);
