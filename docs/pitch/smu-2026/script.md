@@ -3,22 +3,24 @@
 > Для Paul (не зачитывать). Четверг 26.11, Zoom, слот Tech 7: 16:00–16:15 Сингапур = 15:00–15:15 Дананг.
 > 10 минут доклад + 5 минут вопросы. Темп ~130 слов в минуту, простой разговорный английский.
 > Слайды: https://claude.ai/artifact/6NN6poekfiFgxypRtoPCRW (исходники в deck/, экспорт PDF через Share › Export).
-> Демо (3:30–7:30) ведёт сессия smu-demo; здесь только переход в демо и обратно.
-> Запас 30 секунд в конце на задержки Zoom. Если идём с опережением, не добавлять текст, просто медленнее.
+> Демо: беззвучное видео с субтитрами (до 3 минут) на слайде 7, ты комментируешь вживую (решение Paul 16.11, живого
+> демо в браузере нет). Видео делает сессия smu-demo, срок сб 21.11; текст комментария ниже сверить с таймкодами.
+> Запас 45 секунд в конце на задержки Zoom. Если идём с опережением, не добавлять текст, просто медленнее.
 > Слова-табу: fund/donate/back (кроме фразы «after the result, not before»), offset, certified, carbon credit, investment, yield.
 
 | Time | Section | Slides | Words |
 |---|---|---|---|
 | 0:00–1:00 | Problem | 1, 2 | ~130 |
 | 1:00–2:00 | Solution and why Web3 | 3 | ~130 |
-| 2:00–3:30 | How it works | 4, 5 | ~200 |
-| 3:30–7:30 | Live demo (smu-demo) | 6 | demo |
-| 7:30–9:00 | Live today, honest status, sustainability, next | 7, 8, 9 | ~200 |
-| 9:00–9:30 | Close | 10 | ~55 |
-| 9:30–10:00 | Buffer | | |
+| 2:00–2:30 | Who benefits | 4 | ~70 |
+| 2:30–4:00 | How it works | 5, 6 | ~200 |
+| 4:00–7:00 | Demo video, narrated (smu-demo video) | 7 | ~190 + pauses |
+| 7:00–8:45 | Live today, honest status, sustainability, next | 8, 9, 10 | ~200 |
+| 8:45–9:15 | Close | 11 | ~55 |
+| 9:15–10:00 | Buffer | | |
 
-Judging weights and where we earn them: social impact 30% (sections 1, 2, close), solution quality 25% (3, demo, 7),
-Web3 innovation 20% (2, 3), feasibility and sustainability 15% (7), presentation and demo 10% (demo, timing).
+Judging weights and where we earn them: social impact 30% (sections 1, 2, who benefits, close), solution quality 25% (3, demo, 7),
+Web3 innovation 20% (2, 3, video), feasibility and sustainability 15% (7), presentation and demo 10% (demo, timing).
 
 ---
 
@@ -71,7 +73,20 @@ And a stablecoin can pay a creator who cannot receive a foreign bank transfer.
 
 ---
 
-## 2:00–3:30 · How it works (slide 4 → slide 5)
+## 2:00–2:30 · Who benefits (slide 4)
+
+Who benefits? Creators first. A personal wallet is enough. They report finished work in plain words, and they are
+paid on the first sale, with no certification cost up front. Buyers, people, companies and AI agents, get an
+on-chain record of exactly which result they paid for. And partners like DeCleanup, which proves cleanups with
+geotagged before and after photos, get a fixed share of each sale, in the same transaction.
+
+> RU: Кому выгодно. Создателям: достаточно личного кошелька, отчёт простыми словами, деньги с первой продажи, без
+> платы за сертификацию вперёд. Покупателям (люди, компании, AI-агенты): запись в блокчейне, за какой именно
+> результат заплатили. Партнёрам вроде DeCleanup: фиксированная доля каждой продажи в той же транзакции.
+
+---
+
+## 2:30–4:00 · How it works (slide 5 → slide 6)
 
 Here is how it works, in five steps.
 
@@ -86,7 +101,7 @@ Three. A validator sets the proof level, from P0 to P4, and approves. Nothing is
 Four. The claim is attested on-chain with EAS attestations, and the metadata is pinned to
 IPFS. One report is listed on exactly one network, so the same work cannot be sold twice.
 
-*[slide 5]*
+*[slide 6]*
 
 Five. The price. In dollars, it is the Impact Value, times a rate, times the proof factor, times a cost
 coefficient between 1 and 1.5. Impact sets the price. Costs can only raise it a little.
@@ -94,7 +109,7 @@ coefficient between 1 and 1.5. Impact sets the price. Costs can only raise it a 
 At purchase, the editions are minted to the buyer, and one transaction splits the payment: 97.5 percent to the
 creator, 2.5 percent to the platform. If a partner like DeCleanup brought the impact, it is 95, 2.5 and 2.5.
 
-Let me show it live.
+Here is the whole flow, recorded on a test network.
 
 > RU: Как работает, пять шагов. 1) Создатель описывает работу простыми словами и прикладывает фото или ссылки.
 > 2) AI вытаскивает факты (количества, единицы, место), но не ставит оценку: оценку считает опубликованная
@@ -106,50 +121,60 @@ Let me show it live.
 
 ---
 
-## 3:30–7:30 · Live demo (slide 6, then share the browser)
+## 4:00–7:00 · Demo video, narrated (slide 7, video plays inside the slide)
 
-Owned by session smu-demo: full words in `demo-script.md` (PR Regen-Bazaar/regenbazaar-beta#74). Arbitrum Sepolia,
-app.regenbazaar.com.
+Silent captioned video, up to 3 minutes, Arbitrum Sepolia test network, made by session smu-demo. Start it with one
+click on slide 7. Speak slowly; leave the pauses. Beat times below are a draft: re-sync them to the video's beat list
+when it arrives (by Sat 21.11).
 
-| Demo time | Talk time | Segment |
-|---|---|---|
-| 0:00–0:10 | 3:30–3:40 | Handover: "Let me show you, live on Arbitrum Sepolia: a creator, a validator, a buyer." |
-| 0:10–1:00 | 3:40–4:30 | Creator: plain-text report, live Impact Value preview, submit |
-| 1:00–1:50 | 4:30–5:20 | Validator: AI reading vs creator numbers, proof level P2, approve: EAS attestation + IPFS |
-| 1:50–3:05 | 5:20–6:35 | Buyer: listing, Impact Value breakdown, price, split 97.5/2.5, buy |
-| 3:05–4:00 | 6:35–7:30 | Retire one edition in the buyer's name: retirement tx in Blockscout (last screen) |
+*[0:00 · title card]*
+This is a recorded run on Arbitrum Sepolia, a test network. Three people: a creator, a validator and a buyer.
 
-Late start (the demo still ends at 7:30): up to 20 s late, skip the side trips (attestation tab, IPFS, purchase tx).
-20 to 50 s late, also skip the live creator form and approve the backup report. Over 50 s late, also skip the live
-approve: backup listing, Buy, Retire. Never drop Buy and Retire.
+*[~0:10 · creator]*
+A creator writes what they did, in plain words, and adds a link to the proof. While they type, the app shows the
+Impact Value it will compute. They submit.
 
-- Handover line (end of slide 5): "Let me show it live." Then the demo's own first line (above).
-- Last screen of the demo: the retirement transaction in Blockscout (Arbitrum Sepolia).
-- Return line, back on slide 7: "That was the whole flow, live on a test network. Here is what is live today, and you can check all of it."
-- Backup if the live demo fails at any point: say "Zoom is not my friend today, here is the same flow recorded",
-  and play the local recording `~/Desktop/RB_SMU_demo_backup.mov` (recorded 24.11) from the step where it broke. Do not debug live.
+*[~0:55 · validator]*
+Now the validator. On one side, what the AI read from the report. On the other, the creator's own numbers. The
+validator checks the proof, sets proof level P2, and approves. That writes an EAS attestation on-chain and pins the
+metadata to IPFS.
 
-> RU: Демо ведёт сессия smu-demo (Arbitrum Sepolia): рамка, отчёт создателя, валидатор P2 + EAS/IPFS, покупка с
-> делением оплаты, погашение (retire) издания. Финальный экран: транзакция погашения в Blockscout. При опоздании демо сокращается (см. правила выше), Buy и Retire не выкидываем. Если демо
-> ломается, не чинить вживую, а включить запись ~/Desktop/RB_SMU_demo_backup.mov с того же места.
+*[~1:45 · buyer]*
+Here is the listing: the Impact Value with its full breakdown, the price that comes from it, and the split, 97.5
+percent to the creator and 2.5 to the platform. The buyer clicks Buy and confirms in the wallet. In one transaction
+the edition is minted to the buyer and the creator is paid. Nobody holds the money in between.
+
+*[~2:30 · retire]*
+Last, the buyer retires one edition in their own name. It is burned, permanently, and the chain records who retired
+it.
+
+- If the video does not play inside the slide: open the same file from the desktop (`[file name from smu-demo]`) in
+  QuickTime, full screen, and narrate the same text. Do not debug.
+- If the video ends early, wait on its last frame; do not fill the silence with new claims.
+
+> RU: Видео без звука с субтитрами, до 3 минут, тестнет Arbitrum Sepolia. Запускаешь одним кликом на слайде 7 и
+> читаешь комментарий в паузах: создатель пишет отчёт и видит Impact Value, валидатор сверяет данные AI и создателя,
+> ставит P2 и одобряет (EAS + IPFS), покупатель видит цену и деление 97,5 / 2,5, покупает, создателю платится в той
+> же транзакции, в конце покупатель погашает (retire) издание на своё имя. Тайминги сверим с видео до 24.11. Если
+> видео не играет на слайде, открыть файл с рабочего стола в QuickTime.
 
 ---
 
-## 7:30–9:00 · Live today, honest status, sustainability, next (slides 7, 8, 9)
+## 7:00–8:45 · Live today, honest status, sustainability, next (slides 8, 9, 10)
 
-That was the whole flow, live on a test network. Here is what is live today, and you can check all of it.
+That was the whole flow, on a test network. Here is what is live today, and you can check all of it.
 
 The app runs on three test networks: Arbitrum Sepolia, Celo Sepolia and Robinhood Chain testnet. The contracts are
 source-verified, and the partner share, a three-way split in one transaction, is live on all three since October.
 The contracts have 75 Foundry tests, including fuzz tests, and all the code is open source.
 
-*[slide 8]*
+*[slide 9]*
 
 Now, honestly. This is a beta. Testnet listings use test data. We have no production users and no revenue yet.
 Today the validators are our own team. And many weights in the methodology are still assumptions that domain
 experts need to calibrate.
 
-*[slide 9]*
+*[slide 10]*
 
 How it sustains itself: a 2.5 percent fee on each primary sale. Partners earn the same way. Buyers pay in
 stablecoins, so there is no token to buy first.
@@ -166,7 +191,7 @@ does not depend on us.
 
 ---
 
-## 9:00–9:30 · Close (slide 10)
+## 8:45–9:15 · Close (slide 11)
 
 Regen Bazaar lets the people who do the work sell the result, and lets anyone check it.
 

@@ -1,16 +1,17 @@
 # SMU final · Rehearsal checklist
 
-> Для Paul. Цель: 9:30 на доклад (+30 сек запас), 5 минут на вопросы.
+> Для Paul. Цель: 9:15 на доклад (+45 сек запас), 5 минут на вопросы. Демо: беззвучное видео на слайде 7, ты
+> комментируешь. Живого демо в браузере нет.
 
 ## Rehearsal plan
 
 | When | What | Pass if |
 |---|---|---|
-| Thu 19.11 | Read script aloud with a timer, no demo | Each section within ±10 s of its target |
-| Fri 20.11 | Full run with demo on the real Zoom setup (record yourself) | Total 9:15–9:45; demo ends by 7:30 |
-| Sat–Mon | 2 full runs a day; one run with the demo failing on purpose (switch to the video) | Switch to video in under 15 s |
-| Tue 24.11 | Final deck and script frozen; Q&A drill: someone asks 8 random questions from qa-prep.md | Each answer under 30 s |
-| Wed 25.11 | One calm full run; test Zoom screen share of both the deck and the browser | No new changes after this |
+| Thu 19.11 | Read script aloud with a timer, no video | Each section within ±10 s of its target |
+| Sat 21.11 | Video arrives from smu-demo; embedded in slide 7; read the narration over it twice | Narration fits the beats, nothing said after the video ends |
+| Sun–Mon | One full run a day on the real Zoom setup (record yourself) | Total 9:00–9:30; video starts by 4:05 |
+| Tue 24.11 | Final deck and script frozen; ONE rehearsal timed end to end, with the video; Q&A drill: 8 random questions from qa-prep.md | Total under 9:30; each answer under 30 s |
+| Wed 25.11 | One calm full run; test Zoom screen share with the video slide | No new changes after this |
 
 ## Timing marks (check on your timer)
 
@@ -18,25 +19,19 @@
 |---|---|
 | 1:00 | "...what if finished impact could be sold, like any other product?" |
 | 2:00 | "...a foreign bank transfer." |
-| 3:30 | "Let me show it live." |
-| 4:30 | Demo: validator screen (demo 1:00) |
-| 5:20 | Demo: buyer, listing (demo 1:50) |
-| 6:35 | Demo: retire (demo 3:05) |
-| 7:30 | Back on slide 7: "That was the whole flow, live on a test network." |
-| 9:00 | Slide 10, close |
-| 9:30 | "Thank you." |
+| 2:30 | "...in the same transaction." (who benefits) |
+| 4:00 | Slide 7, click play on the video |
+| 7:00 | Video over: "That was the whole flow, on a test network." |
+| 8:45 | Slide 11, close |
+| 9:15 | "Thank you." |
 
-Late at 3:30? The demo still ends at 7:30. Up to 20 s late: skip side trips (attestation tab, IPFS, purchase tx). 20 to 50 s:
-also skip the live creator form, approve the backup report. Over 50 s: also skip the live approve; backup listing, Buy,
-Retire. Never drop Buy and Retire.
+Late at 4:00? The video always plays in full. Make up time after it: shorten "What comes next" to one sentence.
 
 ## Day before (25.11)
 
-- [ ] Deck exported to PDF and saved on the desktop (backup if the artifact link does not open)
-- [ ] Demo wallet funded with test USDG and gas on Arbitrum Sepolia; one test purchase done
-- [ ] Backup recording `~/Desktop/RB_SMU_demo_backup.mov` (recorded 24.11) opens and plays
-- [ ] Morning of 26.11: backup report approved-ready, backup listing and 1 edition in the demo wallet (smu-demo)
-- [ ] Browser: one window, demo tabs open in order, all other tabs closed, notifications off, bookmarks bar hidden
+- [ ] Deck exported to PDF and saved on the desktop (backup if the deck link does not open)
+- [ ] Video file saved on the desktop too (backup if it does not play inside the slide or in the PDF)
+- [ ] Video plays inside slide 7 in presentation mode, from start to end
 - [ ] Zoom display name: "Paul Burg · Regen Bazaar"
 
 ## 30 minutes before (14:30 Da Nang)
@@ -44,14 +39,17 @@ Retire. Never drop Buy and Retire.
 - [ ] Laptop on power, Do Not Disturb on, Telegram/WhatsApp/mail closed
 - [ ] Wired internet or phone hotspot ready as a backup
 - [ ] Headset tested in Zoom; camera at eye level, light in front
-- [ ] Deck open in presentation mode, PDF open as backup, demo browser open
+- [ ] Deck open in presentation mode; play the video once to the end so it is loaded, then go back to slide 1
+- [ ] PDF and the video file open in the background as backup
 - [ ] Water, script on paper or a second screen, timer ready
 - [ ] Join the Zoom 10 minutes early; test "Share screen" once with the organizers if allowed
 
 ## During
 
 - [ ] Start the timer on the first word
-- [ ] Share the window, not the whole screen; switch deck → browser → deck
+- [ ] Share the deck window only, with "Share sound" OFF (the video is silent; your voice goes through the mic)
+- [ ] On slide 7: one click to play, then narrate; leave the pauses
+- [ ] If the video does not play: open the file from the desktop in QuickTime, full screen, same narration
 - [ ] Speak slowly; pause after each number
 - [ ] If anything breaks: one sentence, switch to backup, move on
 - [ ] Q&A: repeat the question in a few words, answer in 2–3 sentences, stop
