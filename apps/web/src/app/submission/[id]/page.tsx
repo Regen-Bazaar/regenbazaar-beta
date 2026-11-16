@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { and, desc, eq } from "drizzle-orm";
 import { impactSubmissions, listings, partners, verifications } from "@rb/db/schema";
 import { currentNetwork } from "../../../lib/network-server";
-import { networkByChainId } from "../../../lib/networks";
+import { networkByChainId, tokenInstanceUrl } from "../../../lib/networks";
 import { getDb } from "../../../lib/db";
 import { BuyButton } from "../../../components/BuyButton";
 import { SaleSplit } from "../../../components/SaleSplit";
@@ -249,7 +249,7 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
                 <p className="text-muted">
                   tRWI #{String(listing.tokenId)} ·{" "}
                   <a
-                    href={`${explorer}/token/${NETWORK.trwi}/instance/${String(listing.tokenId)}`}
+                    href={tokenInstanceUrl(NETWORK, listing.tokenId)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="underline underline-offset-4 hover:text-accent"

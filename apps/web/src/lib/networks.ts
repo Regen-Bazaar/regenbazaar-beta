@@ -19,6 +19,14 @@ export interface SaleCurrency {
  * USDG / tUSDG are dollar stablecoins (1). Test CELO has no market value; on the test network it is counted
  * as $1 so prices stay comparable. Mainnet primary sales settle in a stablecoin (decision D4).
  */
+/** Explorer page of one tRWI edition collection (Etherscan-family and Blockscout use different paths). */
+export function tokenInstanceUrl(net: Network, tokenId: string | number | bigint): string {
+  const url = net.chain.blockExplorers?.default.url ?? "";
+  return url.includes("arbiscan")
+    ? `${url}/nft/${net.trwi}/${String(tokenId)}`
+    : `${url}/token/${net.trwi}/instance/${String(tokenId)}`;
+}
+
 export function usdPerUnit(_currency: SaleCurrency): number {
   return 1;
 }
@@ -73,7 +81,8 @@ function arbitrumSepolia(): Network {
       name: "Arbitrum Sepolia",
       nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
       rpcUrls: { default: { http: [rpc] } },
-      blockExplorers: { default: { name: "Blockscout", url: "https://arbitrum-sepolia.blockscout.com" } },
+      // Arbiscan: Blockscout shows third-party gambling ads on tx pages (seen 2026-11-16).
+      blockExplorers: { default: { name: "Arbiscan", url: "https://sepolia.arbiscan.io" } },
       testnet: true,
     }),
     eas: "0x95cD0E3bDbC670e057416D65C89B584a9a24d95d",
