@@ -18,17 +18,19 @@
 |---|---|
 | 1:00 | "...what if finished impact could be sold, like any other product?" |
 | 2:00 | "...a foreign bank transfer." |
-| 3:30 | "Let me show you." |
-| 7:30 | Back on slide 7: "That was a real transaction on a test network." |
+| 3:30 | "Let me show it live." |
+| 5:20 | Demo: buying the listing (demo 1:50) |
+| 7:00 | Demo: Arc mainnet transaction (demo 3:30) |
+| 7:30 | Back on slide 7: "That was the whole flow, ending on mainnet." |
 | 9:00 | Slide 10, close |
 | 9:30 | "Thank you." |
 
-If at 3:30 you are late by more than 20 s, the demo drops its least important step (agreed with smu-demo).
+If at 3:30 you are late by more than 20 s, the demo drops one step (which one: to confirm with smu-demo).
 
 ## Day before (25.11)
 
 - [ ] Deck exported to PDF and saved on the desktop (backup if the artifact link does not open)
-- [ ] Demo wallet funded with test USDG and gas on the demo network; one test purchase done
+- [ ] Demo wallet funded with test USDG and gas on Arbitrum Sepolia; one test purchase done
 - [ ] Demo video (Loom) opens and plays; link on slide 6
 - [ ] Browser: one window, demo tabs open in order, all other tabs closed, notifications off, bookmarks bar hidden
 - [ ] Zoom display name: "Paul Burg · Regen Bazaar"
