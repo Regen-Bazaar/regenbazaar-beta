@@ -1,4 +1,4 @@
-# SMU Web3 for Social Good 2026 · live demo script (4:00)
+# SMU Web3 for Social Good 2026 · live demo script (4:00, talk slot 3:30–7:30)
 
 Final: Thu 26.11.2026, Tech Track slot 7, 16:00–16:15 SGT (15:00 Da Nang), Zoom. The demo sits inside the
 10-minute pitch (slides owned by the `smu-pitch-deck` session). Speaker: Paul.
@@ -11,8 +11,8 @@ Final: Thu 26.11.2026, Tech Track slot 7, 16:00–16:15 SGT (15:00 Da Nang), Zoo
    the token metadata to **IPFS**.
 3. **The price comes from the Impact Value** (IV × rate × proof level × bounded cost coefficient), and a purchase
    **splits the payment on-chain in one transaction**: creator 97.5% / platform 2.5% (or a partner share).
-4. **The buyer retires an edition in their name**: burned on-chain, permanent, visible in the explorer. Plus: the
-   same sale contract is **live on Arc mainnet with real USDC** (one real purchase tx).
+4. **The buyer retires an edition in their name**: burned on-chain, permanent, visible in the explorer. (The Arc
+   mainnet real-USDC purchase is shown on the traction slide after the demo, not in the demo.)
 
 ## Network
 
@@ -45,48 +45,39 @@ Proof link: https://www.regenbazaar.com/
 
 ## Script
 
-Timings are cumulative. Spoken lines in quotes; actions in brackets.
+Slot 3:30–7:30 of the 10-minute talk. The slides before already explain EAS, IPFS, the split and the IV formula,
+so the demo only shows them. The demo ends on the retirement tx in the explorer; the Arc mainnet tx moves to the
+traction slide right after. Timings below are from the start of the demo (cumulative). Spoken lines in quotes;
+actions in brackets.
 
-### 0:00–0:15 · Frame (T1)
-"Let me show it live on Arbitrum Sepolia. Three people: a creator who already did the work, a validator, and a buyer."
+### 0:00–0:10 · Handover (T1)
+"Let me show you, live on Arbitrum Sepolia: a creator, a validator, a buyer."
 
-### 0:15–1:05 · Creator reports finished work (T1, Tokenize impact)
-- [Paste title and the report text in step 1.]
-  "A beach-cleanup group writes what they did, in plain words. No forms of carbon methodology."
-- [Point at the preview card on the right: Environment score and price update as you type.]
-  "The preview is our deterministic engine: published weights, same input, same number."
-- [Step 2 Check actions: type **0.6** in *Planted area, ha*.]
-  "We found mangroves, waste and volunteers in the text. The creator adds the planted area, so carbon can count."
-- [Step 4 Proof: paste the link. Step 6 Review: **Submit for verification** (5–15 s).]
-  "On submit, an LLM reads the text a second time on the server and a moderation check runs. The LLM only lists
-  actions and numbers; it never sets the score."
+### 0:10–1:00 · Creator reports finished work (T1, Tokenize impact) · 50 s
+- [Paste title and the report text in step 1.] "A beach-cleanup group writes what they did, in plain words."
+- [Point at the preview card: score and price update as you type.] "That number is the formula, not the AI."
+- [Step 2: type **0.6** in *Planted area, ha*.] "The creator adds the planted area, so carbon can count."
+- [Step 4: paste the proof link. Step 6: **Submit for verification** (5–15 s).]
+  "On submit an LLM reads the text again on the server: it lists actions, it never sets the score."
 
-### 1:05–1:50 · Validator approves (T2, Verification queue, already unlocked)
-- [Reload; the new report is on top.]
-  "The validator sees the AI reading next to the creator's numbers, the engine's flags and the proof links."
-- [Proof level → **P2** (link plus photo/second source). **Approve** (5–15 s).]
-  "The validator sets the proof level; that is human judgement, not AI. Approve writes an EAS attestation on-chain
-  and pins the metadata to IPFS."
-- [Click **Attestation transaction ↗** (Blockscout opens), show the tx, close the tab.]
+### 1:00–1:50 · Validator approves (T2, Verification queue, already unlocked) · 50 s
+- [Reload; new report on top.] "The validator sees the AI reading next to the creator's numbers, flags and proof."
+- [Proof level **P2** → **Approve** (5–15 s).] "Proof level is a human decision. Approve attests on-chain and pins to IPFS."
+- [**Attestation transaction ↗** → Blockscout, 3 s on screen, close.]
 
-### 1:50–2:50 · Buyer purchases (T2 → listing)
-- [**View listing**.]
-  "This is the listing. Impact Value with the full breakdown; the price is IV times the rate, times the proof level,
-  times a bounded cost coefficient. 100 editions."
-- [Point at *Payment goes to: creator 97.5% · platform 2.5%*; click **open** next to *Metadata (IPFS)*, show JSON, back.]
-- [**Buy this impact** → MetaMask: approve tUSDG → confirm; then redeem → confirm (2 popups, ~10 s).]
-  "One transaction mints the edition to the buyer and splits the payment: 97.5% straight to the creator's wallet,
-  2.5% to the platform. No custody."
-- [**Bought ✓ · view tx** → Blockscout: show *Token transfers*: tUSDG to creator, tUSDG to platform, tRWI to buyer.]
+### 1:50–3:05 · Buyer purchases (T2 → View listing) · 75 s
+- [**View listing**. Point at IV breakdown, price, *Payment goes to: creator 97.5% · platform 2.5%*.]
+  "Price comes from the Impact Value. 100 editions."
+- [**open** next to *Metadata (IPFS)*, 3 s, back.]
+- [**Buy this impact** → MetaMask: approve tUSDG → confirm; redeem → confirm (2 popups, ~10 s).]
+  "One transaction: the edition goes to the buyer, 97.5% straight to the creator's wallet, 2.5% to the platform."
+- [**Bought ✓ · view tx** → Blockscout *Token transfers*: tUSDG to creator, tUSDG to platform, tRWI to buyer. Close.]
 
-### 2:50–3:30 · Retire in the buyer's name (T4, My impact)
-- [Reload. Show *Impact Value owned*. **Retire 1 edition** → MetaMask confirm (~5 s) → **Retirement transaction ↗**.]
-  "Retiring burns the edition: the impact is now claimed in the buyer's name, permanently, and cannot be sold twice."
-
-### 3:30–4:00 · Mainnet proof and close (T5)
-- [Show the Arc mainnet tx.]
-  "The same sale contract runs on Arc mainnet with real USDC; this is a real purchase. Regen Bazaar sells impact that
-  already happened: the creator gets paid for done work, the buyer gets a verifiable, retirable claim."
+### 3:05–4:00 · Retire in the buyer's name (T4, My impact) · 55 s
+- [Reload. Show *Impact Value owned*.] "The buyer now owns a share of this verified impact."
+- [**Retire 1 edition** → MetaMask confirm (~5 s).]
+  "Retiring burns the edition: the impact is claimed in the buyer's name, permanently, and cannot be sold again."
+- [**Retirement transaction ↗** → Blockscout. **End here**, hand back to the slides.]
 
 ## Fallbacks
 
@@ -96,7 +87,7 @@ Timings are cumulative. Spoken lines in quotes; actions in brackets.
 | Approve spins > 20 s | Open the backup listing (already approved), continue with Buy. | +5 s |
 | MetaMask popup does not appear | Click the MetaMask icon in the toolbar; pending requests are there. | +5 s |
 | Buy tx pending > 20 s | Say "Arbitrum Sepolia is congested", go to T4 and retire the **backup holding**; open a past purchase tx from the listing's *token on explorer* link. | +10 s |
-| Retire hangs | Show the Arc mainnet tx (T5) and close. | 0 s |
+| Retire hangs | Open the backup holding's past retirement tx (link kept in the notes) and hand back. | 0 s |
 | Site down or Zoom share fails | Play the backup recording (T6) and narrate over it. | 0 s |
 
 ## Backup recording
