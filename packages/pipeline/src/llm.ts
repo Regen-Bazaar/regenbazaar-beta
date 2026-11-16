@@ -69,6 +69,8 @@ function openaiRunner(apiKey: string | undefined, baseURL: string, model: string
       const res = await client.chat.completions.create({
         model,
         temperature: 0,
+        // Without a cap OpenRouter reserves the model's full output window (131k) and refuses low balances (402).
+        max_tokens: 4000,
         messages: [
           { role: "system", content: c.system },
           { role: "user", content: c.user },
@@ -117,5 +119,6 @@ export async function callStructured(c: StructuredCall, opts: LlmOptions = {}): 
       if (i < list.length - 1) console.warn(`[llm] ${c.name} via ${r.label} failed, falling back: ${(e as Error).message?.slice(0, 200)}`);
     }
   }
+  console.warn(`[llm] ${c.name} failed on every provider: ${(last as Error)?.message?.slice(0, 200)}`);
   throw last;
 }

@@ -276,7 +276,19 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
                     </dd>
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-                    <dt>Metadata (IPFS)</dt>
+                    <dt>
+                      Metadata (IPFS){" "}
+                      {listing.metadataUri.startsWith("ipfs://") && (
+                        <a
+                          href={`/api/ipfs/${listing.metadataUri.slice("ipfs://".length)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline underline-offset-4 hover:text-accent"
+                        >
+                          open
+                        </a>
+                      )}
+                    </dt>
                     <dd>
                       <CopyValue value={listing.metadataUri} label="metadata URI" />
                     </dd>
