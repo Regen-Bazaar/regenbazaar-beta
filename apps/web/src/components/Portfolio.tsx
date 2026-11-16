@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useAccount, useReadContracts, useSwitchChain, useWriteContract, usePublicClient } from "wagmi";
 import { NO_WALLET_HINT } from "../lib/wallet";
+import { tokenInstanceUrl } from "../lib/networks";
 import { feeOverrides, trwiAbi } from "../lib/chain";
 import { useNetwork } from "./NetworkProvider";
 import { useConnectWallet } from "./useConnectWallet";
@@ -136,7 +137,7 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
                   <p className="mt-2 break-all text-sm text-subtle">
                     tRWI #{i.tokenId} · EAS attestation {i.easUid.slice(0, 10)}…{i.easUid.slice(-6)} ·{" "}
                     <a
-                      href={`${EXPLORER}/token/${TRWI}/instance/${i.tokenId}`}
+                      href={tokenInstanceUrl(net, i.tokenId)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="underline underline-offset-4 hover:text-accent"
