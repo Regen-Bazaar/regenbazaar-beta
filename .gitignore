@@ -32,5 +32,23 @@ generated/
 coverage/
 *.tsbuildinfo
 
-# private strategy notes (public repo)
-docs/private/
+
+# internal documents never go to this public repo (kept locally / in regenbazaar-private)
+docs/
+pitch/
+/submission*
+**/submission-images/
+**/*SUBMISSION*.md
+*.pdf
+*.doc
+*.docx
+*.ppt
+*.pptx
+*.key
+*.xls
+*.xlsx
+*.odt
+*.odp
+*.ods
+*.mov
+*.mp4

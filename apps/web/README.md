@@ -1,7 +1,7 @@
 # `apps/web` — Regen Bazaar beta dApp
 
 Next.js 15 App Router frontend and API for the beta. Project overview, architecture and
-runbook live in the [repository README](../../README.md) and [`docs/`](../../docs).
+runbook live in the [repository README](../../README.md).
 
 ## What runs here
 

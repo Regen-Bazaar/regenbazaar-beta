@@ -1,13 +1,13 @@
-<p align="center"><img src="docs/submission-images/logo-512.png" width="80" alt="Regen Bazaar"></p>
+<p align="center"><img src=".github/assets/logo-512.png" width="80" alt="Regen Bazaar"></p>
 <h1 align="center">Regen Bazaar</h1>
 <p align="center"><b>Buy verified real-world impact on-chain, paid in USDG, with provenance anyone can check.</b></p>
 <p align="center">
   <a href="https://app.regenbazaar.com"><b>Try it</b></a> ·
-  <a href="docs/ARCHITECTURE.md">How it works</a> ·
+  <a href="https://app.regenbazaar.com/methodology">How it works</a> ·
   <a href="packages/contracts/deployments">Contracts</a> ·
   <a href="https://app.regenbazaar.com/roadmap">Roadmap</a>
 </p>
-<p align="center"><img src="docs/submission-images/2-marketplace.png" width="820" alt="Regen Bazaar marketplace with tRWI cards"></p>
+<p align="center"><img src=".github/assets/2-marketplace.png" width="820" alt="Regen Bazaar marketplace with tRWI cards"></p>
 
 > Public beta on testnets. The same v3 contracts run on **Celo Sepolia** (where Regen Bazaar started),
 > **Arbitrum Sepolia** and **Robinhood Chain testnet**, and the site's network switcher offers all three. Each impact
@@ -49,7 +49,6 @@ packages/
                   RegenPrimarySale (voucher sale, partner share in v2), RegenMarketplace (resale),
                   EAS attester resolver, deploy scripts.
 deploy/       Dockerfile + isolated compose (web, postgres, ipfs, indexers) + nginx + runbook; live on a shared VPS.
-docs/         POSITIONING.md · ARCHITECTURE.md · DECISIONS.md · KNOWN_ISSUES.md · methodology/.
 ```
 
 ## Architecture
@@ -58,7 +57,7 @@ docs/         POSITIONING.md · ARCHITECTURE.md · DECISIONS.md · KNOWN_ISSUES.
 - **AI Impact-Value engine** (custom): LLM extraction of the creator's free text → deterministic, versioned,
   auditable scoring (methodology v0.2): `domain score = Σ units × AW × SM × ESM × S`, `IV = Σ domain score × k`.
   Quantities are converted to physical units first; every weight has a justification card with its source
-  (`docs/methodology/`). The LLM never scores; a validator sets the proof level (P0–P4) and confirms before
+  (published at `/methodology`). The LLM never scores; a validator sets the proof level (P0–P4) and confirms before
   mint. Reports scored before v0.2 keep their v0.1 score. Methodology is published in-app at `/methodology`.
 - **tRWI** = ERC-1155 with fractional editions (Impact Value split across editions; retire to record your contribution),
   EAS-attestation-gated mint, ERC-2981 royalties.
@@ -67,8 +66,7 @@ docs/         POSITIONING.md · ARCHITECTURE.md · DECISIONS.md · KNOWN_ISSUES.
 
 ## Deployed (v3, testnets)
 Source-verified on Blockscout on all three networks.
-Full records, including proof transactions: `packages/contracts/deployments/*.json`. Design:
-`docs/SMART_CONTRACT_DESIGN.md`.
+Full records, including proof transactions: `packages/contracts/deployments/*.json`.
 
 **Money split on a primary sale** (RegenPrimarySale v2, all three testnets since 2026-10-06): 2.5% platform fee,
 an optional partner share when the impact came through a partner (fixed per partner; at most 10%, and at most 15%
@@ -144,4 +142,4 @@ Secrets live only in `.env` (never committed); see each package's `.env.example`
 - `DEEPSEEK_API_KEY` (web): optional OpenAI-compatible fallback (OpenRouter in production) when Claude is unset or fails; with neither key, extraction uses the deterministic rule-based fallback.
 - `DATABASE_URL` (web): set to use Postgres; omit locally for the in-process dev DB.
 
-See `docs/ARCHITECTURE.md` for a plain-language overview and `docs/KNOWN_ISSUES.md` for current limitations.
+The scoring methodology is published at https://app.regenbazaar.com/methodology.

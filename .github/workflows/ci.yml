@@ -5,6 +5,13 @@ on:
   pull_request:
 
 jobs:
+  no-internal-docs:
+    name: No internal documents
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash .github/scripts/no-internal-docs.sh
+
   offchain:
     name: Off-chain (engine, db, pipeline, web build)
     runs-on: ubuntu-latest
