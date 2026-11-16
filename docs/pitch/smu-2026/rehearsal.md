@@ -19,19 +19,23 @@
 | 1:00 | "...what if finished impact could be sold, like any other product?" |
 | 2:00 | "...a foreign bank transfer." |
 | 3:30 | "Let me show it live." |
-| 5:20 | Demo: buying the listing (demo 1:50) |
-| 7:00 | Demo: Arc mainnet transaction (demo 3:30) |
-| 7:30 | Back on slide 7: "That was the whole flow, ending on mainnet." |
+| 4:30 | Demo: validator screen (demo 1:00) |
+| 5:20 | Demo: buyer, listing (demo 1:50) |
+| 6:35 | Demo: retire (demo 3:05) |
+| 7:30 | Back on slide 7: "That was the whole flow, live on a test network." |
 | 9:00 | Slide 10, close |
 | 9:30 | "Thank you." |
 
-If at 3:30 you are late by more than 20 s, the demo drops one step (which one: to confirm with smu-demo).
+Late at 3:30? The demo still ends at 7:30. Up to 20 s late: skip side trips (attestation tab, IPFS, purchase tx). 20 to 50 s:
+also skip the live creator form, approve the backup report. Over 50 s: also skip the live approve; backup listing, Buy,
+Retire. Never drop Buy and Retire.
 
 ## Day before (25.11)
 
 - [ ] Deck exported to PDF and saved on the desktop (backup if the artifact link does not open)
 - [ ] Demo wallet funded with test USDG and gas on Arbitrum Sepolia; one test purchase done
-- [ ] Demo video (Loom) opens and plays; link on slide 6
+- [ ] Backup recording `~/Desktop/RB_SMU_demo_backup.mov` (recorded 24.11) opens and plays
+- [ ] Morning of 26.11: backup report approved-ready, backup listing and 1 edition in the demo wallet (smu-demo)
 - [ ] Browser: one window, demo tabs open in order, all other tabs closed, notifications off, bookmarks bar hidden
 - [ ] Zoom display name: "Paul Burg · Regen Bazaar"
 

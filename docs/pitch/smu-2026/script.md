@@ -113,30 +113,34 @@ app.regenbazaar.com.
 
 | Demo time | Talk time | Segment |
 |---|---|---|
-| 0:00 | 3:30 | Frame: the three roles |
-| 0:15 | 3:45 | Creator writes a plain-text report, live Impact Value preview, submit |
-| 1:05 | 4:35 | Validator sets proof level P2, approves: EAS attestation + IPFS |
-| 1:50 | 5:20 | Listing, price from Impact Value, buy with the on-chain split |
-| 2:50 | 6:20 | Retire one edition in the buyer's name |
-| 3:30 | 7:00 | Arc mainnet real-USDC transaction as proof, close |
+| 0:00–0:10 | 3:30–3:40 | Handover: "Let me show you, live on Arbitrum Sepolia: a creator, a validator, a buyer." |
+| 0:10–1:00 | 3:40–4:30 | Creator: plain-text report, live Impact Value preview, submit |
+| 1:00–1:50 | 4:30–5:20 | Validator: AI reading vs creator numbers, proof level P2, approve: EAS attestation + IPFS |
+| 1:50–3:05 | 5:20–6:35 | Buyer: listing, Impact Value breakdown, price, split 97.5/2.5, buy |
+| 3:05–4:00 | 6:35–7:30 | Retire one edition in the buyer's name: retirement tx in Blockscout (last screen) |
 
-- Handover line (end of slide 5): "Let me show it live."
-- Last screen of the demo: the Arc mainnet transaction on the explorer.
-- Return line, back on slide 7: "That was the whole flow, ending on mainnet. Here is what is live today."
+Late start (the demo still ends at 7:30): up to 20 s late, skip the side trips (attestation tab, IPFS, purchase tx).
+20 to 50 s late, also skip the live creator form and approve the backup report. Over 50 s late, also skip the live
+approve: backup listing, Buy, Retire. Never drop Buy and Retire.
+
+- Handover line (end of slide 5): "Let me show it live." Then the demo's own first line (above).
+- Last screen of the demo: the retirement transaction in Blockscout (Arbitrum Sepolia).
+- Return line, back on slide 7: "That was the whole flow, live on a test network. The same sale contract already runs on mainnet. Here is what is live today, and you can check all of it."
 - Backup if the live demo fails at any point: say "Zoom is not my friend today, here is the same flow recorded",
-  and play the demo video (Loom link on slide 6) from the step where it broke. Do not debug live.
+  and play the local recording `~/Desktop/RB_SMU_demo_backup.mov` (recorded 24.11) from the step where it broke. Do not debug live.
 
 > RU: Демо ведёт сессия smu-demo (Arbitrum Sepolia): рамка, отчёт создателя, валидатор P2 + EAS/IPFS, покупка с
-> делением оплаты, погашение (retire) издания, в конце транзакция на Arc mainnet. Финальный экран: Arc в эксплорере. Если демо
-> ломается, не чинить вживую, а включить запись (Loom) с того же места.
+> делением оплаты, погашение (retire) издания, Финальный экран: транзакция погашения в Blockscout. Arc mainnet
+> в демо нет, он открывает слайд 7. При опоздании демо сокращается (см. правила выше), Buy и Retire не выкидываем. Если демо
+> ломается, не чинить вживую, а включить запись ~/Desktop/RB_SMU_demo_backup.mov с того же места.
 
 ---
 
 ## 7:30–9:00 · Live today, honest status, sustainability, next (slides 7, 8, 9)
 
-That was the whole flow, ending on mainnet. Here is what is live today, and you can check all of it.
+That was the whole flow, live on a test network. The same sale contract already runs on mainnet. Here is what is live today, and you can check all of it.
 
-The sale contract you just saw on Arc mainnet is our first mainnet experiment, from October: only the sale layer,
+In October we made our first mainnet experiment, on Arc: only the sale layer,
 six contracts source-verified, and one edition bought with real Circle USDC. The app itself runs on three test
 networks: Arbitrum Sepolia, Celo Sepolia and Robinhood Chain testnet. The partner share is live on all three. The
 contracts have 75 Foundry tests, including fuzz tests, and all the code is open source.
@@ -156,7 +160,7 @@ What comes next: open testing with real creators, login without a crypto wallet,
 sale layer on mainnet where creators and buyers already are. Later, a community of validators, so verification
 does not depend on us.
 
-> RU: Что работает сейчас (всё проверяемо): контракт продажи на Arc mainnet, который только что показали (октябрь,
+> RU: Что работает сейчас (всё проверяемо): тот же контракт продажи уже на Arc mainnet (октябрь,
 > только слой продажи, шесть верифицированных контрактов, одна покупка за настоящие USDC), три тестнета, доля
 > партнёра на всех трёх, 75 тестов Foundry, открытый код. Честно: бета, тестовые данные, нет пользователей и выручки, валидирует
 > наша команда, многие веса пока допущения. Устойчивость: 2,5% с каждой первичной продажи, партнёры так же;
