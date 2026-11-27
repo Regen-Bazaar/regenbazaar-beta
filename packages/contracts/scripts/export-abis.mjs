@@ -10,8 +10,19 @@ const destDir = join(root, "abis");
 mkdirSync(destDir, { recursive: true });
 
 // Our contracts (required) + EAS pieces (best-effort; needed for attestation calls).
-const required = ["TRWI", "REBAZ", "TRWIStaking", "AuthorizedAttesterResolver", "RegenMarketplace", "RegenPrimarySale"];
-const optional = ["EAS", "SchemaRegistry"];
+const required = [
+  "TRWI",
+  "REBAZ",
+  "TRWIStaking",
+  "AuthorizedAttesterResolver",
+  "RegenMarketplace",
+  "RegenPrimarySale",
+  // contract revision 4 (src/revision4)
+  "TRWIV4",
+  "RegenPrimarySaleV3",
+  "RegenMarketplaceV2",
+];
+const optional = ["EAS", "SchemaRegistry", "TimelockController"];
 
 function exportAbi(name, required) {
   const p = join(outDir, `${name}.sol`, `${name}.json`);
