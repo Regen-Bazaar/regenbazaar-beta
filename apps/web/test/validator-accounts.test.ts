@@ -604,3 +604,48 @@ test("detaching a partner twice writes one log line; the action log pages withou
   assert.equal(new Set(seen).size, total);
   assert.equal(seen.length, total);
 });
+
+test("removal and session revocation are one transaction: if revocation fails, the account stays active and a retry works", async () => {
+  const adm = await addUser("admin");
+  const v = await addUser("validator");
+  const ac = await signIn(adm);
+  await signIn(v);
+  await db.execute(sql`alter table validator_sessions rename to validator_sessions_x`);
+  try {
+    await assert.rejects(() => validatorRoute.PATCH(req(`/api/validators/${v.id}`, { method: "PATCH", cookie: ac, body: { remove: true } }), params(v.id)));
+  } finally {
+    await db.execute(sql`alter table validator_sessions_x rename to validator_sessions`);
+  }
+  const [row] = await db.select().from(schema.users).where(eq(schema.users.id, v.id));
+  assert.equal(row.active, true);
+  assert.equal((await validatorRoute.PATCH(req(`/api/validators/${v.id}`, { method: "PATCH", cookie: ac, body: { remove: true } }), params(v.id))).status, 200);
+});
+
+test("two admins demoting each other at once leave one active admin", async () => {
+  const a1 = await addUser("admin", "One");
+  const a2 = await addUser("admin", "Two");
+  const c1 = await signIn(a1);
+  const c2 = await signIn(a2);
+  const [r1, r2] = await Promise.all([
+    validatorRoute.PATCH(req(`/api/validators/${a2.id}`, { method: "PATCH", cookie: c1, body: { role: "validator" } }), params(a2.id)),
+    validatorRoute.PATCH(req(`/api/validators/${a1.id}`, { method: "PATCH", cookie: c2, body: { role: "validator" } }), params(a1.id)),
+  ]);
+  assert.deepEqual([r1.status, r2.status].sort(), [200, 409]);
+  assert.equal((await db.select().from(schema.users)).filter((u) => u.active && u.role === "admin").length, 1);
+});
+
+test("shared mode: the action log answers to the access code header, not to anyone else; the log and team screens send that header", async () => {
+  const saved = process.env.VALIDATOR_AUTH;
+  delete process.env.VALIDATOR_AUTH;
+  try {
+    assert.equal((await logRoute.GET(req("/api/action-log"))).status, 401);
+    assert.equal((await logRoute.GET(req("/api/action-log", { headers: { "x-admin-token": process.env.ADMIN_TOKEN! } }))).status, 200);
+  } finally {
+    process.env.VALIDATOR_AUTH = saved;
+  }
+  for (const page of ["log", "team"]) {
+    const text = readFileSync(join(import.meta.dirname, `../src/app/verify/${page}/page.tsx`), "utf8");
+    assert.match(text, /sharedHeaders\(\)/);
+    assert.doesNotMatch(text, /fetch\("\/api\/(action-log|validators)"\)/);
+  }
+});
