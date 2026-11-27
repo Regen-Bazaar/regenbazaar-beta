@@ -1,6 +1,5 @@
 import type { NextConfig } from "next";
 import { fileURLToPath } from "node:url";
-import { withSentryConfig } from "@sentry/nextjs";
 import { enabledNetworks } from "./src/lib/networks";
 
 // Browser-side reads (allowance, receipts, balances) go straight to each network's public RPC.
@@ -24,8 +23,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data: https://fonts.reown.com",
-  // allow the Sentry browser SDK to send events/traces to its ingest endpoint
-  `connect-src 'self' https://*.ingest.us.sentry.io https://*.ingest.sentry.io ${rpcOrigins.join(" ")} ${walletConnect}`,
+  `connect-src 'self' ${rpcOrigins.join(" ")} ${walletConnect}`,
   // WalletConnect domain verification runs in an iframe
   "frame-src https://verify.walletconnect.org https://verify.walletconnect.com",
   "frame-ancestors 'self'",
@@ -69,11 +67,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-// Sentry wrap. Runtime capture is gated on the DSN env vars (no-op if unset); no auth token needed to build.
-export default withSentryConfig(nextConfig, {
-  org: "vitacrypt",
-  project: "regenbazaar",
-  silent: !process.env.CI,
-  widenClientFileUpload: true,
-  disableLogger: true,
-});
+export default nextConfig;

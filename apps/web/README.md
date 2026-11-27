@@ -14,7 +14,7 @@ runbook live in the [repository README](../../README.md).
 ## Stack
 
 Next.js 15 · React 19 · TypeScript · Tailwind · wagmi + viem · Drizzle ORM
-(PGlite in dev, postgres-js in prod) · TanStack Query · Sentry.
+(PGlite in dev, postgres-js in prod) · TanStack Query.
 
 Workspace packages: `@rb/impact-engine` (deterministic Impact-Value scoring),
 `@rb/pipeline` (submit → extract → score → persist), `@rb/db` (schema and migrations).
