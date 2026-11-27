@@ -20,7 +20,11 @@ export type LogAction =
   | "validator_add"
   | "validator_remove"
   | "role_change"
-  | "first_admin";
+  | "first_admin"
+  | "withdraw_request"
+  | "withdraw_approve"
+  | "withdraw_reject"
+  | "edition_limit_lift";
 
 export type LogEntry = {
   action: LogAction;

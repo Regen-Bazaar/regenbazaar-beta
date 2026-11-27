@@ -190,17 +190,21 @@ function operatorAccount() {
 }
 
 // Revision 4 separates the keys: the voucher signer and the attester are two server keys (contract-revision.md, 2).
-function revision4Account(envKey: "VOUCHER_SIGNER_PRIVATE_KEY" | "ATTESTER_PRIVATE_KEY") {
+function revision4Account(envKey: "VOUCHER_SIGNER_PRIVATE_KEY" | "ATTESTER_PRIVATE_KEY" | "WITHDRAWER_PRIVATE_KEY") {
   const pk = process.env[envKey];
   if (!pk) throw new Error(`${envKey} not set (needed for contract revision 4)`);
   return privateKeyToAccount((pk.startsWith("0x") ? pk : `0x${pk}`) as Hex);
 }
 
-function clients(net: Network, role: "signer" | "attester" = "signer") {
-  const account =
-    net.primarySaleVersion === 3
-      ? revision4Account(role === "signer" ? "VOUCHER_SIGNER_PRIVATE_KEY" : "ATTESTER_PRIVATE_KEY")
-      : operatorAccount();
+const REVISION4_KEYS = {
+  signer: "VOUCHER_SIGNER_PRIVATE_KEY",
+  attester: "ATTESTER_PRIVATE_KEY",
+  withdrawer: "WITHDRAWER_PRIVATE_KEY",
+} as const;
+
+function clients(net: Network, role: "signer" | "attester" | "withdrawer" = "signer") {
+  if (role === "withdrawer" && net.primarySaleVersion !== 3) throw new Error("withdraw needs contract revision 4");
+  const account = net.primarySaleVersion === 3 ? revision4Account(REVISION4_KEYS[role]) : operatorAccount();
   const transport = http(rpcFor(net));
   const wallet = createWalletClient({ account, chain: net.chain, transport });
   const pub = createPublicClient({ chain: net.chain, transport });
@@ -289,4 +293,110 @@ export function voucherV3Message(v: ImpactVoucher) {
   if (v.resaleFeeBps === undefined || v.resalePartnerBps === undefined) throw new Error("v3 voucher needs resale shares");
   if (v.partner === zeroAddress && v.resalePartnerBps !== 0n) throw new Error("resale partner share without a partner");
   return { ...v, recipient: v.recipient ?? zeroAddress, resaleFeeBps: v.resaleFeeBps, resalePartnerBps: v.resalePartnerBps };
+}
+
+// ---- revision 4: withdraw a false claim, revoke its attestation, read minted editions ----
+
+const trwiV4Abi = [
+  {
+    type: "function",
+    name: "withdraw",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "easUID", type: "bytes32" }, { name: "reasonURI", type: "string" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "withdrawnUID",
+    stateMutability: "view",
+    inputs: [{ name: "", type: "bytes32" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "collection",
+    stateMutability: "view",
+    inputs: [{ name: "tokenId", type: "uint256" }],
+    outputs: [
+      {
+        name: "",
+        type: "tuple",
+        components: [
+          { name: "creator", type: "address" },
+          { name: "totalIV", type: "uint256" },
+          { name: "maxEditions", type: "uint256" },
+          { name: "minted", type: "uint256" },
+          { name: "easUID", type: "bytes32" },
+          { name: "partner", type: "address" },
+          { name: "validator", type: "address" },
+          { name: "proofLevel", type: "uint8" },
+          { name: "transferable", type: "bool" },
+          { name: "royaltyBps", type: "uint96" },
+          { name: "resaleFeeBps", type: "uint96" },
+          { name: "resalePartnerBps", type: "uint96" },
+          { name: "methodologyVersion", type: "string" },
+        ],
+      },
+    ],
+  },
+] as const;
+
+const easRevokeAbi = [
+  {
+    type: "function",
+    name: "revoke",
+    stateMutability: "payable",
+    inputs: [
+      {
+        name: "request",
+        type: "tuple",
+        components: [
+          { name: "schema", type: "bytes32" },
+          { name: "data", type: "tuple", components: [{ name: "uid", type: "bytes32" }, { name: "value", type: "uint256" }] },
+        ],
+      },
+    ],
+    outputs: [],
+  },
+] as const;
+
+function requireRevision4(net: Network) {
+  if (net.primarySaleVersion !== 3) throw new Error(`${net.chain.name} is not on contract revision 4`);
+}
+
+/** Editions already minted for `tokenId` on TRWIV4 (0 before the first sale). */
+export async function mintedOnChain(net: Network, tokenId: bigint): Promise<bigint> {
+  requireRevision4(net);
+  const pub = createPublicClient({ chain: net.chain, transport: http(rpcFor(net)) });
+  const c = await pub.readContract({ address: net.trwi, abi: trwiV4Abi, functionName: "collection", args: [tokenId] });
+  return c.minted;
+}
+
+/** Mark the impact withdrawn on TRWIV4 (WITHDRAWER key). Skips the call when it is already marked. */
+export async function withdrawOnChain(net: Network, easUid: Hex, reasonURI: string): Promise<Hex | null> {
+  requireRevision4(net);
+  const { account, wallet, pub } = clients(net, "withdrawer");
+  const done = await pub.readContract({ address: net.trwi, abi: trwiV4Abi, functionName: "withdrawnUID", args: [easUid] });
+  if (done) return null;
+  const hash = await wallet.writeContract({ address: net.trwi, abi: trwiV4Abi, functionName: "withdraw", args: [easUid, reasonURI], account, chain: net.chain });
+  const r = await pub.waitForTransactionReceipt({ hash });
+  if (r.status !== "success") throw new Error(`withdraw reverted (${hash})`);
+  return hash;
+}
+
+/** Revoke the ImpactClaim attestation in EAS (ATTESTER key, the original attester). */
+export async function revokeOnChain(net: Network, easUid: Hex): Promise<Hex> {
+  requireRevision4(net);
+  const { account, wallet, pub } = clients(net, "attester");
+  const hash = await wallet.writeContract({
+    address: net.eas,
+    abi: easRevokeAbi,
+    functionName: "revoke",
+    args: [{ schema: net.schemaUID, data: { uid: easUid, value: 0n } }],
+    account,
+    chain: net.chain,
+  });
+  const r = await pub.waitForTransactionReceipt({ hash });
+  if (r.status !== "success") throw new Error(`revoke reverted (${hash})`);
+  return hash;
 }

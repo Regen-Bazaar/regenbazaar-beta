@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { listings, partners } from "@rb/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { zeroAddress } from "viem";
 import { getDb } from "../../../../../lib/db";
-import { onchainEnabled, signVoucher, type ImpactVoucher } from "../../../../../lib/onchain";
+import { mintedOnChain, onchainEnabled, signVoucher, type ImpactVoucher } from "../../../../../lib/onchain";
+import { contractGenerationOf } from "../../../../../lib/revision4";
+import { editionLimit, editionLimitError, limitFactsFor } from "../../../../../lib/edition-limit";
 import { networkByChainId } from "../../../../../lib/networks";
 import {
   PLATFORM_FEE_BPS,
@@ -28,6 +30,25 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   // The listing's own chain decides the signing domain, never the visitor's cookie.
   const net = networkByChainId(l.chainId);
   if (!net) return NextResponse.json({ error: "listing network not supported" }, { status: 404 });
+  // A listing is sold only on the contract generation it was attested for (never on both).
+  if (l.contractGeneration !== contractGenerationOf(net)) {
+    return NextResponse.json({ error: "this listing belongs to the previous contracts and is closed" }, { status: 409 });
+  }
+  if (l.withdrawnAt) return NextResponse.json({ error: "this impact was withdrawn" }, { status: 409 });
+
+  // Edition limit (revision 4 only): refuse to sign once the limited editions are sold.
+  if (net.primarySaleVersion === 3) {
+    const minted = Number(await mintedOnChain(net, BigInt(l.tokenId)));
+    const now = new Date();
+    if (minted > 0 && !l.firstSaleAt) {
+      // First sale seen by the site (not earlier than the real one, so the 30 days never open early).
+      await db.update(listings).set({ firstSaleAt: now }).where(and(eq(listings.id, l.id), isNull(listings.firstSaleAt)));
+      l.firstSaleAt = now;
+    }
+    const limit = editionLimit(await limitFactsFor(db, l.id, now));
+    const bad = editionLimitError(limit, minted, 1);
+    if (bad) return NextResponse.json({ error: bad, limit }, { status: 409 });
+  }
 
   // Partner share (RegenPrimarySale v2). A listing with a partner is never sold without the partner's share.
   let partner = zeroAddress as `0x${string}`;
