@@ -16,7 +16,7 @@ import { desc, eq, inArray, sql } from "drizzle-orm";
 import { getAddress, isAddress } from "viem";
 import type { DB } from "@rb/db";
 import { getDb, getDemoOrgId } from "../../../lib/db";
-import { isAdmin } from "../../../lib/admin";
+import { authenticate } from "../../../lib/validator-auth";
 import { clientIp, rateLimit } from "../../../lib/rate-limit";
 import { findDuplicates } from "../../../lib/duplicates";
 import { currentNetwork } from "../../../lib/network-server";
@@ -53,7 +53,7 @@ async function findOrCreateOrg(db: DB, name: string, wallet: `0x${string}`): Pro
 export async function GET(req: Request) {
   const db = await getDb();
   const status = new URL(req.url).searchParams.get("status");
-  const admin = isAdmin(req);
+  const admin = (await authenticate(req)) !== null;
   if (!admin && status && !PUBLIC_STATUSES.includes(status)) {
     return NextResponse.json({ error: "validator access required" }, { status: 401 });
   }

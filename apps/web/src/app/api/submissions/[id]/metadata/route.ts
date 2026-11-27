@@ -4,7 +4,7 @@ import { impactSubmissions } from "@rb/db/schema";
 import { buildTokenMetadata } from "@rb/pipeline";
 import { parseProofLevel, type DomainScoreV02, type ExtractedAction, type FrameworkTags } from "@rb/impact-engine";
 import { getDb } from "../../../../../lib/db";
-import { isAdmin } from "../../../../../lib/admin";
+import { authenticate } from "../../../../../lib/validator-auth";
 import { siteUrl } from "../../../../../lib/site";
 
 export const runtime = "nodejs";
@@ -19,7 +19,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
   if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "not found" }, { status: 404 });
   const db = await getDb();
   const [s] = await db.select().from(impactSubmissions).where(eq(impactSubmissions.id, id)).limit(1);
-  if (!s || (!PUBLIC_STATUSES.includes(s.status) && !isAdmin(req))) {
+  if (!s || (!PUBLIC_STATUSES.includes(s.status) && !(await authenticate(req)))) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 

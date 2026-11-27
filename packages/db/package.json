@@ -7,12 +7,14 @@
     ".": "./src/index.ts",
     "./schema": "./src/schema.ts",
     "./testing": "./src/testing.ts",
-    "./dev-schema": "./src/dev-schema.ts"
+    "./dev-schema": "./src/dev-schema.ts",
+    "./first-admin": "./src/first-admin.ts"
   },
   "scripts": {
     "generate": "drizzle-kit generate",
     "migrate": "node --experimental-strip-types src/migrate.ts",
-    "test": "node --experimental-strip-types --test test/db.test.ts test/dev-schema-drift.test.ts"
+    "first-admin": "node --experimental-strip-types src/first-admin.ts",
+    "test": "node --experimental-strip-types --test test/db.test.ts test/dev-schema-drift.test.ts test/first-admin.test.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.2.0",

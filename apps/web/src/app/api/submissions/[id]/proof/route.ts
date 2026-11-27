@@ -10,7 +10,8 @@ import {
 } from "@rb/pipeline";
 import type { ExtractedActionV02 } from "@rb/impact-engine";
 import { getDb } from "../../../../../lib/db";
-import { isAdmin } from "../../../../../lib/admin";
+import { requireActor } from "../../../../../lib/validator-auth";
+import { logAction } from "../../../../../lib/action-log";
 import { rateLimit } from "../../../../../lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -21,7 +22,8 @@ const CHECKS_PER_HOUR = 30;
 // (https only, private addresses blocked, time and size limits), stores a snapshot hash and AI/regex
 // flags per link. It never sets the proof level and never changes IV: the validator decides.
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  if (!isAdmin(req)) return NextResponse.json({ error: "validator access required" }, { status: 401 });
+  const a = await requireActor(req);
+  if ("response" in a) return a.response;
   if (!rateLimit("proof:all", CHECKS_PER_HOUR, 3_600_000)) {
     return NextResponse.json({ error: "too many proof checks, please try again later" }, { status: 429 });
   }
@@ -68,5 +70,11 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   const checked = duplicateFlags(results, seen);
 
   await db.update(impactSubmissions).set({ proofChecks: checked, updatedAt: new Date() }).where(eq(impactSubmissions.id, id));
+  await logAction(db, a.actor, {
+    action: "proof_check",
+    objectType: "impact",
+    objectId: id,
+    after: { links: links.length },
+  });
   return NextResponse.json({ id, proofChecks: checked });
 }

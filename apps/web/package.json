@@ -7,7 +7,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "node --import tsx --test test/validator-accounts.test.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.2.0",
