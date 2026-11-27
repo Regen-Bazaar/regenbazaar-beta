@@ -38,6 +38,9 @@ CREATE TABLE IF NOT EXISTS "users" (
   "wallet_address" varchar(42) NOT NULL,
   "display_name" text,
   "role" "user_role" DEFAULT 'buyer' NOT NULL,
+  "active" boolean DEFAULT true NOT NULL,
+  "removed_at" timestamp with time zone,
+  "added_by" uuid,
   "created_at" timestamp with time zone DEFAULT now() NOT NULL,
   CONSTRAINT "users_wallet_address_unique" UNIQUE("wallet_address")
 );
@@ -124,4 +127,39 @@ CREATE UNIQUE INDEX IF NOT EXISTS "listings_chain_token_idx" ON "listings" USING
 CREATE UNIQUE INDEX IF NOT EXISTS "aw_version_type_idx" ON "action_weights" USING btree ("version","action_type");
 CREATE INDEX IF NOT EXISTS "submission_org_idx" ON "impact_submissions" USING btree ("org_id");
 CREATE INDEX IF NOT EXISTS "submission_status_idx" ON "impact_submissions" USING btree ("status");
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "active" boolean DEFAULT true NOT NULL;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "removed_at" timestamp with time zone;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "added_by" uuid;
+CREATE TABLE IF NOT EXISTS "validator_sessions" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "token_hash" varchar(64) NOT NULL,
+  "user_id" uuid NOT NULL REFERENCES "users"("id"),
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "expires_at" timestamp with time zone NOT NULL,
+  "revoked_at" timestamp with time zone,
+  CONSTRAINT "validator_sessions_token_hash_unique" UNIQUE("token_hash")
+);
+CREATE INDEX IF NOT EXISTS "validator_sessions_user_idx" ON "validator_sessions" ("user_id");
+CREATE TABLE IF NOT EXISTS "auth_nonces" (
+  "nonce" varchar(64) PRIMARY KEY NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "used_at" timestamp with time zone
+);
+CREATE TABLE IF NOT EXISTS "action_log" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "actor_id" uuid REFERENCES "users"("id"),
+  "actor_wallet" varchar(42),
+  "actor_name" text,
+  "action" varchar(40) NOT NULL,
+  "object_type" varchar(20),
+  "object_id" text,
+  "before" jsonb,
+  "after" jsonb,
+  "note" text,
+  "result" varchar(10) DEFAULT 'done' NOT NULL,
+  "error" text
+);
+CREATE INDEX IF NOT EXISTS "action_log_created_idx" ON "action_log" ("created_at");
+CREATE INDEX IF NOT EXISTS "action_log_actor_idx" ON "action_log" ("actor_id");
 `;

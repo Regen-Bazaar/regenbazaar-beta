@@ -2,14 +2,16 @@ import { NextResponse } from "next/server";
 import { impactSubmissions, listings, partners } from "@rb/db/schema";
 import { desc, eq, isNotNull } from "drizzle-orm";
 import { getDb } from "../../../lib/db";
-import { isAdmin } from "../../../lib/admin";
+import { requireActor } from "../../../lib/validator-auth";
+import { logAction } from "../../../lib/action-log";
 import { partnerShareError } from "../../../lib/partner-share";
 
 export const runtime = "nodejs";
 
 // GET /api/partners — validators only: every partner with the listings attached to it.
 export async function GET(req: Request) {
-  if (!isAdmin(req)) return NextResponse.json({ error: "validator access required" }, { status: 401 });
+  const a = await requireActor(req);
+  if ("response" in a) return a.response;
   const db = await getDb();
   const rows = await db.select().from(partners).orderBy(desc(partners.createdAt));
   const attached = await db
@@ -36,7 +38,8 @@ export async function GET(req: Request) {
 // POST /api/partners — create a partner. The share is fixed for the partner's lifetime (owner decision
 // 2026-10-07): a different share means a new partner record, so listed lots never change their split.
 export async function POST(req: Request) {
-  if (!isAdmin(req)) return NextResponse.json({ error: "validator access required" }, { status: 401 });
+  const a = await requireActor(req, "admin");
+  if ("response" in a) return a.response;
   let body: Record<string, unknown>;
   try {
     body = (await req.json()) as Record<string, unknown>;
@@ -52,5 +55,11 @@ export async function POST(req: Request) {
 
   const db = await getDb();
   const [created] = await db.insert(partners).values({ name, payoutAddress, feeBps }).returning();
+  await logAction(db, a.actor, {
+    action: "partner_create",
+    objectType: "partner",
+    objectId: created.id,
+    after: { name, payoutAddress, feeBps },
+  });
   return NextResponse.json({ ...created, listings: [] }, { status: 201 });
 }

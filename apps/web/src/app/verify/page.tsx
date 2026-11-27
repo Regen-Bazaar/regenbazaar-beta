@@ -8,6 +8,7 @@ import { ErrorNote } from "../../components/ErrorNote";
 import { ReviewV02, type ReviewChoice, type SubmissionV02 } from "./ReviewV02";
 import { fmt, headline, impactView } from "../../lib/impact-view";
 import { bpsToPercent } from "../../lib/partner-share";
+import { ValidatorBar, useValidatorMe } from "../../components/ValidatorBar";
 
 type Submission = {
   id: string;
@@ -53,6 +54,7 @@ export default function Verify() {
   const [choices, setChoices] = useState<Record<string, ReviewChoice>>({});
   const [partnerList, setPartnerList] = useState<PartnerOption[]>([]);
   const [partnerOf, setPartnerOf] = useState<Record<string, string>>({});
+  const me = useValidatorMe();
 
   useEffect(() => {
     try {
@@ -116,7 +118,8 @@ export default function Verify() {
         Marketplace of the one network it was submitted on. Submitted a report? It will appear in the Marketplace once reviewed.
       </p>
 
-      {denied && (
+      <ValidatorBar me={me} current="queue" />
+      {denied && me.ready && me.mode === "shared" && (
         <form
           className="mt-8 flex max-w-[560px] gap-2"
           onSubmit={(e) => {
@@ -137,7 +140,7 @@ export default function Verify() {
           <button className="btn btn-secondary btn-sm">Unlock</button>
         </form>
       )}
-      {denied && token && <p className="mt-2 text-sm text-danger">Wrong access code.</p>}
+      {denied && me.mode === "shared" && token && <p className="mt-2 text-sm text-danger">Wrong access code.</p>}
       {error && <ErrorNote text={error} className="mt-4 text-danger" />}
 
       {approved.map((a) => {

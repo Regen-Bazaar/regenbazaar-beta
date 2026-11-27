@@ -26,6 +26,7 @@ jobs:
       - run: pnpm --filter @rb/impact-engine test
       - run: pnpm --filter @rb/db test
       - run: pnpm --filter @rb/pipeline test
+      - run: pnpm --filter web test
       - run: pnpm --filter web build
 
   contracts:

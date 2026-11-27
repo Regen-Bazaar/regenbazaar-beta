@@ -24,7 +24,8 @@ import { onchainEnabled, attestImpact, hasCode, ivToWei, type ImpactClaimV2Extra
 import { partnerShareError } from "../../../lib/partner-share";
 import { DEFAULT_NETWORK_KEY, NATIVE, getNetwork, isNetworkKey, networkByChainId, usdPerUnit, type Network } from "../../../lib/networks";
 import type { DB } from "@rb/db";
-import { isAdmin } from "../../../lib/admin";
+import { requireActor } from "../../../lib/validator-auth";
+import { logAction } from "../../../lib/action-log";
 import { cardHeadline } from "../../../lib/impact-view";
 import { siteUrl } from "../../../lib/site";
 
@@ -43,7 +44,7 @@ async function registerListing(db: DB, net: Network, submissionId: string, partn
   const [existing] = await db.select().from(listings).where(eq(listings.submissionId, submissionId)).limit(1);
   if (existing) {
     const where = networkByChainId(existing.chainId)?.key ?? String(existing.chainId);
-    return { network: where, tokenId: String(existing.tokenId), easUid: existing.easUid, existing: true };
+    return { network: where, tokenId: String(existing.tokenId), easUid: existing.easUid, existing: true, partnerId: existing.partnerId };
   }
   const [s] = await db.select().from(impactSubmissions).where(eq(impactSubmissions.id, submissionId)).limit(1);
   if (!s || !s.ivValue) throw new Error("submission not found or unscored");
@@ -147,12 +148,14 @@ async function registerListing(db: DB, net: Network, submissionId: string, partn
     active: true,
   });
 
-  return { network: net.key, tokenId, easUid: uid, attestTx: txHash, metadataURI, pricePerEditionWei, existing: false };
+  return { network: net.key, tokenId, easUid: uid, attestTx: txHash, metadataURI, pricePerEditionWei, existing: false, partnerId };
 }
 
 // POST /api/verifications — validator decision. Approve registers the on-chain-ready listing (lazy mint).
 export async function POST(req: Request) {
-  if (!isAdmin(req)) return NextResponse.json({ error: "validator access required" }, { status: 401 });
+  const auth = await requireActor(req);
+  if ("response" in auth) return auth.response;
+  const actor = auth.actor;
   let body: Record<string, unknown>;
   try {
     body = (await req.json()) as Record<string, unknown>;
@@ -205,6 +208,24 @@ export async function POST(req: Request) {
       });
     }
     await db.update(impactSubmissions).set(patch).where(eq(impactSubmissions.id, submissionId));
+    if (proofLevel) {
+      await logAction(db, actor, {
+        action: "set_proof_level",
+        objectType: "impact",
+        objectId: submissionId,
+        before: { proofLevel: target.proofLevel },
+        after: { proofLevel },
+      });
+    }
+    if (esm !== null) {
+      await logAction(db, actor, {
+        action: "set_esm",
+        objectType: "impact",
+        objectId: submissionId,
+        before: { esm: (target.context as { esm?: number } | null)?.esm ?? null, impactValue: target.ivValue },
+        after: { esm, impactValue: patch.ivValue ?? null },
+      });
+    }
   }
 
   // The ONE network this report is listed on: the one chosen at submission (legacy rows without a network ->
@@ -241,17 +262,18 @@ export async function POST(req: Request) {
     }
     partnerId = p.id;
   }
-  await db.insert(verifications).values({
-    submissionId,
-    decision,
-    note: typeof body.note === "string" ? body.note : null,
-  });
+  const note = typeof body.note === "string" ? body.note : null;
+  await db.insert(verifications).values({ submissionId, validatorId: actor.userId, decision, note });
+  const logDecision = (extra: { after?: unknown; error?: string }) =>
+    logAction(db, actor, { action: decision, objectType: "impact", objectId: submissionId, before: { status: target.status }, note, ...extra });
 
   if (decision === "reject") {
     await db.update(impactSubmissions).set({ status: "rejected", updatedAt: new Date() }).where(eq(impactSubmissions.id, submissionId));
+    await logDecision({ after: { status: "rejected" } });
     return NextResponse.json({ ok: true, status: "rejected" });
   }
   if (decision === "request_info") {
+    await logDecision({ after: { status: target.status } }); // asking for more proof changes no status
     return NextResponse.json({ ok: true, status: "pending_verification" });
   }
 
@@ -263,11 +285,16 @@ export async function POST(req: Request) {
     } catch (e) {
       // Keep it in the queue so the reviewer sees the failure and can retry (re-approving is idempotent).
       const error = e instanceof Error ? e.message.slice(0, 300) : "listing failed";
+      await logDecision({ error: `listing on ${net.key} failed: ${error}`, after: { network: net.key, partnerId } });
       return NextResponse.json({ error: `Approved, but listing on ${net.chain.name} failed: ${error}` }, { status: 502 });
     }
     await db.update(impactSubmissions).set({ status: "tokenized", updatedAt: new Date() }).where(eq(impactSubmissions.id, submissionId));
+    await logDecision({
+      after: { status: "tokenized", network: result.network, tokenId: result.tokenId, easUid: result.easUid, partnerId: result.partnerId, existing: result.existing },
+    });
     return NextResponse.json({ ok: true, status: "tokenized", listings: [{ ok: true, ...result }] });
   }
   await db.update(impactSubmissions).set({ status: "verified", updatedAt: new Date() }).where(eq(impactSubmissions.id, submissionId));
+  await logDecision({ after: { status: "verified", partnerId } });
   return NextResponse.json({ ok: true, status: "verified" });
 }
