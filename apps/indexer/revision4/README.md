@@ -16,3 +16,5 @@ Switch, per network, after the owner's yes and the revision 4 deploy:
 Regenerate `src/abis.ts` after a contract change: `forge build && node scripts/export-abis.mjs` in
 `packages/contracts`, then rerun the extraction (events of TRWIV4, RegenPrimarySaleV3 `Sold`,
 RegenMarketplaceV2 `Listed`/`Purchased`/`Cancelled`).
+
+Type-check: `apps/web/node_modules/.bin/tsc --noEmit -p apps/indexer/revision4` (from the repo root).

@@ -430,6 +430,11 @@ contract DeployRevision4Test is DeployRevision4Checks {
         script.validate(c, deployer);
 
         c = _config(address(eas), address(registry));
+        c.withdrawer = c.signer;
+        vm.expectRevert(abi.encodeWithSelector(DeployRevision4.BadConfig.selector, "two roles share one key"));
+        script.validate(c, deployer);
+
+        c = _config(address(eas), address(registry));
         c.deployTestStablecoin = false;
         vm.expectRevert(abi.encodeWithSelector(DeployRevision4.BadConfig.selector, "no stablecoin"));
         script.validate(c, deployer);

@@ -96,6 +96,9 @@ contract DeployRevision4 is Script {
         for (uint256 i = 0; i < holders.length; ++i) {
             if (holders[i] == address(0)) revert BadConfig("role holder is zero");
             if (holders[i] == deployer) revert BadConfig("role holder is the deployer");
+            for (uint256 j = 0; j < i; ++j) {
+                if (holders[i] == holders[j]) revert BadConfig("two roles share one key");
+            }
         }
         if (c.currencies.length == 0 && !c.deployTestStablecoin) revert BadConfig("no stablecoin");
         for (uint256 i = 0; i < c.currencies.length; ++i) {
