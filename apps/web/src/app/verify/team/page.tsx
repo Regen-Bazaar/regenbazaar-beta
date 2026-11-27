@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { isAddress } from "viem";
 import { ErrorNote } from "../../../components/ErrorNote";
-import { ValidatorBar, useValidatorMe } from "../../../components/ValidatorBar";
+import { ValidatorBar, sharedHeaders, useValidatorMe } from "../../../components/ValidatorBar";
 
 type Member = { id: string; wallet: string; name: string | null; role: "validator" | "admin"; active: boolean; removedAt: string | null; createdAt: string };
 
@@ -20,9 +20,13 @@ export default function Team() {
   const [role, setRole] = useState<"validator" | "admin">("validator");
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/validators");
-    setStatus(res.status);
-    setRows(res.ok ? await res.json() : []);
+    try {
+      const res = await fetch("/api/validators", { headers: sharedHeaders() });
+      setStatus(res.status);
+      setRows(res.ok ? await res.json() : []);
+    } catch {
+      setError("Could not load the team. Check the connection and reload.");
+    }
   }, []);
   useEffect(() => {
     void load();
@@ -31,9 +35,14 @@ export default function Team() {
   async function call(key: string, url: string, method: string, body: unknown) {
     setBusy(key);
     setError("");
-    const res = await fetch(url, { method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-    if (!res.ok) setError(((await res.json().catch(() => ({}))) as { error?: string }).error ?? "failed");
-    setBusy("");
+    try {
+      const res = await fetch(url, { method, headers: { "content-type": "application/json", ...sharedHeaders() }, body: JSON.stringify(body) });
+      if (!res.ok) setError(((await res.json().catch(() => ({}))) as { error?: string }).error ?? "failed");
+    } catch {
+      setError("Request failed. Check the connection and try again.");
+    } finally {
+      setBusy("");
+    }
     await load();
   }
 

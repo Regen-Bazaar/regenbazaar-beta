@@ -535,3 +535,72 @@ test("switch: an unset or short ADMIN_TOKEN lets nobody in (fail closed)", async
     process.env.ADMIN_TOKEN = token;
   }
 });
+
+// ---- review follow-ups -----------------------------------------------------------------------------------
+
+test("shared code: a non-ASCII header of the same length is refused, not a server error", async () => {
+  const saved = process.env.VALIDATOR_AUTH;
+  delete process.env.VALIDATOR_AUTH;
+  try {
+    const res = await partnersRoute.GET(req("/api/partners", { headers: { "x-admin-token": "é".repeat(process.env.ADMIN_TOKEN!.length) } }));
+    assert.equal(res.status, 401);
+  } finally {
+    process.env.VALIDATOR_AUTH = saved;
+  }
+});
+
+test("sign-in: a null or non-object body is refused, not a server error", async () => {
+  for (const body of [null, 5, "x", [1]]) {
+    const res = await signInRoute.POST(req("/api/auth/sign-in", { method: "POST", body }));
+    assert.equal(res.status, 401);
+  }
+});
+
+test("two admins removing each other at once leave one active admin", async () => {
+  const a1 = await addUser("admin", "One");
+  const a2 = await addUser("admin", "Two");
+  const c1 = await signIn(a1);
+  const c2 = await signIn(a2);
+  const [r1, r2] = await Promise.all([
+    validatorRoute.PATCH(req(`/api/validators/${a2.id}`, { method: "PATCH", cookie: c1, body: { remove: true } }), params(a2.id)),
+    validatorRoute.PATCH(req(`/api/validators/${a1.id}`, { method: "PATCH", cookie: c2, body: { remove: true } }), params(a1.id)),
+  ]);
+  assert.deepEqual([r1.status, r2.status].sort(), [200, 409]);
+  const active = (await db.select().from(schema.users)).filter((u) => u.active && u.role === "admin");
+  assert.equal(active.length, 1);
+  assert.equal((await logLines("validator_remove")).length, 1);
+});
+
+test("removal ends the sessions, and re-adding the wallet does not bring the old cookie back", async () => {
+  const adm = await addUser("admin");
+  const v = await addUser("validator");
+  const ac = await signIn(adm);
+  const vc = await signIn(v);
+  await validatorRoute.PATCH(req(`/api/validators/${v.id}`, { method: "PATCH", cookie: ac, body: { remove: true } }), params(v.id));
+  await validatorsRoute.POST(req("/api/validators", { method: "POST", cookie: ac, body: { wallet: v.account.address, name: "Back", role: "validator" } }));
+  assert.equal((await partnersRoute.GET(req("/api/partners", { cookie: vc }))).status, 401);
+});
+
+test("detaching a partner twice writes one log line; the action log pages without skipping lines that share a time", async () => {
+  const adm = await addUser("admin");
+  const ac = await signIn(adm);
+  const pid = ((await (await partnersRoute.POST(req("/api/partners", { method: "POST", cookie: ac, body: { name: "P2", payoutAddress: "0x" + "1".repeat(40), feeBps: 100 } }))).json()) as { id: string }).id;
+  const listing = await insertListing(pid);
+  const del = () => listingPartnerRoute.DELETE(req(`/api/listings/${listing}/partner`, { method: "DELETE", cookie: ac }), params(listing));
+  assert.equal((await del()).status, 200);
+  assert.equal((await del()).status, 200);
+  assert.equal((await logLines("partner_detach")).length, 1);
+
+  await db.execute(sql`update action_log set created_at = '2026-01-01T00:00:00Z'`);
+  const seen: string[] = [];
+  let before = "";
+  for (let i = 0; i < 10; i++) {
+    const page = (await (await logRoute.GET(req(`/api/action-log?limit=1${before}`, { cookie: ac }))).json()) as { id: string; createdAt: string }[];
+    if (page.length === 0) break;
+    seen.push(page[0].id);
+    before = `&before=${encodeURIComponent(`${new Date(page[0].createdAt).toISOString()},${page[0].id}`)}`;
+  }
+  const total = (await db.select().from(schema.actionLog)).length;
+  assert.equal(new Set(seen).size, total);
+  assert.equal(seen.length, total);
+});

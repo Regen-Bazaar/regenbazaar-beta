@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ErrorNote } from "../../../components/ErrorNote";
-import { ValidatorBar, useValidatorMe } from "../../../components/ValidatorBar";
+import { ValidatorBar, sharedHeaders, useValidatorMe } from "../../../components/ValidatorBar";
 
 type Line = {
   id: string;
@@ -36,6 +36,7 @@ export default function Log() {
   const [object, setObject] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const seq = useRef(0);
   const isAdmin = me.user?.role === "admin" || me.mode === "shared";
 
   const load = useCallback(async () => {
@@ -43,18 +44,25 @@ export default function Log() {
     if (person) q.set("person", person);
     if (action) q.set("action", action);
     if (object.trim()) q.set("object", object.trim());
-    if (from) q.set("from", new Date(from).toISOString());
+    if (from) q.set("from", new Date(`${from}T00:00:00`).toISOString());
     if (to) q.set("to", new Date(`${to}T23:59:59`).toISOString());
-    const res = await fetch(`/api/action-log?${q}`);
-    setStatus(res.status);
-    setRows(res.ok ? await res.json() : []);
+    const mine = ++seq.current; // only the latest filter change may update the list
+    try {
+      const res = await fetch(`/api/action-log?${q}`, { headers: sharedHeaders() });
+      const data = res.ok ? await res.json() : [];
+      if (mine !== seq.current) return;
+      setStatus(res.status);
+      setRows(data);
+    } catch {
+      if (mine === seq.current) setStatus(0);
+    }
   }, [person, action, object, from, to]);
   useEffect(() => {
     void load();
   }, [load]);
   useEffect(() => {
     if (me.user?.role !== "admin") return;
-    fetch("/api/validators").then((r) => (r.ok ? r.json() : [])).then(setTeam).catch(() => {});
+    fetch("/api/validators", { headers: sharedHeaders() }).then((r) => (r.ok ? r.json() : [])).then(setTeam).catch(() => {});
   }, [me.user?.role]);
 
   return (

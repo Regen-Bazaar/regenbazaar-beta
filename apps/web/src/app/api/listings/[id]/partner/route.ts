@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { listings } from "@rb/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getDb } from "../../../../../lib/db";
 import { requireActor } from "../../../../../lib/validator-auth";
 import { logAction } from "../../../../../lib/action-log";
@@ -15,8 +15,15 @@ export async function DELETE(req: Request, ctx: { params: Promise<{ id: string }
   const { id } = await ctx.params;
   const db = await getDb();
   const [before] = await db.select({ partnerId: listings.partnerId }).from(listings).where(eq(listings.id, id)).limit(1);
-  const [updated] = await db.update(listings).set({ partnerId: null }).where(eq(listings.id, id)).returning({ id: listings.id });
-  if (!updated) return NextResponse.json({ error: "listing not found" }, { status: 404 });
-  await logAction(db, a.actor, { action: "partner_detach", objectType: "listing", objectId: id, before: { partnerId: before?.partnerId ?? null }, after: { partnerId: null } });
+  if (!before) return NextResponse.json({ error: "listing not found" }, { status: 404 });
+  if (before.partnerId) {
+    // Conditional on the partner we read: an overlapping request that already detached it writes no second line.
+    const [changed] = await db
+      .update(listings)
+      .set({ partnerId: null })
+      .where(and(eq(listings.id, id), eq(listings.partnerId, before.partnerId)))
+      .returning({ id: listings.id });
+    if (changed) await logAction(db, a.actor, { action: "partner_detach", objectType: "listing", objectId: id, before: { partnerId: before.partnerId }, after: { partnerId: null } });
+  }
   return NextResponse.json({ ok: true });
 }

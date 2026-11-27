@@ -56,8 +56,10 @@ export function sameOrigin(req: Request): boolean {
 function sharedActor(req: Request): Actor | null {
   const expected = process.env.ADMIN_TOKEN ?? "";
   const got = req.headers.get("x-admin-token") ?? "";
-  if (expected.length < 16 || got.length !== expected.length) return null;
-  if (!timingSafeEqual(Buffer.from(got), Buffer.from(expected))) return null;
+  if (expected.length < 16) return null;
+  const a = Buffer.from(got);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null; // byte lengths, not characters: non-ASCII must refuse, not throw
   return { userId: null, wallet: null, name: null, role: "admin", via: "shared" };
 }
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, isNull, ne, sql } from "drizzle-orm";
 import { users, validatorSessions } from "@rb/db/schema";
 import { getDb } from "../../../../lib/db";
 import { logAction } from "../../../../lib/action-log";
@@ -27,32 +27,36 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   if (!target || (target.role !== "validator" && target.role !== "admin")) {
     return NextResponse.json({ error: "validator not found" }, { status: 404 });
   }
-  const endSessions = () =>
-    db.update(validatorSessions).set({ revokedAt: new Date() }).where(and(eq(validatorSessions.userId, id), isNull(validatorSessions.revokedAt)));
-  const isLastAdmin = async () => {
-    if (target.role !== "admin" || !target.active) return false;
-    const [{ n }] = await db
+  // Admin membership changes run one at a time (transaction-scoped advisory lock), and the account change and the
+  // ending of its sessions commit together, so the last admin cannot be removed by two overlapping requests and a
+  // removed account never keeps a live session.
+  const ADMIN_LOCK = 7_300_001;
+  const activeAdminsOtherThan = async (tx: Pick<typeof db, "select">) => {
+    const [{ n }] = await tx
       .select({ n: sql<number>`count(*)::int` })
       .from(users)
-      .where(and(eq(users.role, "admin"), eq(users.active, true), isNull(users.removedAt)));
-    return n <= 1;
+      .where(and(eq(users.role, "admin"), eq(users.active, true), isNull(users.removedAt), ne(users.id, id)));
+    return n;
   };
+  const revokeAll = (tx: Pick<typeof db, "update">) =>
+    tx.update(validatorSessions).set({ revokedAt: new Date() }).where(and(eq(validatorSessions.userId, id), isNull(validatorSessions.revokedAt)));
 
   if (body.endSessions === true) {
-    await endSessions();
+    await revokeAll(db);
     return NextResponse.json({ ok: true });
   }
   if (body.remove === true) {
-    if (!target.active) return NextResponse.json({ error: "already removed" }, { status: 409 });
-    if (await isLastAdmin()) return NextResponse.json({ error: "the last active admin cannot be removed" }, { status: 409 });
-    // One statement: it only applies while another active admin remains, so two admins removing each other at once cannot empty the team.
-    const done = await db
-      .update(users)
-      .set({ active: false, removedAt: new Date() })
-      .where(and(eq(users.id, id), sql`(${users.role} <> 'admin' or exists (select 1 from users o where o.role = 'admin' and o.active and o.removed_at is null and o.id <> ${id}))`))
-      .returning({ id: users.id });
-    if (done.length === 0) return NextResponse.json({ error: "the last active admin cannot be removed" }, { status: 409 });
-    await endSessions();
+    const result = await db.transaction(async (tx) => {
+      await tx.execute(sql`select pg_advisory_xact_lock(${ADMIN_LOCK})`);
+      const [t] = await tx.select().from(users).where(eq(users.id, id)).limit(1);
+      if (!t || !t.active) return "already removed" as const;
+      if (t.role === "admin" && (await activeAdminsOtherThan(tx)) === 0) return "last admin" as const;
+      await tx.update(users).set({ active: false, removedAt: new Date() }).where(eq(users.id, id));
+      await revokeAll(tx);
+      return "ok" as const;
+    });
+    if (result === "already removed") return NextResponse.json({ error: "already removed" }, { status: 409 });
+    if (result === "last admin") return NextResponse.json({ error: "the last active admin cannot be removed" }, { status: 409 });
     await logAction(db, a.actor, {
       action: "validator_remove",
       objectType: "validator",
@@ -63,23 +67,25 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     return NextResponse.json({ ok: true });
   }
   if (body.role === "validator" || body.role === "admin") {
-    if (!target.active) return NextResponse.json({ error: "this account is removed" }, { status: 409 });
-    if (body.role === target.role) return NextResponse.json({ error: "role is unchanged" }, { status: 409 });
-    if (body.role === "validator" && (await isLastAdmin())) {
-      return NextResponse.json({ error: "the last active admin cannot be demoted" }, { status: 409 });
-    }
-    const done = await db
-      .update(users)
-      .set({ role: body.role })
-      .where(and(eq(users.id, id), sql`(${users.role} <> 'admin' or ${body.role} = 'admin' or exists (select 1 from users o where o.role = 'admin' and o.active and o.removed_at is null and o.id <> ${id}))`))
-      .returning({ id: users.id });
-    if (done.length === 0) return NextResponse.json({ error: "the last active admin cannot be demoted" }, { status: 409 });
+    const newRole = body.role;
+    const result = await db.transaction(async (tx) => {
+      await tx.execute(sql`select pg_advisory_xact_lock(${ADMIN_LOCK})`);
+      const [t] = await tx.select().from(users).where(eq(users.id, id)).limit(1);
+      if (!t || !t.active) return "removed" as const;
+      if (t.role === newRole) return "unchanged" as const;
+      if (newRole === "validator" && t.role === "admin" && (await activeAdminsOtherThan(tx)) === 0) return "last admin" as const;
+      await tx.update(users).set({ role: newRole }).where(eq(users.id, id));
+      return "ok" as const;
+    });
+    if (result === "removed") return NextResponse.json({ error: "this account is removed" }, { status: 409 });
+    if (result === "unchanged") return NextResponse.json({ error: "role is unchanged" }, { status: 409 });
+    if (result === "last admin") return NextResponse.json({ error: "the last active admin cannot be demoted" }, { status: 409 });
     await logAction(db, a.actor, {
       action: "role_change",
       objectType: "validator",
       objectId: id,
       before: { role: target.role },
-      after: { role: body.role },
+      after: { role: newRole },
     });
     return NextResponse.json({ ok: true });
   }

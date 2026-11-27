@@ -21,6 +21,7 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
+  if (!body || typeof body !== "object" || Array.isArray(body)) return NextResponse.json(REFUSED, { status: 401 });
   const { message, signature } = body;
   if (typeof message !== "string" || message.length > 1000 || typeof signature !== "string" || !/^0x[0-9a-fA-F]{130}$/.test(signature)) {
     return NextResponse.json(REFUSED, { status: 401 });

@@ -8,6 +8,16 @@ import { NONCE_TTL_MS, SIGN_IN_STATEMENT } from "../lib/validator-constants";
 import { useConnectWallet } from "./useConnectWallet";
 import { ErrorNote } from "./ErrorNote";
 
+/** Shared mode only: the access code the old /verify form keeps for this tab. */
+export function sharedHeaders(): Record<string, string> {
+  try {
+    const t = sessionStorage.getItem("rb_admin_token");
+    return t ? { "x-admin-token": t } : {};
+  } catch {
+    return {};
+  }
+}
+
 export type Me = {
   ready: boolean;
   mode: "shared" | "personal";
@@ -18,10 +28,19 @@ export type Me = {
 export function useValidatorMe(): Me {
   const [me, setMe] = useState<Me>({ ready: false, mode: "shared", user: null });
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((b) => setMe({ ready: true, mode: b.mode === "personal" ? "personal" : "shared", user: b.user ?? null }))
-      .catch(() => setMe((m) => ({ ...m, ready: true })));
+    // A failed lookup is not "shared mode": keep waiting and retry, so personal sign-in never silently shows the old code form.
+    let stop = false;
+    const ask = (left: number) =>
+      fetch("/api/auth/me")
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error("me failed"))))
+        .then((b) => !stop && setMe({ ready: true, mode: b.mode === "personal" ? "personal" : "shared", user: b.user ?? null }))
+        .catch(() => {
+          if (!stop && left > 0) setTimeout(() => ask(left - 1), 2000);
+        });
+    void ask(5);
+    return () => {
+      stop = true;
+    };
   }, []);
   return me;
 }
@@ -97,12 +116,14 @@ export function ValidatorBar({ me, current }: { me: Me; current?: "queue" | "par
         <button
           className="btn btn-secondary btn-sm"
           onClick={async () => {
-            await fetch("/api/auth/sign-out", { method: "POST" });
-            window.location.href = "/verify";
+            const res = await fetch("/api/auth/sign-out", { method: "POST" }).catch(() => null);
+            if (res?.ok) window.location.href = "/verify";
+            else setError("Could not sign out. Try again.");
           }}
         >
           Sign out
         </button>
+        {error && <span className="text-danger">{error}</span>}
       </div>
     );
   }

@@ -44,7 +44,7 @@ async function registerListing(db: DB, net: Network, submissionId: string, partn
   const [existing] = await db.select().from(listings).where(eq(listings.submissionId, submissionId)).limit(1);
   if (existing) {
     const where = networkByChainId(existing.chainId)?.key ?? String(existing.chainId);
-    return { network: where, tokenId: String(existing.tokenId), easUid: existing.easUid, existing: true };
+    return { network: where, tokenId: String(existing.tokenId), easUid: existing.easUid, existing: true, partnerId: existing.partnerId };
   }
   const [s] = await db.select().from(impactSubmissions).where(eq(impactSubmissions.id, submissionId)).limit(1);
   if (!s || !s.ivValue) throw new Error("submission not found or unscored");
@@ -131,7 +131,7 @@ async function registerListing(db: DB, net: Network, submissionId: string, partn
     active: true,
   });
 
-  return { network: net.key, tokenId, easUid: uid, attestTx: txHash, metadataURI, pricePerEditionWei, existing: false };
+  return { network: net.key, tokenId, easUid: uid, attestTx: txHash, metadataURI, pricePerEditionWei, existing: false, partnerId };
 }
 
 // POST /api/verifications — validator decision. Approve registers the on-chain-ready listing (lazy mint).
@@ -256,7 +256,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, status: "rejected" });
   }
   if (decision === "request_info") {
-    await logDecision({ after: { status: "pending_verification" } });
+    await logDecision({ after: { status: target.status } }); // asking for more proof changes no status
     return NextResponse.json({ ok: true, status: "pending_verification" });
   }
 
@@ -273,7 +273,7 @@ export async function POST(req: Request) {
     }
     await db.update(impactSubmissions).set({ status: "tokenized", updatedAt: new Date() }).where(eq(impactSubmissions.id, submissionId));
     await logDecision({
-      after: { status: "tokenized", network: result.network, tokenId: result.tokenId, easUid: result.easUid, partnerId, existing: result.existing },
+      after: { status: "tokenized", network: result.network, tokenId: result.tokenId, easUid: result.easUid, partnerId: result.partnerId, existing: result.existing },
     });
     return NextResponse.json({ ok: true, status: "tokenized", listings: [{ ok: true, ...result }] });
   }
