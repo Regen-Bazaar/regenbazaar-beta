@@ -45,7 +45,13 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   if (body.remove === true) {
     if (!target.active) return NextResponse.json({ error: "already removed" }, { status: 409 });
     if (await isLastAdmin()) return NextResponse.json({ error: "the last active admin cannot be removed" }, { status: 409 });
-    await db.update(users).set({ active: false, removedAt: new Date() }).where(eq(users.id, id));
+    // One statement: it only applies while another active admin remains, so two admins removing each other at once cannot empty the team.
+    const done = await db
+      .update(users)
+      .set({ active: false, removedAt: new Date() })
+      .where(and(eq(users.id, id), sql`(${users.role} <> 'admin' or exists (select 1 from users o where o.role = 'admin' and o.active and o.removed_at is null and o.id <> ${id}))`))
+      .returning({ id: users.id });
+    if (done.length === 0) return NextResponse.json({ error: "the last active admin cannot be removed" }, { status: 409 });
     await endSessions();
     await logAction(db, a.actor, {
       action: "validator_remove",
@@ -62,7 +68,12 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     if (body.role === "validator" && (await isLastAdmin())) {
       return NextResponse.json({ error: "the last active admin cannot be demoted" }, { status: 409 });
     }
-    await db.update(users).set({ role: body.role }).where(eq(users.id, id));
+    const done = await db
+      .update(users)
+      .set({ role: body.role })
+      .where(and(eq(users.id, id), sql`(${users.role} <> 'admin' or ${body.role} = 'admin' or exists (select 1 from users o where o.role = 'admin' and o.active and o.removed_at is null and o.id <> ${id}))`))
+      .returning({ id: users.id });
+    if (done.length === 0) return NextResponse.json({ error: "the last active admin cannot be demoted" }, { status: 409 });
     await logAction(db, a.actor, {
       action: "role_change",
       objectType: "validator",
