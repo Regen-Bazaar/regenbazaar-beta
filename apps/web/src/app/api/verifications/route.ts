@@ -17,10 +17,10 @@ import {
   type ProofLevel,
 } from "@rb/impact-engine";
 import { eq, sql } from "drizzle-orm";
-import { parseUnits } from "viem";
+import { parseUnits, zeroAddress } from "viem";
 import { getDb } from "../../../lib/db";
 import { pinFile, pinJson } from "../../../lib/ipfs";
-import { onchainEnabled, attestImpact, hasCode, ivToWei } from "../../../lib/onchain";
+import { onchainEnabled, attestImpact, hasCode, ivToWei, type ImpactClaimV2Extra } from "../../../lib/onchain";
 import { partnerShareError } from "../../../lib/partner-share";
 import { DEFAULT_NETWORK_KEY, NATIVE, getNetwork, isNetworkKey, networkByChainId, usdPerUnit, type Network } from "../../../lib/networks";
 import type { DB } from "@rb/db";
@@ -89,7 +89,24 @@ async function registerListing(db: DB, net: Network, submissionId: string, partn
   });
 
   const metadataURI = await pinJson(meta); // ipfs://<cid>
-  const { uid, txHash } = await attestImpact(net, ngo, s.ivValue, metadataURI); // platform attests provenance
+  // Revision 4 (primarySaleVersion 3) writes the v2 attestation: proof level, methodology, validator, partner.
+  let claimV2: ImpactClaimV2Extra | undefined;
+  if (net.primarySaleVersion === 3) {
+    let partnerWallet = zeroAddress as Hex;
+    if (partnerId) {
+      const [p] = await db.select().from(partners).where(eq(partners.id, partnerId)).limit(1);
+      if (!p) throw new Error("partner not found");
+      partnerWallet = p.payoutAddress as Hex;
+    }
+    claimV2 = {
+      proofLevel: proofLevel ? Number(proofLevel.slice(1)) : 0,
+      methodologyVersion: s.methodologyVersion ?? "v0.1",
+      validator: zeroAddress, // validator sign-in wallet: filled once validator accounts ship
+      partner: partnerWallet,
+      transferable: true,
+    };
+  }
+  const { uid, txHash } = await attestImpact(net, ngo, s.ivValue, metadataURI, claimV2); // platform attests provenance
 
   // assign the next on-chain tokenId off-chain (collection materializes on first redeem)
   const [{ m }] = await db
@@ -215,7 +232,7 @@ export async function POST(req: Request) {
     if (!p || !p.active) return NextResponse.json({ error: "partner not found or not active" }, { status: 422 });
     const bad = partnerShareError(p);
     if (bad) return NextResponse.json({ error: bad }, { status: 422 });
-    if (net.primarySaleVersion !== 2) {
+    if (net.primarySaleVersion < 2) {
       return NextResponse.json({ error: `partner share is not available on ${net.chain.name} yet` }, { status: 422 });
     }
     // A contract partner may reject native payouts and block every sale of the listing (docs/AUDIT.md).

@@ -38,9 +38,13 @@ export interface Network {
   eas: Hex;
   schemaUID: Hex;
   primarySale: Hex;
-  // RegenPrimarySale voucher version at `primarySale`: 1 = no partner share, 2 = partner share (EIP-712 domain "2").
-  // Flip to 2 together with the v2 address after the redeploy (docs/AUDIT.md, 2026-09-27).
-  primarySaleVersion: 1 | 2;
+  // RegenPrimarySale voucher version at `primarySale`: 1 = no partner share, 2 = partner share (EIP-712 domain "2"),
+  // 3 = contract revision 4 (RegenPrimarySaleV3 + TRWIV4 + ImpactClaim v2 attestation, stablecoins only).
+  // Flip to 3 only together with the revision 4 addresses (primarySale, trwi, schemaUID, marketplace) after the
+  // owner's yes; every network stays on 2 until then.
+  primarySaleVersion: 1 | 2 | 3;
+  // Revision 4 resale marketplace (RegenMarketplaceV2); unset before the switch.
+  marketplace?: Hex;
   trwi: Hex;
   saleCurrency: SaleCurrency;
   // Token ids already used on-chain outside the app (scripts); the app's next tokenId starts above this.

@@ -5,7 +5,12 @@ import { zeroAddress } from "viem";
 import { getDb } from "../../../../../lib/db";
 import { onchainEnabled, signVoucher, type ImpactVoucher } from "../../../../../lib/onchain";
 import { networkByChainId } from "../../../../../lib/networks";
-import { PLATFORM_FEE_BPS, partnerShareError } from "../../../../../lib/partner-share";
+import {
+  PLATFORM_FEE_BPS,
+  RESALE_FEE_BPS,
+  RESALE_PARTNER_BPS,
+  partnerShareError,
+} from "../../../../../lib/partner-share";
 
 export const runtime = "nodejs";
 
@@ -32,7 +37,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     if (!p || !p.active) return NextResponse.json({ error: "listing partner is not active" }, { status: 409 });
     const bad = partnerShareError(p);
     if (bad) return NextResponse.json({ error: bad }, { status: 409 });
-    if (net.primarySaleVersion !== 2) {
+    if (net.primarySaleVersion < 2) {
       return NextResponse.json({ error: "partner share is not available on this network yet" }, { status: 409 });
     }
     partner = p.payoutAddress as `0x${string}`;
@@ -57,6 +62,12 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     nonce: BigInt(l.nonce),
     deadline,
   };
+  if (net.primarySaleVersion === 3) {
+    // Revision 4: editions go to the payer; resale shares are fixed on-chain at the impact's first sale.
+    voucher.recipient = zeroAddress;
+    voucher.resaleFeeBps = BigInt(RESALE_FEE_BPS);
+    voucher.resalePartnerBps = partner === zeroAddress ? 0n : BigInt(RESALE_PARTNER_BPS);
+  }
   const signature = await signVoucher(net, voucher);
 
   // bigints -> strings for JSON; the client reconstructs them for the redeem call.
@@ -81,6 +92,13 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       partnerFeeBps: voucher.partnerFeeBps.toString(),
       nonce: voucher.nonce.toString(),
       deadline: voucher.deadline.toString(),
+      ...(net.primarySaleVersion === 3
+        ? {
+            recipient: voucher.recipient,
+            resaleFeeBps: voucher.resaleFeeBps?.toString(),
+            resalePartnerBps: voucher.resalePartnerBps?.toString(),
+          }
+        : {}),
     },
   });
 }

@@ -4,6 +4,11 @@
 import { isAddress, zeroAddress } from "viem";
 
 export const PLATFORM_FEE_BPS = 250;
+// Resale shares fixed per impact at first sale (contract revision 4, owner decision 2026-10-07): creator royalty,
+// Regen Bazaar and partner 2.5% each. Caps in TRWIV4: each <= 1000, all three <= 1500.
+export const RESALE_ROYALTY_BPS = 250;
+export const RESALE_FEE_BPS = 250;
+export const RESALE_PARTNER_BPS = 250;
 export const MAX_PARTNER_FEE_BPS = 1000;
 export const MAX_TOTAL_FEE_BPS = 1500;
 

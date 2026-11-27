@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { NO_WALLET_HINT } from "../lib/wallet";
-import { NATIVE, erc20Abi, feeOverrides, redeemAbiV1, redeemAbiV2 } from "../lib/chain";
+import { NATIVE, erc20Abi, feeOverrides, redeemAbiV1, redeemAbiV2, redeemAbiV3 } from "../lib/chain";
 import { useNetwork } from "./NetworkProvider";
 import { useConnectWallet } from "./useConnectWallet";
 import { ErrorNote } from "./ErrorNote";
@@ -24,6 +24,10 @@ type VoucherJson = {
   partnerFeeBps: string;
   nonce: string;
   deadline: string;
+  // v3 (contract revision 4) only
+  recipient?: `0x${string}`;
+  resaleFeeBps?: string;
+  resalePartnerBps?: string;
 };
 
 /** Connect → fetch a platform-signed voucher → (approve ERC-20 if needed) → redeem (pay + lazily mint 1 edition). */
@@ -54,7 +58,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
       const { voucher, signature, version } = (await res.json()) as {
         voucher: VoucherJson;
         signature: `0x${string}`;
-        version: 1 | 2;
+        version: 1 | 2 | 3;
       };
 
       const v = {
@@ -105,10 +109,25 @@ export function BuyButton({ listingId }: { listingId: string }) {
         ...(await feeOverrides(publicClient)),
       } as const;
       // The server signs for the contract version deployed on this network; send the matching tuple.
-      const hash =
-        version === 2
-          ? await writeContractAsync({ ...common, abi: redeemAbiV2, args: [{ ...v, ...partner }, amount, signature] })
-          : await writeContractAsync({ ...common, abi: redeemAbiV1, args: [v, amount, signature] });
+      let hash: `0x${string}`;
+      if (version === 3) {
+        if (!voucher.recipient || voucher.resaleFeeBps === undefined || voucher.resalePartnerBps === undefined) {
+          throw new Error("voucher is missing revision 4 fields");
+        }
+        const v3 = {
+          ...v,
+          ...partner,
+          recipient: voucher.recipient,
+          resaleFeeBps: BigInt(voucher.resaleFeeBps),
+          resalePartnerBps: BigInt(voucher.resalePartnerBps),
+        };
+        // Stablecoins only on revision 4: no value is ever sent.
+        hash = await writeContractAsync({ ...common, value: undefined, abi: redeemAbiV3, args: [v3, amount, signature] });
+      } else if (version === 2) {
+        hash = await writeContractAsync({ ...common, abi: redeemAbiV2, args: [{ ...v, ...partner }, amount, signature] });
+      } else {
+        hash = await writeContractAsync({ ...common, abi: redeemAbiV1, args: [v, amount, signature] });
+      }
       setTx(hash);
       setState("done");
     } catch (e) {
