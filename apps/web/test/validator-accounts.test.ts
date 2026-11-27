@@ -591,7 +591,7 @@ test("detaching a partner twice writes one log line; the action log pages withou
   assert.equal((await del()).status, 200);
   assert.equal((await logLines("partner_detach")).length, 1);
 
-  await db.execute(sql`update action_log set created_at = '2026-01-01T00:00:00Z'`);
+  await db.execute(sql`update action_log set created_at = '2026-01-01T00:00:00.123400Z'::timestamptz + (random() * 90) * interval '1 microsecond'`); // same millisecond, different microseconds
   const seen: string[] = [];
   let before = "";
   for (let i = 0; i < 10; i++) {
