@@ -162,4 +162,25 @@ CREATE TABLE IF NOT EXISTS "action_log" (
 );
 CREATE INDEX IF NOT EXISTS "action_log_created_idx" ON "action_log" ("created_at");
 CREATE INDEX IF NOT EXISTS "action_log_actor_idx" ON "action_log" ("actor_id");
+ALTER TABLE "listings" ADD COLUMN IF NOT EXISTS "contract_generation" integer DEFAULT 3 NOT NULL;
+ALTER TABLE "listings" ADD COLUMN IF NOT EXISTS "withdrawn_at" timestamp with time zone;
+ALTER TABLE "listings" ADD COLUMN IF NOT EXISTS "withdrawn_reason" text;
+ALTER TABLE "listings" ADD COLUMN IF NOT EXISTS "first_sale_at" timestamp with time zone;
+ALTER TABLE "listings" ADD COLUMN IF NOT EXISTS "edition_limit_lifted_at" timestamp with time zone;
+ALTER TABLE "listings" ADD COLUMN IF NOT EXISTS "edition_limit_lifted_by" uuid REFERENCES "users"("id");
+CREATE TABLE IF NOT EXISTS "withdrawal_requests" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "listing_id" uuid NOT NULL REFERENCES "listings"("id"),
+  "requested_by" uuid REFERENCES "users"("id"),
+  "requested_wallet" varchar(42),
+  "reason" text NOT NULL,
+  "status" varchar(10) DEFAULT 'open' NOT NULL,
+  "decided_by" uuid REFERENCES "users"("id"),
+  "decided_at" timestamp with time zone,
+  "decision_note" text,
+  "withdraw_tx" varchar(66),
+  "revoke_tx" varchar(66),
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+CREATE INDEX IF NOT EXISTS "withdrawal_requests_listing_idx" ON "withdrawal_requests" ("listing_id");
 `;

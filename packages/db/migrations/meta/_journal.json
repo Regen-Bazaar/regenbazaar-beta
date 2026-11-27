@@ -50,6 +50,13 @@
       "when": 1795780820077,
       "tag": "0006_validator_accounts",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795783464032,
+      "tag": "0007_revision4_withdraw_edition_limit",
+      "breakpoints": true
     }
   ]
 }

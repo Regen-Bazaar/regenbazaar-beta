@@ -211,7 +211,38 @@ export const listings = pgTable("listings", {
   nonce: integer("nonce").notNull().default(0),
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  // Contract generation the listing was attested and is sold on: 3 = today's contracts, 4 = revision 4.
+  contractGeneration: integer("contract_generation").notNull().default(3),
+  // False claim withdrawn by an admin (revision 4): the listing is closed and shown as withdrawn.
+  withdrawnAt: timestamp("withdrawn_at", { withTimezone: true }),
+  withdrawnReason: text("withdrawn_reason"),
+  // Edition limit (site rule): first sale seen by the site, and an admin's manual lift.
+  firstSaleAt: timestamp("first_sale_at", { withTimezone: true }),
+  editionLimitLiftedAt: timestamp("edition_limit_lifted_at", { withTimezone: true }),
+  editionLimitLiftedBy: uuid("edition_limit_lifted_by").references(() => users.id),
 }, (t) => [uniqueIndex("listings_chain_token_idx").on(t.chainId, t.tokenId)]);
+
+// A validator's request to withdraw a false claim; only an admin decides. Rows are never deleted.
+export const withdrawalRequests = pgTable(
+  "withdrawal_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    listingId: uuid("listing_id")
+      .notNull()
+      .references(() => listings.id),
+    requestedBy: uuid("requested_by").references(() => users.id), // null = shared access code
+    requestedWallet: varchar("requested_wallet", { length: 42 }),
+    reason: text("reason").notNull(),
+    status: varchar("status", { length: 10 }).notNull().default("open"), // open | approved | rejected
+    decidedBy: uuid("decided_by").references(() => users.id),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    decisionNote: text("decision_note"),
+    withdrawTx: varchar("withdraw_tx", { length: 66 }), // TRWIV4.withdraw
+    revokeTx: varchar("revoke_tx", { length: 66 }), // EAS revoke
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("withdrawal_requests_listing_idx").on(t.listingId)],
+);
 
 // DEPRECATED: not read by the engine (weights live in packages/impact-engine tables, versioned in code).
 // Kept so existing databases need no destructive migration.
