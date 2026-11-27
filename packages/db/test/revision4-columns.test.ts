@@ -30,7 +30,10 @@ test("0007: listing defaults and withdrawal requests", async () => {
 
   const [r] = await db.insert(schema.withdrawalRequests).values({ listingId: l.id, reason: "photos reused from another project" }).returning();
   assert.equal(r.status, "open");
+  await assert.rejects(db.insert(schema.withdrawalRequests).values({ listingId: l.id, reason: "second open request" }), "one open request per listing");
+  await db.update(schema.withdrawalRequests).set({ status: "rejected" }).where(eq(schema.withdrawalRequests.id, r.id));
+  await db.insert(schema.withdrawalRequests).values({ listingId: l.id, reason: "new request after a rejection" });
   await assert.rejects(db.insert(schema.withdrawalRequests).values({ listingId: "00000000-0000-4000-8000-000000000000", reason: "x" }));
   const rows = await db.select().from(schema.withdrawalRequests).where(eq(schema.withdrawalRequests.listingId, l.id));
-  assert.equal(rows.length, 1);
+  assert.equal(rows.length, 2);
 });

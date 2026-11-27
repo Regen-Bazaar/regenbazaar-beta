@@ -56,10 +56,16 @@ export async function fileRequest(
     .where(and(eq(withdrawalRequests.listingId, l.id), eq(withdrawalRequests.status, "open")))
     .limit(1);
   if (open) return fail(409, "a withdrawal request for this listing is already open");
-  const [r] = await db
-    .insert(withdrawalRequests)
-    .values({ listingId: l.id, requestedBy: actor.userId, requestedWallet: actor.wallet, reason })
-    .returning();
+  let r: typeof withdrawalRequests.$inferSelect;
+  try {
+    [r] = await db
+      .insert(withdrawalRequests)
+      .values({ listingId: l.id, requestedBy: actor.userId, requestedWallet: actor.wallet, reason })
+      .returning();
+  } catch {
+    // withdrawal_requests_one_open_idx: another validator filed at the same moment
+    return fail(409, "a withdrawal request for this listing is already open");
+  }
   await logAction(db, actor, { action: "withdraw_request", objectType: "listing", objectId: l.id, after: { requestId: r.id, status: "open" }, note: reason });
   return { status: 201, body: { ok: true, request: r } };
 }

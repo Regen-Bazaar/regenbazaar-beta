@@ -23,4 +23,5 @@ ALTER TABLE "withdrawal_requests" ADD CONSTRAINT "withdrawal_requests_listing_id
 ALTER TABLE "withdrawal_requests" ADD CONSTRAINT "withdrawal_requests_requested_by_users_id_fk" FOREIGN KEY ("requested_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "withdrawal_requests" ADD CONSTRAINT "withdrawal_requests_decided_by_users_id_fk" FOREIGN KEY ("decided_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "withdrawal_requests_listing_idx" ON "withdrawal_requests" USING btree ("listing_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "withdrawal_requests_one_open_idx" ON "withdrawal_requests" USING btree ("listing_id") WHERE status = 'open';--> statement-breakpoint
 ALTER TABLE "listings" ADD CONSTRAINT "listings_edition_limit_lifted_by_users_id_fk" FOREIGN KEY ("edition_limit_lifted_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;

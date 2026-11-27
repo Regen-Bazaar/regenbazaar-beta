@@ -18,6 +18,7 @@ import {
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const impactDomain = pgEnum("impact_domain", [
   "environment",
@@ -241,7 +242,11 @@ export const withdrawalRequests = pgTable(
     revokeTx: varchar("revoke_tx", { length: 66 }), // EAS revoke
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("withdrawal_requests_listing_idx").on(t.listingId)],
+  (t) => [
+    index("withdrawal_requests_listing_idx").on(t.listingId),
+    // at most one open request per listing, even when two validators file at the same moment
+    uniqueIndex("withdrawal_requests_one_open_idx").on(t.listingId).where(sql`status = 'open'`),
+  ],
 );
 
 // DEPRECATED: not read by the engine (weights live in packages/impact-engine tables, versioned in code).

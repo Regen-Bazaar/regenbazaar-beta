@@ -1,5 +1,5 @@
 {
-  "id": "93d89188-2d5d-4594-802f-86a7dbf84997",
+  "id": "cf4f09dd-eee5-4e11-93d6-d614dd0a704d",
   "prevId": "6e0d5bd6-4d48-46ce-9b52-b79c727b5611",
   "version": "7",
   "dialect": "postgresql",
@@ -1315,6 +1315,22 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "withdrawal_requests_one_open_idx": {
+          "name": "withdrawal_requests_one_open_idx",
+          "columns": [
+            {
+              "expression": "listing_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "status = 'open'",
           "concurrently": false,
           "method": "btree",
           "with": {}

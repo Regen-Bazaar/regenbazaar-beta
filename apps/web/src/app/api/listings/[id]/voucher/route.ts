@@ -38,7 +38,12 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
 
   // Edition limit (revision 4 only): refuse to sign once the limited editions are sold.
   if (net.primarySaleVersion === 3) {
-    const minted = Number(await mintedOnChain(net, BigInt(l.tokenId)));
+    let minted: number;
+    try {
+      minted = Number(await mintedOnChain(net, BigInt(l.tokenId)));
+    } catch {
+      return NextResponse.json({ error: `${net.chain.name} is not answering, try again in a minute` }, { status: 503 });
+    }
     const now = new Date();
     if (minted > 0 && !l.firstSaleAt) {
       // First sale seen by the site (not earlier than the real one, so the 30 days never open early).
