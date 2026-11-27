@@ -284,17 +284,10 @@ contract TRWIV4 is
     }
 
     /// @notice Decode an ImpactClaim v2 attestation payload (the flat ABI encoding EAS uses).
+    /// @dev EAS stores the flat encoding of the fields; prefixing the tuple offset (0x20) turns it into the
+    ///      encoding of one `Claim` struct, which abi.decode reads with full validation.
     function decodeClaim(bytes memory data) public pure returns (Claim memory cl) {
-        (
-            cl.creator,
-            cl.impactValue,
-            cl.metadataURI,
-            cl.proofLevel,
-            cl.methodologyVersion,
-            cl.validator,
-            cl.partner,
-            cl.transferable
-        ) = abi.decode(data, (address, uint256, string, uint8, string, address, address, bool));
+        cl = abi.decode(bytes.concat(bytes32(uint256(0x20)), data), (Claim));
     }
 
     function _attestation(bytes32 uid) internal view returns (Attestation memory att) {
