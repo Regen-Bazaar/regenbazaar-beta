@@ -6,6 +6,7 @@ import { isAddress } from "viem";
 import { DEFAULT_NETWORK_KEY, getNetwork, networkByChainId } from "../../../lib/networks";
 import { MAX_PARTNER_FEE_BPS, bpsToPercent, saleSplitBps } from "../../../lib/partner-share";
 import { ErrorNote } from "../../../components/ErrorNote";
+import { ValidatorBar, useValidatorMe } from "../../../components/ValidatorBar";
 
 type PartnerListing = { id: string; chainId: number; tokenId: string; active: boolean; submissionId: string; title: string };
 type Partner = {
@@ -29,6 +30,7 @@ function percentToBps(v: string): number {
 
 export default function Partners() {
   const [token, setToken] = useState("");
+  const me = useValidatorMe();
   const [denied, setDenied] = useState(false);
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<Partner[]>([]);
@@ -91,7 +93,8 @@ export default function Partners() {
         add a new partner. Attach a partner when approving a report.
       </p>
 
-      {denied && (
+      <ValidatorBar me={me} current="partners" />
+      {denied && me.ready && me.mode === "shared" && (
         <form
           className="mt-8 flex max-w-[560px] gap-2"
           onSubmit={(e) => {
@@ -107,7 +110,7 @@ export default function Partners() {
           <button className="btn btn-secondary btn-sm">Unlock</button>
         </form>
       )}
-      {denied && token && <p className="mt-2 text-sm text-danger">Wrong access code.</p>}
+      {denied && me.mode === "shared" && token && <p className="mt-2 text-sm text-danger">Wrong access code.</p>}
       {error && <ErrorNote text={error} className="mt-4 text-danger" />}
 
       {!denied && (

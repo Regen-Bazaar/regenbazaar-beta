@@ -58,8 +58,56 @@ export const users = pgTable("users", {
   walletAddress: varchar("wallet_address", { length: 42 }).notNull().unique(),
   displayName: text("display_name"),
   role: userRole("role").notNull().default("buyer"),
+  // Validator accounts (wallet sign-in). Removed accounts are marked, never deleted, so log lines keep their author.
+  active: boolean("active").notNull().default(true),
+  removedAt: timestamp("removed_at", { withTimezone: true }),
+  addedBy: uuid("added_by"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// Server-side sessions: only the SHA-256 fingerprint of the cookie value is stored.
+export const validatorSessions = pgTable(
+  "validator_sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tokenHash: varchar("token_hash", { length: 64 }).notNull().unique(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  },
+  (t) => [index("validator_sessions_user_idx").on(t.userId)],
+);
+
+// One-time sign-in numbers (valid 5 minutes, usable once).
+export const authNonces = pgTable("auth_nonces", {
+  nonce: varchar("nonce", { length: 64 }).primaryKey(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+});
+
+// Append-only log of validator actions. The site has no route that updates or deletes a line.
+export const actionLog = pgTable(
+  "action_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    actorId: uuid("actor_id").references(() => users.id),
+    actorWallet: varchar("actor_wallet", { length: 42 }), // copy at the moment of the action
+    actorName: text("actor_name"), // copy at the moment of the action
+    action: varchar("action", { length: 40 }).notNull(),
+    objectType: varchar("object_type", { length: 20 }), // impact | listing | partner | validator
+    objectId: text("object_id"),
+    before: jsonb("before"),
+    after: jsonb("after"),
+    note: text("note"),
+    result: varchar("result", { length: 10 }).notNull().default("done"), // done | failed
+    error: text("error"),
+  },
+  (t) => [index("action_log_created_idx").on(t.createdAt), index("action_log_actor_idx").on(t.actorId)],
+);
 
 export const impactSubmissions = pgTable(
   "impact_submissions",
