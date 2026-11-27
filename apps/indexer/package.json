@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "ponder dev",
     "start": "ponder start",
-    "codegen": "ponder codegen"
+    "codegen": "ponder codegen",
+    "start:revision4": "ponder start --root revision4",
+    "typecheck:revision4": "tsc --noEmit -p revision4"
   },
   "dependencies": {
     "hono": "^4.12.23",

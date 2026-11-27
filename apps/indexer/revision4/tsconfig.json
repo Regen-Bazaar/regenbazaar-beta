@@ -1,0 +1,4 @@
+{
+  "extends": "../tsconfig.json",
+  "include": ["ponder-env.d.ts", "ponder.config.ts", "ponder.schema.ts", "src"]
+}
