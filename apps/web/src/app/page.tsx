@@ -10,8 +10,8 @@ export const dynamic = "force-dynamic";
 
 const CYCLE = [
   { k: "Report", d: "A creator (an NGO, a group or a person) describes work already done, in plain language: what, how many, where, when." },
-  { k: "Evaluate", d: "AI extracts the actions, a published formula scores Impact Value, a validator attests it on-chain." },
-  { k: "List", d: "The attested impact is listed as tRWI editions. Nothing is minted until someone buys it." },
+  { k: "Evaluate", d: "AI extracts the actions, a published formula scores Impact Value, a validator verifies it and it is recorded on-chain." },
+  { k: "List", d: "The verified impact is listed as tRWI editions. Nothing is minted until someone buys it." },
   { k: "Buy", d: "A buyer pays in the network's currency (USDG stablecoin, or CELO on Celo): tRWI is minted to them and the creator is paid in the same transaction." },
 ];
 
@@ -81,7 +81,7 @@ export default async function Home() {
           <div>
             <p className="label-mono flex items-center gap-3 !text-accent">
               <span className="inline-block h-px w-7 bg-current" aria-hidden="true" />
-              Beta · {NETWORK.chain.name} (testnet)
+              Beta · {NETWORK.chain.name}{/testnet/i.test(NETWORK.chain.name) ? "" : " (testnet)"}
             </p>
             <h1 className="mt-5 text-[clamp(2.6rem,5.4vw,5.25rem)]">
               We turn verified real-world impact into a <span className="text-accent">tradable asset class</span>.
