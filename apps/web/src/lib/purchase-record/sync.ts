@@ -59,7 +59,11 @@ export function makeChainReader(chainId: number): ChainReader {
     blockNumber: async () => Number(await client.getBlockNumber()),
     logs: async (addresses, fromBlock, toBlock) => {
       const logs = await client.getLogs({ address: addresses as `0x${string}`[], events: RECORD_EVENTS, fromBlock: BigInt(fromBlock), toBlock: BigInt(toBlock) });
-      return logs.map((l) => ({ address: l.address, topics: l.topics, data: l.data, blockNumber: l.blockNumber, transactionHash: l.transactionHash, logIndex: l.logIndex }));
+      return logs.map((l) => {
+        // Celo sends the block's time with each log and does not serve old blocks; the other two send zero.
+        const seconds = Number((l as { blockTimestamp?: string | bigint }).blockTimestamp ?? 0);
+        return { address: l.address, topics: l.topics, data: l.data, blockNumber: l.blockNumber, transactionHash: l.transactionHash, logIndex: l.logIndex, blockTime: seconds > 0 ? new Date(seconds * 1000) : undefined };
+      });
     },
     blockTime: async (n) => new Date(Number((await client.getBlock({ blockNumber: BigInt(n) })).timestamp) * 1000),
   };
@@ -144,9 +148,10 @@ export async function syncChain(db: DB, chain: RecordedChain, reader: ChainReade
 
       const decoded = decodeLogs(chain, logs).filter((e) => group.includes(e.contract) && e.blockNumber >= from && e.blockNumber <= to);
       for (const e of decoded) {
-        if (!blockTimes.has(e.blockNumber)) blockTimes.set(e.blockNumber, await reader.blockTime(e.blockNumber));
+        if (!blockTimes.has(e.blockNumber)) blockTimes.set(e.blockNumber, e.blockTime ?? (await reader.blockTime(e.blockNumber)));
       }
       const rows = decoded.map((e) => ({ ...e, blockTime: blockTimes.get(e.blockNumber)! }));
+      range = Math.min(chain.maxRange, range * 2); // a range that was cut after a failure grows back
       result.seen += rows.length;
 
       const inserted = await db.transaction(async (tx) => {

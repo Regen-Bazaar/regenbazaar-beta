@@ -102,6 +102,7 @@ export interface RawLog {
   blockNumber: bigint | number;
   transactionHash: string;
   logIndex: number;
+  blockTime?: Date; // set when the network sends the block's time with the log
 }
 
 export type EventKind = "bought" | "transferred" | "retired";
@@ -123,6 +124,7 @@ export interface DecodedEvent {
   statementId: string | null;
   inNameOf: string | null;
   blockNumber: number;
+  blockTime: Date | null; // null = the network did not send it; the job asks for the block
   txHash: string;
   logIndex: number;
   batchIndex: number;
@@ -145,6 +147,7 @@ export function decodeLogs(chain: Pick<RecordedChain, "chainId" | "contracts">, 
       contract: contract.address,
       tokenContract: contract.token,
       blockNumber: Number(log.blockNumber),
+      blockTime: log.blockTime ?? null,
       txHash: lc(log.transactionHash),
       logIndex: log.logIndex,
       batchIndex: 0,

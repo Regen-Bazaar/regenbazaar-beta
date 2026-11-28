@@ -230,6 +230,20 @@ test("the history limit counts impacts of the site only", async () => {
   assert.deepEqual((await purchaseHistory(db, ALICE, { limit: 2 })).map((h) => h.tokenId), ["5", "5"]);
 });
 
+test("a network that sends the block time with the log is not asked for the block (old blocks may be gone)", async () => {
+  const { db } = await createTestDb();
+  await seed(db);
+  const at = new Date("2026-09-25T08:00:00Z");
+  const chain = new FakeChain(story().map((l) => ({ ...l, blockTime: at })), 6_000);
+  chain.blockTime = async () => {
+    throw new Error("block is more than 10064 blocks behind head");
+  };
+  const r = await syncChain(db, CHAIN, chain, { retryDelayMs: 0 });
+  assert.equal(r.error, undefined);
+  assert.equal(r.inserted, 7);
+  assert.ok((await db.select().from(schema.editionEvents)).every((e) => e.blockTime.getTime() === at.getTime()));
+});
+
 test("one network down does not stop the others", async () => {
   const { db } = await createTestDb();
   await seed(db);
