@@ -94,5 +94,281 @@
       "redeemTx": "0xe3d24389b2144ef5fb4311772f538a8d1424ca34e6ddd18e43ebcfd76924c33e",
       "result": "2 editions for 0.456 tUSDG via the live voucher API (v2, no partner); indexed in indexer_arbsep_v3"
     }
+  },
+  "revision4": {
+    "status": "deployed, NOT switched: networks.ts keeps primarySaleVersion 2; the old sale keeps its minting right",
+    "deployedAt": "2026-11-28",
+    "startBlock": 333368639,
+    "script": "script/DeployRevision4.s.sol (main ab53dc6)",
+    "deployer": {
+      "address": "0xC52Cc12e63e8E1259AC109E2068b03977C82DF2A",
+      "note": "one-time key, holds no role after handover (checked on-chain)"
+    },
+    "contracts": {
+      "TimelockController": "0xbcb23d2792c016D7ab5752EA05A6c1b78C143764",
+      "AuthorizedAttesterResolver": "0x7AaDFBDbb21f8F208119266aFC81585357BBb18E",
+      "TRWIV4Proxy": "0xa46c092D014D8Fc79712f566F5b96BDfa3Af53A5",
+      "TRWIV4Impl": "0xBe2E2B91Ae71eaF9007a272Cdf105182B14BDfd0",
+      "RegenPrimarySaleV3": "0x7F992AAbE7D6EB69363711CdDeaf8895646A0C69",
+      "RegenMarketplaceV2": "0x36AE5263280A4F371975512f362ee5eEfDCFe166",
+      "EAS": "0x95cD0E3bDbC670e057416D65C89B584a9a24d95d",
+      "SchemaRegistry": "0xa5dB5eC4d2F1435f7cb3504414981347E28340b4"
+    },
+    "schemaUID": "0x6541ad9934badc173556aa02ee62b0a5823cdd6605c9786d4e1e326817425a6b",
+    "impactClaimSchema": "address creator,uint256 impactValue,string metadataURI,uint8 proofLevel,string methodologyVersion,address validator,address partner,bool transferable",
+    "eip712": {
+      "name": "RegenPrimarySale",
+      "version": "3"
+    },
+    "roles": {
+      "timelockProposerExecutorCanceller": "0x50418699cb44bfda9c9afc9b7a0b0d244d8927d2",
+      "timelockDelaySeconds": 300,
+      "adminOfAllFour": "TimelockController (self-administered)",
+      "upgrader": "TimelockController",
+      "minter": "RegenPrimarySaleV3",
+      "guardian": "0x7d85fcbb505d48e6176483733b62b51704e0bf95",
+      "voucherSigner": "0x3f10abC23cDE2e2ed4198232B833aA67F23108df",
+      "attester": "0xfF8C07Cc87Ecf621743689AA7dD70A9E60f33322",
+      "withdrawer": "0x12351592A932DC906a61EF02E962fa83499C6be4",
+      "feeRecipient": "0x303265Ac916CcD8844E2BD2a61c6522b19f19EcB",
+      "decidedBy": "owner 28.11.2026 (admin, guardian, three new server keys, delay 300, USDC only); feeRecipient = existing treasury, technical choice"
+    },
+    "currenciesAllowed": {
+      "USDC": {
+        "address": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "decimals": 6,
+        "issuer": "Circle (testnet)"
+      }
+    },
+    "paused": false,
+    "verified": "arbiscan (sepolia.arbiscan.io): all 6 verified 2026-11-28 (resolver and proxy matched existing verified bytecode)",
+    "deployTxs": [
+      {
+        "step": "create TimelockController",
+        "to": "0xbcb23d2792c016d7ab5752ea05a6c1b78c143764",
+        "tx": "0x20819e059fea765ee9480b57b4c30e32e0de64f0159f367a96836681d0c1534f"
+      },
+      {
+        "step": "create AuthorizedAttesterResolver",
+        "to": "0x7aadfbdbb21f8f208119266afc81585357bbb18e",
+        "tx": "0x77a7208805495d23d7c5a5926114ab5887c26550a986a0b6deeff5fb962ff968"
+      },
+      {
+        "step": "register(string,address,bool)",
+        "to": "0xa5db5ec4d2f1435f7cb3504414981347e28340b4",
+        "tx": "0x24616afcbf11d4cea6a83ea1750d14dcbf57f72d782d1c3534cc296412e5eba8"
+      },
+      {
+        "step": "create TRWIV4",
+        "to": "0xbe2e2b91ae71eaf9007a272cdf105182b14bdfd0",
+        "tx": "0x3cd5f3a79019e60819c0a6644e5da617826240e834e1679105de25e5d560452e"
+      },
+      {
+        "step": "create ERC1967Proxy",
+        "to": "0xa46c092d014d8fc79712f566f5b96bdfa3af53a5",
+        "tx": "0x71533b72c862155dd779bc645688f8cc79ba190ab11b2c238d7069dd66103c15"
+      },
+      {
+        "step": "create RegenPrimarySaleV3",
+        "to": "0x7f992aabe7d6eb69363711cddeaf8895646a0c69",
+        "tx": "0x1560e88f3fd5610a786f6d533e0d9c0be8737ea2176324564b97d460e4154586"
+      },
+      {
+        "step": "create RegenMarketplaceV2",
+        "to": "0x36ae5263280a4f371975512f362ee5eefdcfe166",
+        "tx": "0xb4a2493519126174dd26e6019f1c68b37205cc73b55fde6213c0d6acc1118a92"
+      },
+      {
+        "step": "setCurrencyAllowed(address,bool)",
+        "to": "0x7f992aabe7d6eb69363711cddeaf8895646a0c69",
+        "tx": "0x55cc10e60b465249a948f4a1f6bc944d72a0c2123ed9784ce098dd729fb8a238"
+      },
+      {
+        "step": "setCurrencyAllowed(address,bool)",
+        "to": "0x36ae5263280a4f371975512f362ee5eefdcfe166",
+        "tx": "0xcefa4df04ce6dd4076be669c462e10f558858485bd32563a4f1e03023309c553"
+      },
+      {
+        "step": "create ERC1967Proxy",
+        "to": "0xa46c092d014d8fc79712f566f5b96bdfa3af53a5",
+        "tx": "0xdee339283ac53260848adab879e504a1a29814cb8474076a1c0081bd028b9f8e"
+      },
+      {
+        "step": "create ERC1967Proxy",
+        "to": "0xa46c092d014d8fc79712f566f5b96bdfa3af53a5",
+        "tx": "0x9397714ff0491714d4f06a361ea66354ddcd501725cac9b346145ecbb129eb26"
+      },
+      {
+        "step": "create ERC1967Proxy",
+        "to": "0xa46c092d014d8fc79712f566f5b96bdfa3af53a5",
+        "tx": "0xeddcb3027a73e4c7f5d43a24448010e5882b8e59519666b50518b6533a365d93"
+      },
+      {
+        "step": "create ERC1967Proxy",
+        "to": "0xa46c092d014d8fc79712f566f5b96bdfa3af53a5",
+        "tx": "0x1129692438d46c88bc63447185fe273f9a7f3bfc0ab595a478badcd7d33a9942"
+      },
+      {
+        "step": "grantRole(bytes32,address)",
+        "to": "0x7f992aabe7d6eb69363711cddeaf8895646a0c69",
+        "tx": "0x9097a0a3cb6e326d2585c5475e6c23ab7d032983a144c86d133d6c8b7b4737c2"
+      },
+      {
+        "step": "grantRole(bytes32,address)",
+        "to": "0x7f992aabe7d6eb69363711cddeaf8895646a0c69",
+        "tx": "0x30cbd51eafff26ccbfda48f830eaa216a98641a59a5a0cc13bf7fc640118e2f4"
+      },
+      {
+        "step": "grantRole(bytes32,address)",
+        "to": "0x36ae5263280a4f371975512f362ee5eefdcfe166",
+        "tx": "0xdd6e9e9ef57df8075aafd660e0e9ca6fb342d57201c76926adb37ac0a21ca48a"
+      },
+      {
+        "step": "grantRole(bytes32,address)",
+        "to": "0x7aadfbdbb21f8f208119266afc81585357bbb18e",
+        "tx": "0xfbb05fba681e2df7c1c9d2728abb7970e7c3dd8c28c82cbf3693189f599b8fd3"
+      },
+      {
+        "step": "create ERC1967Proxy",
+        "to": "0xa46c092d014d8fc79712f566f5b96bdfa3af53a5",
+        "tx": "0x429b3d2787db5dcf96d5edd0f954c961030b53e2bf5d0665b91c729b44df35a6"
+      },
+      {
+        "step": "grantRole(bytes32,address)",
+        "to": "0x7f992aabe7d6eb69363711cddeaf8895646a0c69",
+        "tx": "0xb20fdddce451c1944c6d28519b57e0f38819e8e5eaba23d968c6ade79d627fb9"
+      },
+      {
+        "step": "grantRole(bytes32,address)",
+        "to": "0x36ae5263280a4f371975512f362ee5eefdcfe166",
+        "tx": "0xde7140803204db276da291252dffb306c2f6ed3f77934d208944034478a16f91"
+      },
+      {
+        "step": "grantRole(bytes32,address)",
+        "to": "0x7aadfbdbb21f8f208119266afc81585357bbb18e",
+        "tx": "0xddc8a0a625cf18eb03547c20048dc910ce7c831378aeb4c56edd08b3949457de"
+      },
+      {
+        "step": "create ERC1967Proxy",
+        "to": "0xa46c092d014d8fc79712f566f5b96bdfa3af53a5",
+        "tx": "0x241eb69bd247d3b1a7ff0fd41716b3a046a2436ec05f0e97794d293f8d24fd94"
+      },
+      {
+        "step": "renounceRole(bytes32,address)",
+        "to": "0x7f992aabe7d6eb69363711cddeaf8895646a0c69",
+        "tx": "0x26db854e031b8d2a7b4e9af7c58484c08bcb158162e98b036e3689d8c6b07797"
+      },
+      {
+        "step": "renounceRole(bytes32,address)",
+        "to": "0x36ae5263280a4f371975512f362ee5eefdcfe166",
+        "tx": "0xacc6749b323c6bcad47271a0fb43aba4b9701790c2da37688d1b4509b666d815"
+      },
+      {
+        "step": "renounceRole(bytes32,address)",
+        "to": "0x7aadfbdbb21f8f208119266afc81585357bbb18e",
+        "tx": "0x4ab2a5cd9006e9d55801c43a0dacc7cf4eca59d53ebf234e0c60bcce28f5cc59"
+      }
+    ],
+    "cycle": {
+      "date": "2026-11-28",
+      "script": "script/Revision4Cycle.s.sol (phases; not in the repo yet)",
+      "tokenIds": "900000001-900000004 (outside the site's tokenId range)",
+      "attestations": {
+        "A": "0xc95bbbaef8082732239d4ed64a4480e0bb717ac420a86228a55a1991993d7db8",
+        "B": "0xeea4946c6f024b78f1cf69dc415503e66ee5ffd743e9895fb832d25a5684dcd2",
+        "C": "0x39ab2ba97aaf79634c8743c91f0e626c6d9b573e2741e96863d24a8fdbe95158",
+        "D": "0xab552cf0cb1a7bc47dc350c4f4257ee1f010cabfc1dcb00e8cf88594e5d49e86",
+        "txs": [
+          "0x53d2c88df801bac884d050899f3d1f9fc654eea3296ca89112a9456a32aaa5a0",
+          "0xde5677f66fc2ec99dc7f4bdc929dd74a3fee3254e1b087bf8364eb31c80fa0af",
+          "0x7ecdda20ed79810ae9fa3a006a9ef2b5e25946398dec78fbe03c9a8f7361026e",
+          "0xd9668c26224b33eb3cad5deb912a7a2cc482da65d4858a1aa1f69c2f06c0bfc2"
+        ]
+      },
+      "steps": [
+        {
+          "step": "buy A x10, no partner, cap 25",
+          "tx": "0xb9cd0cd716e119ed75edc890dc87b11222e18e3e8e2befd63d8a96bca5886f85",
+          "result": "ok"
+        },
+        {
+          "step": "buy A x15 (25 of cap 25)",
+          "tx": "0x1c383ac6166ac7092e18e7cf43b9cd4b14a7f47490b8b9e4109d260b587e817f",
+          "result": "ok"
+        },
+        {
+          "step": "buy B x10 at 0.123457, partner 5%",
+          "tx": "0x7f613755e9961dfc5fe367c6b37019de971a60f02944db98c16e0d236c65f538",
+          "result": "ok"
+        },
+        {
+          "step": "buy C x2",
+          "tx": "0xec5aa1d6102adceabdde419a447951acb256e62bdc01cf87950241a2eaeb9c4f",
+          "result": "ok"
+        },
+        {
+          "step": "list B x4 at 0.250001 (listing 1)",
+          "tx": "0xb8832acbc0bd4197089eb844e41fe55090eb32826ec67f2287938a935710c96d",
+          "result": "ok"
+        },
+        {
+          "step": "resale buy listing 1 x4 (creator/platform/partner 2.5% each)",
+          "tx": "0xe899629077d0ca569f273090595569490327b670fde1c038b00b7118aca9df25",
+          "result": "ok"
+        },
+        {
+          "step": "retire B x2, statement 1, IV 10",
+          "tx": "0x1fc427d3647256802042422b21b551f1a6aee3a7b361723ad7b034ac8dbf15b4",
+          "result": "ok"
+        },
+        {
+          "step": "withdraw C",
+          "tx": "0xfafe05b36513e22c23fb49409727bc9b605f3d2301ab87dcab7ad8c468f27d13",
+          "result": "ok"
+        },
+        {
+          "step": "EAS revoke C",
+          "tx": "0x55fdcd7c970dfd56ebc9f868a41cd3458de162ff436a63f17ee35a42fd2c8a81",
+          "result": "ok"
+        },
+        {
+          "step": "26th of A under cap 25 (read-only call on live state)",
+          "result": "reverts ExceedsMintCap 0x9a3d9754"
+        },
+        {
+          "step": "buy / list / retire withdrawn C (read-only calls)",
+          "result": "revert ImpactIsWithdrawn / NotTradable / ImpactIsWithdrawn"
+        },
+        {
+          "step": "buy A x1 under cap 100 (26 minted)",
+          "tx": "0x30072c2e1bf3e8d369120b55f2305c37cb2de2bdb9a3297d636cc8fa960fa58d",
+          "result": "ok"
+        },
+        {
+          "step": "duplicate-send check on D: site withdrawal code, admin A stalls after send, admin B takes over at once",
+          "tx": "0xf1019d96c21dcc82016349214b362fcee27aae948db7cc87b64ccd2b4d54d739",
+          "result": "1 withdraw tx only: B's send was refused at gas estimation (AlreadyWithdrawn), nothing broadcast; request stayed approving"
+        },
+        {
+          "step": "retry approval of D (site code)",
+          "tx": "0x5edf7c2aec69ce8ffe0edff67f7d3792c3e367b19b9556520b976481a485c48a",
+          "result": "approved: withdraw already on-chain, only the revoke sent"
+        }
+      ],
+      "balancesUSDC6": {
+        "creator": 3896978,
+        "partner": 86728,
+        "feeRecipient": 125864,
+        "buyer": 16890434,
+        "buyer2": 18999996,
+        "sale": 0,
+        "marketplace": 0,
+        "matchesExpected": true
+      }
+    },
+    "notRunNeedsOwnerWallets": [
+      "timelock schedule/execute (admin wallet): unpause, reinstate, upgrade, currency changes",
+      "guardian pause (Anastasia's wallet)"
+    ]
   }
 }
