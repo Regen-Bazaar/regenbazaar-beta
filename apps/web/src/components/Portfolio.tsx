@@ -135,7 +135,7 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
                     </p>
                   )}
                   <p className="mt-2 break-all text-sm text-subtle">
-                    tRWI #{i.tokenId} · EAS attestation {i.easUid.slice(0, 10)}…{i.easUid.slice(-6)} ·{" "}
+                    tRWI #{i.tokenId} · on-chain record {i.easUid.slice(0, 10)}…{i.easUid.slice(-6)} ·{" "}
                     <a
                       href={tokenInstanceUrl(net, i.tokenId)}
                       target="_blank"

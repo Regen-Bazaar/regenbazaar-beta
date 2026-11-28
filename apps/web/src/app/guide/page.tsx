@@ -79,7 +79,7 @@ export default async function Guide() {
         <ul className="list-disc space-y-2 pl-5 marker:text-accent">
           <li>
             Browse the <Link href="/marketplace" className="link">Marketplace</Link> and open any
-            project to see its score per impact area, its proof level and its on-chain attestation.
+            project to see its score per impact area, its proof level and its on-chain record.
           </li>
           <li>
             Read how impact is scored on <Link href="/methodology" className="link">Methodology</Link>.
@@ -226,7 +226,7 @@ export default async function Guide() {
             can send up to 5 per hour.
           </li>
           <li>
-            The Regen Bazaar team reviews it. Once approved, it is recorded on-chain (an EAS attestation, with the report
+            The Regen Bazaar team reviews it. Once approved, it is recorded on-chain (an on-chain record, with the report
             stored on IPFS), gets its own generated tRWI artwork, and appears in the{" "}
             <Link href="/marketplace" className="link">Marketplace</Link> with its score per impact area, its proof
             level and a price based on its Impact Value. It is listed on <b>{chain}</b>, the network selected when you submit, and only there, so the same
@@ -249,7 +249,7 @@ export default async function Guide() {
           </li>
           <li>
             <b>Impact Value</b>: all domain scores added up with published coefficients. It is Regen Bazaar&apos;s own
-            relative index for comparing reports, not a certification, carbon or money amount. See{" "}
+            relative index for comparing reports; it is not a carbon or money amount. See{" "}
             <Link href="/methodology" className="link">Methodology</Link>.
           </li>
           <li>
@@ -276,7 +276,7 @@ export default async function Guide() {
       <Section id="real" title="What is real and what is not">
         <ul className="list-disc space-y-2 pl-5 marker:text-accent">
           <li>Test networks and test tokens only. No real money moves.</li>
-          <li>Impact Value is Regen Bazaar&apos;s own relative index with published weights and sources, not a certification.</li>
+          <li>Impact Value is Regen Bazaar&apos;s own relative index with published weights and sources.</li>
           <li>Reports submitted as the demo organisation, or marked &quot;(test data)&quot;, are sample data.</li>
           <li>Found a problem or something unclear? Tell us in our community chat.</li>
           <li>

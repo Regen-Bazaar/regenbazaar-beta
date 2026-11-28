@@ -7,7 +7,7 @@ import { DOMAIN_KEYS, DOMAIN_LABEL, fmt, impactView, physicalText } from "../../
 
 export const metadata = {
   title: "Impact leaderboard",
-  description: "Creators ranked by verified impact, per impact area and overall.",
+  description: "Creators ranked by verified impact, per impact area.",
 };
 
 export const dynamic = "force-dynamic";
@@ -23,10 +23,10 @@ type Row = {
   physical: Map<string, number>;
 };
 
-// NGOs ranked per impact area (domain score, methodology v0.2) or overall (Impact Value, all versions).
+// NGOs ranked per impact area (domain score, methodology v0.2).
 export default async function Leaderboard({ searchParams }: { searchParams: Promise<{ domain?: string }> }) {
   const sp = await searchParams;
-  const domain = DOMAIN_KEYS.includes(sp.domain as ImpactDomain) ? (sp.domain as ImpactDomain) : null;
+  const requested = DOMAIN_KEYS.includes(sp.domain as ImpactDomain) ? (sp.domain as ImpactDomain) : null;
   const db = await getDb();
   const subs = await db
     .select({
@@ -41,6 +41,12 @@ export default async function Leaderboard({ searchParams }: { searchParams: Prom
     .innerJoin(impactSubmissions, eq(impactSubmissions.orgId, organizations.id))
     .where(inArray(impactSubmissions.status, ["verified", "tokenized"]))
     .limit(5000);
+
+  // Areas are never added together: with no area chosen, open the first one that has data.
+  const domain: ImpactDomain =
+    requested ??
+    DOMAIN_KEYS.find((k) => subs.some((r) => impactView(r.s).domainScores.some((x) => x.domain === k))) ??
+    DOMAIN_KEYS[0];
 
   const byOrg = new Map<string, Row>();
   for (const r of subs) {
@@ -68,25 +74,23 @@ export default async function Leaderboard({ searchParams }: { searchParams: Prom
 
   const rank = (i: number) => (i === 0 ? "text-accent" : i === 1 ? "text-fg" : i === 2 ? "text-ok" : "text-subtle");
   const top = Math.max(rows[0]?.total ?? 0, 1);
-  const tabs: [string, string][] = [...DOMAIN_KEYS.map((d) => [d, DOMAIN_LABEL[d]] as [string, string]), ["", "All (IV)"]];
+  const tabs: [string, string][] = [...DOMAIN_KEYS.map((d) => [d, DOMAIN_LABEL[d]] as [string, string])];
 
   return (
     <main className="page-wrap py-10 md:py-14">
       <h1 className="text-[clamp(2.5rem,4vw,3.5rem)]">Impact leaderboard</h1>
       <p className="mt-3 max-w-[70ch] text-lg text-muted">
         Creators ranked by verified impact. Only verified and on-chain claims count.{" "}
-        {domain
-          ? `${DOMAIN_LABEL[domain]} uses the domain score and physical units of methodology v0.2 reports.`
-          : "All (IV) adds up Impact Value; v0.1 and v0.2 scores are on different scales."}
+        {`${DOMAIN_LABEL[domain]} uses the domain score and physical units of methodology v0.2 reports.`}
       </p>
 
       <nav className="mt-8 flex flex-wrap gap-2" aria-label="Impact area">
         {tabs.map(([key, label]) => {
-          const on = (domain ?? "") === key;
+          const on = domain === key;
           return (
             <Link
-              key={key || "all"}
-              href={key ? `/leaderboard?domain=${key}` : "/leaderboard"}
+              key={key}
+              href={`/leaderboard?domain=${key}`}
               aria-current={on ? "page" : undefined}
               className={`rounded-full border px-3 py-1 text-sm transition-colors ${
                 on ? "border-fg bg-fg text-bg" : "border-line-strong text-muted hover:border-accent hover:text-accent"
@@ -100,7 +104,7 @@ export default async function Leaderboard({ searchParams }: { searchParams: Prom
 
       {rows.length === 0 ? (
         <div className="card mt-10 p-10 text-center text-muted">
-          {domain ? `No verified ${DOMAIN_LABEL[domain].toLowerCase()} reports scored with v0.2 yet.` : "No verified impact yet."}{" "}
+          {`No verified ${DOMAIN_LABEL[domain].toLowerCase()} reports scored with v0.2 yet.`}{" "}
           <Link href="/marketplace" className="link">Marketplace</Link>
         </div>
       ) : (
@@ -125,7 +129,7 @@ export default async function Leaderboard({ searchParams }: { searchParams: Prom
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className="label-mono">{domain ? `${DOMAIN_LABEL[domain]} score` : "Total Impact Value"}</div>
+                  <div className="label-mono">{`${DOMAIN_LABEL[domain]} score`}</div>
                   <div className="text-2xl font-semibold text-accent">{fmt(r.total)}</div>
                 </div>
               </li>

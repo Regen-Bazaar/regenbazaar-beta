@@ -100,8 +100,8 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
 
   return (
     <main className="page-wrap py-10 md:py-14">
-      <Link href="/dashboard" className="text-muted hover:text-accent">
-        ← Dashboard
+      <Link href="/marketplace" className="text-muted hover:text-accent">
+        ← Marketplace
       </Link>
 
       <div className="mt-5 flex flex-wrap items-start justify-between gap-4">
@@ -220,7 +220,7 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
               </div>
               <div className="mt-3 text-sm text-subtle">
                 Impact Value (all areas) <b className="text-fg">{fmt(view.iv)}</b> · methodology v0.2, Community layer ·
-                Regen Bazaar&apos;s own relative index, not a certification
+                Regen Bazaar&apos;s own relative index
               </div>
             </>
           ) : (
@@ -228,7 +228,7 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
               <div className="label-mono">Impact Value</div>
               <div className="mt-1 font-display text-5xl text-accent">{Number(s.ivValue ?? 0).toLocaleString()}</div>
               <div className="mt-2 text-sm text-subtle">
-                platform-assessed (beta) · not third-party certified · {s.tablesVersion ?? "n/a"}
+                platform-assessed (beta) · {s.tablesVersion ?? "n/a"}
               </div>
             </>
           )}
@@ -245,7 +245,7 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
           <div className="mt-6 border-t border-line pt-5">
             {listing ? (
               <div className="space-y-2 text-sm">
-                <p className="text-base font-semibold text-ok">Attested and listed on {NETWORK.chain.name} ✓</p>
+                <p className="text-base font-semibold text-ok">Verified by a validator and listed on {NETWORK.chain.name} ✓</p>
                 <p className="text-muted">
                   tRWI #{String(listing.tokenId)} ·{" "}
                   <a
@@ -261,7 +261,7 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
                 <dl className="space-y-2 text-muted">
                   <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                     <dt>
-                      EAS attestation{" "}
+                      On-chain record{" "}
                       <a
                         href={`${explorer}/address/${NETWORK.eas}`}
                         target="_blank"
@@ -272,7 +272,7 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
                       </a>
                     </dt>
                     <dd>
-                      <CopyValue value={listing.easUid} label="EAS attestation UID" />
+                      <CopyValue value={listing.easUid} label="On-chain record ID" />
                     </dd>
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">

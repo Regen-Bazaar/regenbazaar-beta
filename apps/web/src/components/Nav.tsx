@@ -37,7 +37,7 @@ export function Nav() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-bg/90 backdrop-blur-md">
-      <div className="page-wrap flex h-[72px] items-center gap-6 whitespace-nowrap">
+      <div className="page-wrap flex h-[72px] items-center gap-3 whitespace-nowrap sm:gap-6">
         <Link href="/" className="flex items-center gap-3" aria-label="Regen Bazaar home">
           <Logo className="h-6 w-auto text-fg" />
           <span className="hidden font-display text-[22px] sm:inline">
@@ -71,7 +71,7 @@ export function Nav() {
           </details>
         </nav>
 
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-2 sm:gap-3">
           <div className="hidden md:block">
             <NetworkSwitcher />
           </div>
