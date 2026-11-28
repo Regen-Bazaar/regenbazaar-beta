@@ -181,8 +181,9 @@ export interface ImpactVoucher {
   mintCap?: bigint; // editions that may exist after the purchase (edition limit: 25 while it holds, else maxEditions)
 }
 
+/** On-chain features are on when a signing key is configured: the shared operator key, or revision 4's signer. */
 export function onchainEnabled(): boolean {
-  return !!process.env.OPERATOR_PRIVATE_KEY;
+  return !!process.env.OPERATOR_PRIVATE_KEY || !!process.env.VOUCHER_SIGNER_PRIVATE_KEY;
 }
 
 function operatorAccount() {
@@ -344,6 +345,33 @@ const trwiV4Abi = [
   },
 ] as const;
 
+const easGetAttestationAbi = [
+  {
+    type: "function",
+    name: "getAttestation",
+    stateMutability: "view",
+    inputs: [{ name: "uid", type: "bytes32" }],
+    outputs: [
+      {
+        name: "",
+        type: "tuple",
+        components: [
+          { name: "uid", type: "bytes32" },
+          { name: "schema", type: "bytes32" },
+          { name: "time", type: "uint64" },
+          { name: "expirationTime", type: "uint64" },
+          { name: "revocationTime", type: "uint64" },
+          { name: "refUID", type: "bytes32" },
+          { name: "recipient", type: "address" },
+          { name: "attester", type: "address" },
+          { name: "revocable", type: "bool" },
+          { name: "data", type: "bytes" },
+        ],
+      },
+    ],
+  },
+] as const;
+
 const easRevokeAbi = [
   {
     type: "function",
@@ -387,10 +415,12 @@ export async function withdrawOnChain(net: Network, easUid: Hex, reasonURI: stri
   return hash;
 }
 
-/** Revoke the ImpactClaim attestation in EAS (ATTESTER key, the original attester). */
-export async function revokeOnChain(net: Network, easUid: Hex): Promise<Hex> {
+/** Revoke the ImpactClaim attestation in EAS (ATTESTER key, the original attester). Null when already revoked. */
+export async function revokeOnChain(net: Network, easUid: Hex): Promise<Hex | null> {
   requireRevision4(net);
   const { account, wallet, pub } = clients(net, "attester");
+  const att = await pub.readContract({ address: net.eas, abi: easGetAttestationAbi, functionName: "getAttestation", args: [easUid] });
+  if (att.revocationTime !== 0n) return null;
   const hash = await wallet.writeContract({
     address: net.eas,
     abi: easRevokeAbi,

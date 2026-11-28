@@ -6,6 +6,7 @@ import { createSiweMessage } from "viem/siwe";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { eq, sql } from "drizzle-orm";
 
+delete process.env.DATABASE_URL; // never touch a configured database: the hooks below delete rows
 process.env.PGLITE_DIR = "memory://";
 process.env.VALIDATOR_AUTH = "personal";
 process.env.ADMIN_TOKEN = "shared-code-for-tests-0123456789";
@@ -327,7 +328,7 @@ test("withdraw: admin approval withdraws on-chain, revokes, closes the listing a
   assert.equal((await fileRequest(db, v.actor, { listingId: l.id, reason: "photos are from another project" }, resolveV4)).status, 409, "already withdrawn");
 });
 
-test("withdraw: a failed on-chain step leaves the request open, logs the error, and a retry does not withdraw twice", async () => {
+test("withdraw: a failed on-chain step keeps the request claimed (not rejectable), logs the error, and a retry does not withdraw twice", async () => {
   const v = await addUser("validator");
   const a = await addUser("admin");
   const l = await insertListing({ generation: 4 });
@@ -336,7 +337,9 @@ test("withdraw: a failed on-chain step leaves the request open, logs the error, 
   const broken = fakeChain({ failRevoke: true });
   assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, broken.ops, resolveV4)).status, 502);
   const [mid] = await db.select().from(schema.withdrawalRequests);
-  assert.equal(mid.status, "open");
+  assert.equal(mid.status, "approving");
+  assert.equal((await decideRequest(db, a.actor, r.id, { decision: "reject", note: null }, broken.ops, resolveV4)).status, 409, "no reject once approval started");
+  assert.equal((await fileRequest(db, v.actor, { listingId: l.id, reason: "photos are from another project" }, resolveV4)).status, 409, "no second request meanwhile");
   assert.equal(mid.withdrawTx, "0x" + "a".repeat(64), "the done step is remembered");
   const [listing] = await db.select().from(schema.listings).where(eq(schema.listings.id, l.id));
   assert.equal(listing.withdrawnAt, null);
@@ -401,4 +404,52 @@ test("voucher: a today's-network listing ignores ?currency and signs exactly as 
   assert.equal(j.version, 2);
   assert.equal(j.voucher.currency, l.currency);
   assert.equal(j.voucher.pricePerEdition, l.pricePerEdition);
+});
+
+test("withdraw: a retry skips a revocation that is already on-chain", async () => {
+  const v = await addUser("validator");
+  const a = await addUser("admin");
+  const l = await insertListing({ generation: 4 });
+  await fileRequest(db, v.actor, { listingId: l.id, reason: "photos are from another project" }, resolveV4);
+  const [r] = await db.select().from(schema.withdrawalRequests);
+  const calls = { revoke: 0 };
+  const ops = {
+    withdraw: async () => null, // already withdrawn on-chain
+    revoke: async () => {
+      calls.revoke++;
+      return null; // already revoked in EAS
+    },
+  };
+  assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 200);
+  const [after] = await db.select().from(schema.withdrawalRequests);
+  assert.deepEqual([after.status, after.withdrawTx, after.revokeTx], ["approved", "0x", "0x"]);
+  const [listing] = await db.select().from(schema.listings).where(eq(schema.listings.id, l.id));
+  assert.equal(listing.active, false);
+  assert.equal(calls.revoke, 1);
+});
+
+test("withdraw: a reject that arrives after an approval does not overwrite it", async () => {
+  const v = await addUser("validator");
+  const a = await addUser("admin");
+  const l = await insertListing({ generation: 4 });
+  await fileRequest(db, v.actor, { listingId: l.id, reason: "photos are from another project" }, resolveV4);
+  const [r] = await db.select().from(schema.withdrawalRequests);
+  assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, fakeChain().ops, resolveV4)).status, 200);
+  assert.equal((await decideRequest(db, a.actor, r.id, { decision: "reject", note: null }, fakeChain().ops, resolveV4)).status, 409);
+  const [after] = await db.select().from(schema.withdrawalRequests);
+  assert.equal(after.status, "approved");
+});
+
+test("onchain: a server with only the revision 4 signer key counts as configured", async () => {
+  const { onchainEnabled } = await import("../src/lib/onchain");
+  const op = process.env.OPERATOR_PRIVATE_KEY;
+  delete process.env.OPERATOR_PRIVATE_KEY;
+  try {
+    assert.equal(onchainEnabled(), false);
+    process.env.VOUCHER_SIGNER_PRIVATE_KEY = generatePrivateKey();
+    assert.equal(onchainEnabled(), true);
+  } finally {
+    process.env.OPERATOR_PRIVATE_KEY = op;
+    delete process.env.VOUCHER_SIGNER_PRIVATE_KEY;
+  }
 });

@@ -1,5 +1,5 @@
 {
-  "id": "cf4f09dd-eee5-4e11-93d6-d614dd0a704d",
+  "id": "b00cab16-de56-4fa5-b8ae-1ca90482d54a",
   "prevId": "6e0d5bd6-4d48-46ce-9b52-b79c727b5611",
   "version": "7",
   "dialect": "postgresql",
@@ -1330,7 +1330,7 @@
             }
           ],
           "isUnique": true,
-          "where": "status = 'open'",
+          "where": "status in ('open', 'approving')",
           "concurrently": false,
           "method": "btree",
           "with": {}

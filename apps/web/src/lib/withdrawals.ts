@@ -2,7 +2,7 @@
 // request with a reason; only an admin approves or rejects; every step goes to the action log. On approval the
 // impact is marked withdrawn on TRWIV4 and its attestation is revoked in EAS, then the listing is closed.
 // Revision 4 networks only: on today's contracts there is nothing on-chain to withdraw, so requests are refused.
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { listings, withdrawalRequests } from "@rb/db/schema";
 import type { DB } from "@rb/db";
 import { logAction } from "./action-log";
@@ -18,7 +18,7 @@ export const REASON_MAX = 2000;
 
 export interface ChainOps {
   withdraw(net: Network, easUid: Hex, reasonURI: string): Promise<Hex | null>;
-  revoke(net: Network, easUid: Hex): Promise<Hex>;
+  revoke(net: Network, easUid: Hex): Promise<Hex | null>; // null = already revoked
 }
 
 export type Result = { status: number; body: Record<string, unknown> };
@@ -53,7 +53,7 @@ export async function fileRequest(
   const [open] = await db
     .select({ id: withdrawalRequests.id })
     .from(withdrawalRequests)
-    .where(and(eq(withdrawalRequests.listingId, l.id), eq(withdrawalRequests.status, "open")))
+    .where(and(eq(withdrawalRequests.listingId, l.id), inArray(withdrawalRequests.status, ["open", "approving"])))
     .limit(1);
   if (open) return fail(409, "a withdrawal request for this listing is already open");
   let r: typeof withdrawalRequests.$inferSelect;
@@ -84,37 +84,58 @@ export async function decideRequest(
   const note = typeof input.note === "string" ? input.note.slice(0, REASON_MAX) : null;
   const [r] = await db.select().from(withdrawalRequests).where(eq(withdrawalRequests.id, requestId)).limit(1);
   if (!r) return fail(404, "request not found");
-  if (r.status !== "open") return fail(409, `request is already ${r.status}`);
+  if (r.status !== "open" && !(decision === "approve" && r.status === "approving")) return fail(409, `request is already ${r.status}`);
   const [l] = await db.select().from(listings).where(eq(listings.id, r.listingId)).limit(1);
   if (!l) return fail(404, "listing not found");
 
   if (decision === "reject") {
-    await db.update(withdrawalRequests).set({ status: "rejected", decidedBy: actor.userId, decidedAt: new Date(), decisionNote: note }).where(eq(withdrawalRequests.id, r.id));
+    // Only an untouched request can be rejected: once approval started, the chain steps must be finished.
+    const done = await db
+      .update(withdrawalRequests)
+      .set({ status: "rejected", decidedBy: actor.userId, decidedAt: new Date(), decisionNote: note })
+      .where(and(eq(withdrawalRequests.id, r.id), eq(withdrawalRequests.status, "open")))
+      .returning({ id: withdrawalRequests.id });
+    if (done.length === 0) return fail(409, "request is no longer open");
     await logAction(db, actor, { action: "withdraw_reject", objectType: "listing", objectId: l.id, before: { requestId: r.id, status: "open" }, after: { status: "rejected" }, note });
     return { status: 200, body: { ok: true, status: "rejected" } };
   }
 
   const net = revision4Network(l, resolve);
   if (typeof net === "string") return fail(409, net);
+  // Claim the request before any irreversible step; from here it can only end as approved.
+  const claimed = await db
+    .update(withdrawalRequests)
+    .set({ status: "approving", decidedBy: actor.userId })
+    .where(and(eq(withdrawalRequests.id, r.id), inArray(withdrawalRequests.status, ["open", "approving"])))
+    .returning({ withdrawTx: withdrawalRequests.withdrawTx, revokeTx: withdrawalRequests.revokeTx });
+  if (claimed.length === 0) return fail(409, "request is no longer open");
   const easUid = l.easUid as Hex;
-  let withdrawTx: Hex | null = r.withdrawTx as Hex | null;
-  let revokeTx: Hex | null = r.revokeTx as Hex | null;
+  let withdrawTx: Hex | null = claimed[0].withdrawTx as Hex | null;
+  let revokeTx: Hex | null = claimed[0].revokeTx as Hex | null;
   try {
-    // On-chain first: the listing is only marked withdrawn once the token refuses the impact.
-    if (!withdrawTx) withdrawTx = (await chain.withdraw(net, easUid, siteUrl(`/submission/${l.submissionId}`))) ?? "0x";
-    await db.update(withdrawalRequests).set({ withdrawTx }).where(eq(withdrawalRequests.id, r.id));
-    if (!revokeTx) revokeTx = await chain.revoke(net, easUid);
+    // On-chain first: the listing is only marked withdrawn once the token refuses the impact. Both steps skip
+    // work already done on-chain ("0x" = it was already in place), so retries never repeat a transaction.
+    if (!withdrawTx) {
+      withdrawTx = (await chain.withdraw(net, easUid, siteUrl(`/submission/${l.submissionId}`))) ?? "0x";
+      await db.update(withdrawalRequests).set({ withdrawTx }).where(eq(withdrawalRequests.id, r.id));
+    }
+    if (!revokeTx) {
+      revokeTx = (await chain.revoke(net, easUid)) ?? "0x";
+      await db.update(withdrawalRequests).set({ revokeTx }).where(eq(withdrawalRequests.id, r.id));
+    }
   } catch (e) {
     const error = e instanceof Error ? e.message.slice(0, 300) : "on-chain step failed";
     await logAction(db, actor, { action: "withdraw_approve", objectType: "listing", objectId: l.id, before: { requestId: r.id }, after: { withdrawTx, revokeTx }, note, error });
     return fail(502, `withdrawal not finished, retry: ${error}`);
   }
   const now = new Date();
-  await db
-    .update(withdrawalRequests)
-    .set({ status: "approved", decidedBy: actor.userId, decidedAt: now, decisionNote: note, withdrawTx, revokeTx })
-    .where(eq(withdrawalRequests.id, r.id));
-  await db.update(listings).set({ withdrawnAt: now, withdrawnReason: r.reason, active: false }).where(eq(listings.id, l.id));
+  await db.transaction(async (tx) => {
+    await tx
+      .update(withdrawalRequests)
+      .set({ status: "approved", decidedBy: actor.userId, decidedAt: now, decisionNote: note, withdrawTx, revokeTx })
+      .where(and(eq(withdrawalRequests.id, r.id), eq(withdrawalRequests.status, "approving")));
+    await tx.update(listings).set({ withdrawnAt: now, withdrawnReason: r.reason, active: false }).where(eq(listings.id, l.id));
+  });
   await logAction(db, actor, {
     action: "withdraw_approve",
     objectType: "listing",

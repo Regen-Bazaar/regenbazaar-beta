@@ -106,9 +106,28 @@ contract DeployRevision4 is Script {
             }
         }
         if (c.currencies.length == 0 && !c.deployTestStablecoin) revert BadConfig("no stablecoin");
+        if (c.deployTestStablecoin && !isTestNetwork(block.chainid)) revert BadConfig("test stablecoin on a non-test chain");
         for (uint256 i = 0; i < c.currencies.length; ++i) {
             if (c.currencies[i].code.length == 0) revert BadConfig("currency has no code");
+            if (!_isStablecoin(c.currencies[i])) revert BadConfig("currency is not an ERC-20 stablecoin (6..18 decimals)");
         }
+    }
+
+    /// @notice Networks where the labelled, publicly mintable TestUSDG stand-in may ever be deployed.
+    function isTestNetwork(uint256 chainId) public pure returns (bool) {
+        return chainId == 421614 || chainId == 11142220 || chainId == 46630 || chainId == 31337;
+    }
+
+    /// @dev The address answers the ERC-20 reads the sale and marketplace rely on, with 6..18 decimals.
+    function _isStablecoin(address token) internal view returns (bool) {
+        (bool ok, bytes memory ret) = token.staticcall(abi.encodeWithSignature("decimals()"));
+        if (!ok || ret.length != 32) return false;
+        uint256 dec = abi.decode(ret, (uint256));
+        if (dec < 6 || dec > 18) return false;
+        (ok, ret) = token.staticcall(abi.encodeWithSignature("totalSupply()"));
+        if (!ok || ret.length != 32) return false;
+        (ok, ret) = token.staticcall(abi.encodeWithSignature("balanceOf(address)", address(this)));
+        return ok && ret.length == 32;
     }
 
     /// @dev Must run inside a broadcast (or prank) as `deployer`. Public so the tests run the same code.

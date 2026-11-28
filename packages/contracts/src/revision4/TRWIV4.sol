@@ -344,9 +344,12 @@ contract TRWIV4 is
         emit ImpactWithdrawn(easUID, tokenIdForUID[easUID], msg.sender, reasonURI);
     }
 
-    /// @notice Undo a withdrawal. Admin (timelock) only, so a stolen withdrawer key cannot undo a stop.
+    /// @notice Undo a withdrawal that was NOT followed by an EAS revocation (e.g. a stolen withdrawer key marked
+    ///         good impact). Admin (timelock) only. An approved withdrawal also revokes the attestation, which EAS
+    ///         cannot undo, so such an impact can never be reinstated: this call reverts with UID_Revoked.
     function reinstate(bytes32 easUID) external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (!withdrawnUID[easUID]) revert NotWithdrawn();
+        if (eas.getAttestation(easUID).revocationTime != 0) revert UID_Revoked();
         withdrawnUID[easUID] = false;
         emit ImpactReinstated(easUID, tokenIdForUID[easUID], msg.sender);
     }

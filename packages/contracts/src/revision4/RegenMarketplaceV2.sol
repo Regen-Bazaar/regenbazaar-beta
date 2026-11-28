@@ -120,6 +120,7 @@ contract RegenMarketplaceV2 is AccessControl, ReentrancyGuard, Pausable, IERC115
     function buy(uint256 listingId, uint256 amount) external nonReentrant whenNotPaused {
         Listing storage l = listings[listingId];
         if (!l.active || amount == 0 || amount > l.remaining) revert NotAvailable();
+        if (!allowedCurrency[l.currency]) revert BadCurrency(); // coin removed after listing: seller cancels, relists
         TRWIV4.MarketTerms memory t = trwi.marketTerms(l.tokenId);
         if (!t.tradable) revert NotTradable();
 
@@ -155,12 +156,25 @@ contract RegenMarketplaceV2 is AccessControl, ReentrancyGuard, Pausable, IERC115
     ///         trapped; works for withdrawn impact too.
     function cancel(uint256 listingId) external nonReentrant {
         Listing storage l = listings[listingId];
-        if (!l.active) revert NotAvailable();
         if (msg.sender != l.seller && !hasRole(DEFAULT_ADMIN_ROLE, msg.sender)) revert NotSeller();
+        _cancel(listingId, l, l.seller);
+    }
+
+    /// @notice Seller only: return the escrowed editions to another wallet (for a seller contract that cannot
+    ///         receive ERC-1155 transfers). The admin can never redirect editions.
+    function cancelTo(uint256 listingId, address to) external nonReentrant {
+        Listing storage l = listings[listingId];
+        if (msg.sender != l.seller) revert NotSeller();
+        if (to == address(0)) revert BadParams();
+        _cancel(listingId, l, to);
+    }
+
+    function _cancel(uint256 listingId, Listing storage l, address to) internal {
+        if (!l.active) revert NotAvailable();
         uint256 rem = l.remaining;
         l.remaining = 0;
         l.active = false;
-        trwi.safeTransferFrom(address(this), l.seller, l.tokenId, rem, "");
+        trwi.safeTransferFrom(address(this), to, l.tokenId, rem, "");
         emit Cancelled(listingId, rem);
     }
 

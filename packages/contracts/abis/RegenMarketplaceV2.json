@@ -98,6 +98,24 @@
   },
   {
     "type": "function",
+    "name": "cancelTo",
+    "inputs": [
+      {
+        "name": "listingId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "to",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "feeRecipient",
     "inputs": [],
     "outputs": [

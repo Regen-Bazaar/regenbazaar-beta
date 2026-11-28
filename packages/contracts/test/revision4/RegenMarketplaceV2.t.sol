@@ -133,6 +133,39 @@ contract RegenMarketplaceV2Test is Revision4Base {
         assertEq(usd.balanceOf(address(market)), 0);
     }
 
+    function test_Buy_RefusedAfterCurrencyRemoved_SellerCanCancel() public {
+        _issue(1, address(0), 2);
+        uint256 id = _list(buyer, 1, 2, RESALE_PRICE);
+        vm.prank(admin);
+        market.setCurrencyAllowed(address(usd), false);
+        usd.mint(buyer2, RESALE_PRICE);
+        vm.startPrank(buyer2);
+        usd.approve(address(market), RESALE_PRICE);
+        vm.expectRevert(RegenMarketplaceV2.BadCurrency.selector);
+        market.buy(id, 1);
+        vm.stopPrank();
+        vm.prank(buyer);
+        market.cancel(id);
+        assertEq(trwi.balanceOf(buyer, 1), 2);
+    }
+
+    function test_CancelTo_SellerOnly_NonZero() public {
+        _issue(1, address(0), 2);
+        uint256 id = _list(buyer, 1, 2, RESALE_PRICE);
+        vm.expectRevert(RegenMarketplaceV2.NotSeller.selector);
+        vm.prank(admin);
+        market.cancelTo(id, admin);
+        vm.expectRevert(RegenMarketplaceV2.BadParams.selector);
+        vm.prank(buyer);
+        market.cancelTo(id, address(0));
+        vm.prank(buyer);
+        market.cancelTo(id, buyer2);
+        assertEq(trwi.balanceOf(buyer2, 1), 2, "editions go to the seller's chosen wallet");
+        vm.expectRevert(RegenMarketplaceV2.NotAvailable.selector);
+        vm.prank(buyer);
+        market.cancelTo(id, buyer2);
+    }
+
     // ---- withdrawn / revoked / non-transferable are refused ----
 
     function test_Withdrawn_CannotBeListed() public {

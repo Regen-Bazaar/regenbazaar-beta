@@ -273,12 +273,29 @@ abstract contract DeployRevision4Checks is Test {
         vm.prank(buyer);
         RegenPrimarySaleV3(d.primarySale).redeem(v2, 1, sig2);
 
-        // reinstate only through the timelock
+        // an approved withdrawal (revoked in EAS) can never be reinstated, not even by the timelock
+        TimelockController tl = TimelockController(payable(d.timelock));
+        bytes memory data = abi.encodeCall(TRWIV4.reinstate, (uid2));
+        vm.prank(adminWallet);
+        tl.schedule(d.trwi, 0, data, bytes32(0), bytes32("3"), DELAY);
+        vm.warp(block.timestamp + DELAY);
+        vm.expectRevert();
+        vm.prank(adminWallet);
+        tl.execute(d.trwi, 0, data, bytes32(0), bytes32("3"));
+        assertTrue(t.withdrawnUID(uid2));
+
+        // a withdrawal without revocation (e.g. a misused withdrawer key) is undone only through the timelock
+        vm.prank(attester);
+        bytes32 uid3 = _attest(
+            abi.encode(creator, 300 ether, "ipfs://good", uint8(2), "v0.2", address(0), address(0), true), creator
+        );
+        vm.prank(withdrawer);
+        t.withdraw(uid3, "ipfs://mistake");
         vm.expectRevert();
         vm.prank(withdrawer);
-        t.reinstate(uid2);
-        _timelocked(d.trwi, abi.encodeCall(TRWIV4.reinstate, (uid2)), "3");
-        assertFalse(t.withdrawnUID(uid2));
+        t.reinstate(uid3);
+        _timelocked(d.trwi, abi.encodeCall(TRWIV4.reinstate, (uid3)), "3b");
+        assertFalse(t.withdrawnUID(uid3));
     }
 
     function _cycleAdmin() internal {
@@ -398,7 +415,9 @@ contract DeployRevision4Test is DeployRevision4Checks {
         vm.setEnv("WITHDRAWER_ADDRESS", vm.toString(withdrawer));
         vm.setEnv("GUARDIAN_ADDRESS", vm.toString(guardian));
         vm.setEnv("FEE_RECIPIENT", vm.toString(feeRecipient));
-        vm.setEnv("ALLOWED_CURRENCIES", string.concat(vm.toString(address(eas)), ",", vm.toString(address(registry))));
+        TestUSDG a = new TestUSDG();
+        TestUSDG b = new TestUSDG();
+        vm.setEnv("ALLOWED_CURRENCIES", string.concat(vm.toString(address(a)), ",", vm.toString(address(b))));
         vm.setEnv("DEPLOY_TEST_STABLECOIN", "false");
         DeployRevision4.Config memory c = script.configFromEnv();
         assertEq(c.eas, address(eas));
@@ -407,6 +426,21 @@ contract DeployRevision4Test is DeployRevision4Checks {
         assertEq(c.signer, address(0x51));
         assertEq(c.currencies.length, 2);
         assertFalse(c.deployTestStablecoin);
+        script.validate(c, deployer);
+    }
+
+    function test_Validate_RejectsNonStablecoinAndStandInOffTestnets() public {
+        script = new DeployRevision4();
+        DeployRevision4.Config memory c = _config(address(eas), address(registry));
+        c.deployTestStablecoin = false;
+        c.currencies = new address[](1);
+        c.currencies[0] = address(registry); // has code, is not an ERC-20
+        vm.expectRevert(abi.encodeWithSelector(DeployRevision4.BadConfig.selector, "currency is not an ERC-20 stablecoin (6..18 decimals)"));
+        script.validate(c, deployer);
+
+        c = _config(address(eas), address(registry));
+        vm.chainId(1);
+        vm.expectRevert(abi.encodeWithSelector(DeployRevision4.BadConfig.selector, "test stablecoin on a non-test chain"));
         script.validate(c, deployer);
     }
 

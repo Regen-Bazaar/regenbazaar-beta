@@ -271,6 +271,17 @@ contract TRWIV4Test is Revision4Base {
         trwi.reinstate(uid);
     }
 
+    function test_Reinstate_RevertsAfterRevocation() public {
+        bytes32 uid = _issue(1, address(0), 1);
+        vm.prank(withdrawer);
+        trwi.withdraw(uid, "ipfs://reason");
+        _revoke(uid);
+        vm.expectRevert(TRWIV4.UID_Revoked.selector);
+        vm.prank(admin);
+        trwi.reinstate(uid);
+        assertTrue(trwi.isWithdrawn(1), "an approved withdrawal is final");
+    }
+
     // ---- revoked attestation: checked on every mint ----
 
     function test_Revoked_BeforeFirstSale_CannotBeBought() public {

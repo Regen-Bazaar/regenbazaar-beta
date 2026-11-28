@@ -234,7 +234,7 @@ export const withdrawalRequests = pgTable(
     requestedBy: uuid("requested_by").references(() => users.id), // null = shared access code
     requestedWallet: varchar("requested_wallet", { length: 42 }),
     reason: text("reason").notNull(),
-    status: varchar("status", { length: 10 }).notNull().default("open"), // open | approved | rejected
+    status: varchar("status", { length: 10 }).notNull().default("open"), // open | approving | approved | rejected
     decidedBy: uuid("decided_by").references(() => users.id),
     decidedAt: timestamp("decided_at", { withTimezone: true }),
     decisionNote: text("decision_note"),
@@ -245,7 +245,7 @@ export const withdrawalRequests = pgTable(
   (t) => [
     index("withdrawal_requests_listing_idx").on(t.listingId),
     // at most one open request per listing, even when two validators file at the same moment
-    uniqueIndex("withdrawal_requests_one_open_idx").on(t.listingId).where(sql`status = 'open'`),
+    uniqueIndex("withdrawal_requests_one_open_idx").on(t.listingId).where(sql`status in ('open', 'approving')`),
   ],
 );
 

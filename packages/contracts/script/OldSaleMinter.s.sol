@@ -8,6 +8,8 @@ import { TRWI } from "../src/TRWI.sol";
 ///         primary sale's minting right on the old TRWI, so no impact is ever sellable on both generations.
 /// @dev    Env: OLD_ADMIN_PRIVATE_KEY (admin of the old TRWI), OLD_TRWI_ADDRESS, OLD_PRIMARY_SALE_ADDRESS
 ///         (comma-separated: v1 and v2 sales), GRANT_BACK (default false; true = rollback).
+///         The revoke run prints which sales held the role BEFORE it; a rollback must list only those (so a sale
+///         that was already off stays off). Record that output with the deployment.
 contract OldSaleMinter is Script {
     function run() external {
         uint256 pk = vm.envUint("OLD_ADMIN_PRIVATE_KEY");
@@ -16,6 +18,9 @@ contract OldSaleMinter is Script {
         bool grantBack = vm.envOr("GRANT_BACK", false);
         bytes32 role = trwi.MINTER_ROLE();
 
+        for (uint256 i = 0; i < sales.length; ++i) {
+            console2.log(sales[i], "held MINTER_ROLE before this run:", trwi.hasRole(role, sales[i]));
+        }
         vm.startBroadcast(pk);
         for (uint256 i = 0; i < sales.length; ++i) {
             if (grantBack) trwi.grantRole(role, sales[i]);
