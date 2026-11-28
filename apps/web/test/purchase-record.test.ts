@@ -75,6 +75,10 @@ class FakeChain implements ChainReader {
   failLogsFrom: number | null = null; // every request that reaches this block fails
   mangle: (logs: RawLog[]) => RawLog[] = (l) => l;
   constructor(public all: RawLog[], public head: number) {}
+  networkId = 421614;
+  async chainId() {
+    return this.networkId;
+  }
   async blockNumber() {
     if (this.failHead) throw new Error("network down");
     return this.head;
@@ -206,13 +210,33 @@ test("a failure in the middle keeps what was read and the next run continues fro
   assert.deepEqual(await holdingsOf(db), [`${TOKEN}|5|${ALICE}|3|4`, `${TOKEN}|5|${BOB}|3|0`, `${TOKEN}|6|${ALICE}|2|0`]);
 });
 
+test("a connection that points at another network is refused: nothing is read and the position stays", async () => {
+  const { db } = await createTestDb();
+  await seed(db);
+  const wrong = new FakeChain([], 6_000); // answers with no events, as another network would
+  wrong.networkId = 11142220;
+  const r = await syncChain(db, CHAIN, wrong, { retryDelayMs: 0 });
+  assert.match(r.error ?? "", /answers as chain 11142220/);
+  assert.equal((await db.select().from(schema.recordCursors)).length, 0);
+  const ok = await syncChain(db, CHAIN, new FakeChain(story(), 6_000), { retryDelayMs: 0 });
+  assert.equal(ok.inserted, 7);
+});
+
+test("the history limit counts impacts of the site only", async () => {
+  const { db } = await createTestDb();
+  await seed(db);
+  const logs = [...story(), ...purchase(ALICE, 777n, 1n, 1n, 4_700), ...purchase(ALICE, 778n, 1n, 1n, 4_800)];
+  await syncChain(db, CHAIN, new FakeChain(logs, 6_000), { retryDelayMs: 0 });
+  assert.deepEqual((await purchaseHistory(db, ALICE, { limit: 2 })).map((h) => h.tokenId), ["5", "5"]);
+});
+
 test("one network down does not stop the others", async () => {
   const { db } = await createTestDb();
   await seed(db);
   const down = new FakeChain([], 100);
   down.failHead = true;
   const other: RecordedChain = { ...CHAIN, chainId: 46630, contracts: CHAIN.contracts.slice(0, 2) };
-  const results = await syncAll(db, { chains: [other, CHAIN], readerFor: (id) => (id === 46630 ? down : new FakeChain(story(), 6_000)), retryDelayMs: 0 });
+  const results = await syncAll(db, { chains: [other, CHAIN], readerFor: (id) => (id === 46630 ? Object.assign(down, { networkId: 46630 }) : new FakeChain(story(), 6_000)), retryDelayMs: 0 });
   assert.match(results[0].error ?? "", /network down/);
   assert.equal(results[1].inserted, 7);
 });

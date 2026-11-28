@@ -12,9 +12,11 @@ import { decodeLogs, RECORD_EVENTS, type RawLog } from "./events";
 
 const ZERO = "0x0000000000000000000000000000000000000000";
 const MIN_RANGE = 1_000;
+const RECORD_LOCK = 20261128; // first key of the job's advisory lock; the second is the chain id
 
 /** What the job needs from a network. The live one is makeChainReader; tests pass a fake. */
 export interface ChainReader {
+  chainId(): Promise<number>;
   blockNumber(): Promise<number>;
   logs(addresses: string[], fromBlock: number, toBlock: number): Promise<RawLog[]>;
   blockTime(blockNumber: number): Promise<Date>;
@@ -53,6 +55,7 @@ export function makeChainReader(chainId: number): ChainReader {
   const chain = defineChain({ id: chainId, name: `chain-${chainId}`, nativeCurrency: { name: "native", symbol: "N", decimals: 18 }, rpcUrls: { default: { http: [rpcUrlFor(chainId)] } } });
   const client = createPublicClient({ chain, transport: http(rpcUrlFor(chainId), { timeout: 30_000, retryCount: 2 }) });
   return {
+    chainId: () => client.getChainId(),
     blockNumber: async () => Number(await client.getBlockNumber()),
     logs: async (addresses, fromBlock, toBlock) => {
       const logs = await client.getLogs({ address: addresses as `0x${string}`[], events: RECORD_EVENTS, fromBlock: BigInt(fromBlock), toBlock: BigInt(toBlock) });
@@ -95,6 +98,9 @@ export async function syncChain(db: DB, chain: RecordedChain, reader: ChainReade
   const addresses = chain.contracts.map((c) => c.address);
   const blockTimes = new Map<number, Date>();
   try {
+    // A connection that points at another network would answer "no events" and the job would skip real ones.
+    const connected = await reader.chainId();
+    if (connected !== chain.chainId) throw new Error(`the connection for chain ${chain.chainId} answers as chain ${connected}`);
     const head = await reader.blockNumber();
     result.head = head;
     const safe = head - chain.confirmations;
@@ -144,6 +150,8 @@ export async function syncChain(db: DB, chain: RecordedChain, reader: ChainReade
       result.seen += rows.length;
 
       const inserted = await db.transaction(async (tx) => {
+        // One writer per network at a time, so holdings are always recalculated from every stored event.
+        await tx.execute(sql`select pg_advisory_xact_lock(${RECORD_LOCK}, ${chain.chainId})`);
         let n = 0;
         for (let i = 0; i < rows.length; i += 500) {
           const added = await tx.insert(editionEvents).values(rows.slice(i, i + 500)).onConflictDoNothing().returning({ id: editionEvents.id });

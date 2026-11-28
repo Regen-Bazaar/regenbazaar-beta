@@ -162,6 +162,8 @@ export async function walletPoints(db: DB, wallet: string): Promise<WalletPoints
   };
 }
 
+const HISTORY_SCAN = 5_000;
+
 export interface HistoryRow {
   date: Date; // time of the block
   kind: "bought" | "retired";
@@ -188,7 +190,7 @@ export async function purchaseHistory(db: DB, wallet: string, opts: { limit?: nu
     .from(editionEvents)
     .where(and(eq(editionEvents.wallet, w), inArray(editionEvents.kind, ["bought", "retired"])))
     .orderBy(desc(editionEvents.blockTime), desc(editionEvents.blockNumber), desc(editionEvents.logIndex))
-    .limit(limit);
+    .limit(HISTORY_SCAN); // the limit is applied after tokens outside the site are dropped
   const listed = await listedImpacts(db, rows.map((r) => ({ chainId: r.chainId, tokenContract: r.tokenContract, tokenId: String(r.tokenId) })));
   const out: HistoryRow[] = [];
   for (const r of rows) {
@@ -216,6 +218,7 @@ export async function purchaseHistory(db: DB, wallet: string, opts: { limit?: nu
       txHash: r.txHash,
       txUrl: explorer ? `${explorer}/tx/${r.txHash}` : null,
     });
+    if (out.length >= limit) break;
   }
   return out;
 }
