@@ -1,71 +1,49 @@
 import Link from "next/link";
-import { Logo } from "./Logo";
+import { Icon, type IconName } from "./ui/Icon";
 
-const PRODUCT = [
-  { href: "/marketplace", label: "Marketplace" },
-  { href: "/tokenize", label: "Tokenize impact" },
-  { href: "/portfolio", label: "My impact" },
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/leaderboard", label: "Leaderboard" },
+const LEARN: { href: string; label: string; icon: IconName }[] = [
+  { href: "/guide", label: "Guide", icon: "book" },
+  { href: "/methodology", label: "Scoring", icon: "ruler" },
+  { href: "/roadmap", label: "Roadmap", icon: "calendar" },
+  { href: "/dashboard", label: "Dashboard", icon: "list" },
 ];
-const LEARN = [
-  { href: "/guide", label: "How to try the demo" },
-  { href: "/methodology", label: "Impact Value methodology" },
-  { href: "/roadmap", label: "Roadmap" },
-];
-const ELSEWHERE = [
-  { href: "https://www.regenbazaar.com", label: "regenbazaar.com" },
-  { href: "https://x.com/RegenBazaar", label: "X (Twitter)" },
-  { href: "https://t.me/regen_bazaar", label: "Telegram" },
-  { href: "https://github.com/Regen-Bazaar/regenbazaar-beta", label: "GitHub" },
+const ELSEWHERE: { href: string; label: string; icon: IconName }[] = [
+  { href: "https://www.regenbazaar.com", label: "regenbazaar.com", icon: "globe" },
+  { href: "https://x.com/RegenBazaar", label: "X", icon: "link" },
+  { href: "https://t.me/regen_bazaar", label: "Telegram", icon: "share" },
+  { href: "https://github.com/Regen-Bazaar/regenbazaar-beta", label: "GitHub", icon: "doc" },
 ];
 
+const LINK = "inline-flex min-h-11 items-center gap-1.5 text-meta text-muted hover:text-fg";
+
+/** Compact footer: one or two lines. The four main destinations are in the app bar and the tab bar, not here. */
 export function Footer() {
   return (
-    <footer className="mt-24 border-t border-line bg-surface">
-      <div className="page-wrap grid gap-10 py-14 md:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
-        <div className="max-w-sm">
-          <Link href="/" className="flex items-center gap-3" aria-label="Regen Bazaar home">
-            <Logo className="h-6 w-auto text-fg" />
-            <span className="font-display text-[22px]">
-              Regen <span className="text-accent">Bazaar</span>
-            </span>
-          </Link>
-          <p className="mt-4 text-muted">
-            Verified real-world impact as a tradable asset class, for the people who create it and the people who buy it.
-          </p>
-          <p className="mt-4 text-sm text-subtle">
-            Testnet beta: test networks and test tokens only, no real money moves.{" "}
-            Impact Value is Regen Bazaar&apos;s own relative index (methodology v0.2).
-          </p>
-        </div>
-        <FooterCol title="Product" links={PRODUCT} />
-        <FooterCol title="Learn" links={LEARN} />
-        <FooterCol title="Elsewhere" links={ELSEWHERE} external />
-      </div>
-    </footer>
-  );
-}
-
-function FooterCol({ title, links, external }: { title: string; links: { href: string; label: string }[]; external?: boolean }) {
-  return (
-    <nav aria-label={title}>
-      <h2 className="label-mono">{title}</h2>
-      <ul className="mt-4 space-y-2.5">
-        {links.map((l) => (
-          <li key={l.href}>
-            {external ? (
-              <a href={l.href} target="_blank" rel="noopener noreferrer" className="text-muted hover:text-accent">
-                {l.label} ↗
-              </a>
-            ) : (
-              <Link href={l.href} className="text-muted hover:text-accent">
+    <footer className="mt-16 border-t border-line">
+      <div className="page-wrap flex flex-col py-2 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
+        <p className="order-last flex items-center gap-1.5 py-2 text-label text-subtle lg:order-first">
+          <Icon name="drop" />
+          Test version, no real money
+        </p>
+        <div className="flex flex-col lg:flex-row lg:gap-8">
+          <nav aria-label="Learn" className="flex flex-wrap gap-x-4">
+            {LEARN.map((l) => (
+              <Link key={l.href} href={l.href} className={LINK}>
+                <Icon name={l.icon} />
                 {l.label}
               </Link>
-            )}
-          </li>
-        ))}
-      </ul>
-    </nav>
+            ))}
+          </nav>
+          <nav aria-label="Elsewhere" className="flex flex-wrap gap-x-4">
+            {ELSEWHERE.map((l) => (
+              <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className={LINK}>
+                <Icon name={l.icon} />
+                {l.label}
+              </a>
+            ))}
+          </nav>
+        </div>
+      </div>
+    </footer>
   );
 }
