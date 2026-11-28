@@ -431,6 +431,17 @@ export async function sendRevoke(net: Network, easUid: Hex): Promise<Hex | null>
   });
 }
 
+/** Read-only: is the withdrawal step already in place on-chain (TRWIV4 mark or EAS revocation)? */
+export async function isStepDone(net: Network, easUid: Hex, step: "withdraw" | "revoke"): Promise<boolean> {
+  requireRevision4(net);
+  const pub = createPublicClient({ chain: net.chain, transport: http(rpcFor(net)) });
+  if (step === "withdraw") {
+    return pub.readContract({ address: net.trwi, abi: trwiV4Abi, functionName: "withdrawnUID", args: [easUid] });
+  }
+  const att = await pub.readContract({ address: net.eas, abi: easGetAttestationAbi, functionName: "getAttestation", args: [easUid] });
+  return att.revocationTime !== 0n;
+}
+
 /** Wait (at most 5 minutes, well inside the approval lease) for a sent transaction; "reverted" if it failed. */
 export async function waitForTx(net: Network, hash: Hex): Promise<"success" | "reverted"> {
   const pub = createPublicClient({ chain: net.chain, transport: http(rpcFor(net)) });

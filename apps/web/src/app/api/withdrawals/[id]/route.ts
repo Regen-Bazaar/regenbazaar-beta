@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "../../../../lib/db";
 import { requireActor } from "../../../../lib/validator-auth";
 import { decideRequest } from "../../../../lib/withdrawals";
-import { sendRevoke, sendWithdraw, waitForTx } from "../../../../lib/onchain";
+import { isStepDone, sendRevoke, sendWithdraw, waitForTx } from "../../../../lib/onchain";
 
 export const runtime = "nodejs";
 
@@ -19,6 +19,6 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   } catch {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
-  const r = await decideRequest(await getDb(), a.actor, id, { decision: body.decision, note: body.note }, { sendWithdraw, sendRevoke, waitForTx });
+  const r = await decideRequest(await getDb(), a.actor, id, { decision: body.decision, note: body.note }, { sendWithdraw, sendRevoke, waitForTx, isDone: isStepDone });
   return NextResponse.json(r.body, { status: r.status });
 }

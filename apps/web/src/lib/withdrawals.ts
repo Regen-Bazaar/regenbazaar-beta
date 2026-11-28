@@ -24,6 +24,8 @@ export interface ChainOps {
   sendWithdraw(net: Network, easUid: Hex, reasonURI: string): Promise<Hex | null>;
   sendRevoke(net: Network, easUid: Hex): Promise<Hex | null>;
   waitForTx(net: Network, hash: Hex): Promise<"success" | "reverted">;
+  /** Read-only: is this step already in place on-chain (impact withdrawn / attestation revoked)? */
+  isDone(net: Network, easUid: Hex, step: "withdraw" | "revoke"): Promise<boolean>;
 }
 
 class LostClaim extends Error {}
@@ -153,18 +155,14 @@ export async function decideRequest(
     }
     if (hash !== "0x" && (await chain.waitForTx(net, hash)) !== "success") {
       // A revert is usually a duplicate of a step another attempt already finished (TRWIV4 and EAS refuse repeats,
-      // so a duplicate changes nothing and costs one fee). Ask the chain again: send() returns null when done.
-      await save({ [field]: null });
-      unsavedSend = true;
-      const again = await send();
-      if (again !== null) {
-        await save({ [field]: again });
-        unsavedSend = false;
-        throw new Error(`${field === "withdrawTx" ? "withdraw" : "revoke"} transaction reverted (${hash}); resent as ${again}, retry to confirm`);
+      // so it changes nothing). Check the chain read-only; never resend in the same attempt.
+      if (await chain.isDone(net, easUid, field === "withdrawTx" ? "withdraw" : "revoke")) {
+        hash = "0x";
+        await save({ [field]: hash });
+      } else {
+        await save({ [field]: null }); // forget it: the next attempt sends the step once
+        throw new Error(`${field === "withdrawTx" ? "withdraw" : "revoke"} transaction reverted (${hash}); retry to send it again`);
       }
-      unsavedSend = false;
-      hash = "0x";
-      await save({ [field]: hash });
     }
     return hash;
   };

@@ -227,7 +227,7 @@ test("voucher: a withdrawn listing is refused", async () => {
 type Hex = `0x${string}`;
 /** Old-style fakes (send and confirm in one call) as the send/wait chain steps; every wait succeeds. */
 function asOps(f: { withdraw: () => Promise<Hex | null>; revoke: () => Promise<Hex | null> }) {
-  return { sendWithdraw: f.withdraw, sendRevoke: f.revoke, waitForTx: async () => "success" as const };
+  return { sendWithdraw: f.withdraw, sendRevoke: f.revoke, waitForTx: async () => "success" as const, isDone: async () => false };
 }
 
 function fakeChain(o: { failWithdraw?: boolean; failRevoke?: boolean } = {}) {
@@ -533,6 +533,7 @@ test("withdraw: a receipt failure after sending keeps the hash; the retry only w
       if (rpcDown) throw new Error("receipt timeout");
       return "success" as const;
     },
+    isDone: async () => false,
   };
   assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 502);
   const [mid] = await db.select().from(schema.withdrawalRequests);
@@ -558,14 +559,15 @@ test("withdraw: a reverted transaction is forgotten, so the next attempt sends i
     },
     sendRevoke: async () => ("0x" + "d".repeat(64)) as Hex,
     waitForTx: async () => (reverted ? ("reverted" as const) : ("success" as const)),
+    isDone: async () => false, // the revert did not come from a finished step
   };
   assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 502);
   const [mid] = await db.select().from(schema.withdrawalRequests);
-  assert.equal(mid.withdrawTx, "0x" + "c".repeat(64), "the resent transaction's hash is saved");
-  assert.equal(sent.withdraw, 2, "resent once after the revert");
+  assert.equal(mid.withdrawTx, null, "the reverted hash is forgotten");
+  assert.equal(sent.withdraw, 1, "no resend inside the same attempt");
   reverted = false;
   assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 200);
-  assert.equal(sent.withdraw, 2, "the retry only waited for the saved hash");
+  assert.equal(sent.withdraw, 2, "the retry sends it once");
 });
 
 test("withdraw: an attempt whose lease expired during a chain call stops after takeover and never reaches the next step", async () => {
@@ -589,6 +591,7 @@ test("withdraw: an attempt whose lease expired during a chain call stops after t
       return ("0x" + "f".repeat(64)) as Hex;
     },
     waitForTx: async () => "success" as const,
+    isDone: async () => false,
   };
   const first = decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, stuck, resolveV4);
   await new Promise((res) => setTimeout(res, 20));
@@ -641,6 +644,7 @@ test("withdraw: takeover while a send is in flight: the duplicate reverts harmle
       return tx(true);
     },
     waitForTx: async (_n: unknown, h: Hex) => hashes.get(h) ?? "reverted",
+    isDone: async (_n: unknown, _u: unknown, step: "withdraw" | "revoke") => (step === "withdraw" ? chainState.withdrawn : chainState.revoked),
   };
   const first = decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, real, resolveV4);
   await new Promise((res) => setTimeout(res, 20));
@@ -669,6 +673,7 @@ test("withdraw: a revert because the step was already done on-chain counts as do
     },
     sendRevoke: async () => ("0x" + "8".repeat(64)) as Hex,
     waitForTx: async (_n: unknown, h: Hex) => (h === "0x" + "9".repeat(64) ? ("reverted" as const) : ("success" as const)),
+    isDone: async (_n: unknown, _u: unknown, step: "withdraw" | "revoke") => step === "withdraw" && withdrawn,
   };
   assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 200);
   const [after] = await db.select().from(schema.withdrawalRequests);
@@ -689,6 +694,7 @@ test("withdraw: if saving a sent transaction's hash fails, the claim is kept and
     },
     sendRevoke: async () => ("0x" + "2".repeat(64)) as Hex,
     waitForTx: async () => "success" as const,
+    isDone: async () => false,
   };
   assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 502);
   const [mid] = await db.select().from(schema.withdrawalRequests);
@@ -696,4 +702,34 @@ test("withdraw: if saving a sent transaction's hash fails, the claim is kept and
   assert.ok(mid.claimedAt, "the claim is still held");
   assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 409, "no second send before the lease runs out");
   assert.equal(sent.withdraw, 1);
+});
+
+test("withdraw: after a revert the attempt never sends again; with an older transaction still pending, the chain decides", async () => {
+  const v = await addUser("validator");
+  const a = await addUser("admin");
+  const l = await insertListing({ generation: 4 });
+  await fileRequest(db, v.actor, { listingId: l.id, reason: "photos are from another project" }, resolveV4);
+  const [r] = await db.select().from(schema.withdrawalRequests);
+  // an older, unrecorded withdraw is still pending and lands while ours reverts behind it (same key, later nonce)
+  let landed = false;
+  const sent = { withdraw: 0 };
+  const ops = {
+    sendWithdraw: async () => {
+      sent.withdraw++;
+      return ("0x" + "7".repeat(64)) as Hex;
+    },
+    sendRevoke: async () => ("0x" + "6".repeat(64)) as Hex,
+    waitForTx: async (_n: unknown, h: Hex) => {
+      if (h === "0x" + "7".repeat(64)) {
+        landed = true; // the pending one is mined first, so ours reverts as a duplicate
+        return "reverted" as const;
+      }
+      return "success" as const;
+    },
+    isDone: async (_n: unknown, _u: unknown, step: "withdraw" | "revoke") => step === "withdraw" && landed,
+  };
+  assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 200);
+  assert.equal(sent.withdraw, 1, "no extra send after the revert");
+  const [after] = await db.select().from(schema.withdrawalRequests);
+  assert.deepEqual([after.status, after.withdrawTx], ["approved", "0x"]);
 });
