@@ -64,6 +64,13 @@
       "when": 1795850045055,
       "tag": "0008_validator_workspace_r1",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795861828658,
+      "tag": "0009_purchase_record",
+      "breakpoints": true
     }
   ]
 }

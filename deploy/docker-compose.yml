@@ -111,6 +111,42 @@ services:
         limits:
           memory: 512M
 
+  # Purchase record job (gamification v1): reads edition events (bought, transferred, retired) of all three
+  # networks into Postgres and keeps them current. Read-only on the chain, holds no key. One-off commands:
+  #   docker compose --env-file .env run --rm recorder pnpm --filter web record status
+  recorder:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: build
+      args:
+        NEXT_PUBLIC_NETWORK: ${NETWORK:-arbitrum-sepolia}
+        NEXT_PUBLIC_SALE_CURRENCY: ${SALE_CURRENCY:-}
+        NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${WALLETCONNECT_PROJECT_ID:-}
+    image: regenbazaar_build:latest
+    container_name: regenbazaar_recorder
+    command: ["pnpm", "--filter", "web", "record", "loop"]
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      # Optional provider connections; empty = each network's public one.
+      RPC_URL_421614: ${RPC_URL:-}
+      RPC_URL_46630: ${RH_RPC_URL:-}
+      RPC_URL_11142220: ${CELO_SEPOLIA_RPC_URL:-}
+      RECORD_INTERVAL_SECONDS: ${RECORD_INTERVAL_SECONDS:-60}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks: [regenbazaar_net]
+    # Capped: a failure must not become an endless restart loop on the shared host.
+    restart: "on-failure:5"
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+          cpus: "0.25"
+
   # On-chain indexer (Ponder) — syncs contract events into Postgres (schema "indexer"); web reads them.
   indexer:
     build:

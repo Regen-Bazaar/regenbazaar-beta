@@ -66,6 +66,21 @@ git pull
 cd deploy && docker compose --env-file .env up -d --build   # migrate re-runs (idempotent), web restarts
 ```
 
+## Purchase record job (`regenbazaar_recorder`)
+Reads edition events (bought, transferred, retired) from the sale and tRWI contracts of every network into
+`edition_events`, recalculates `holdings`, and repeats every `RECORD_INTERVAL_SECONDS`. It only reads the chain,
+holds no key and writes only its own three tables, which can be rebuilt from the chain at any time.
+```sh
+cd deploy
+docker compose --env-file .env up -d --build web recorder             # deploy web and the job together
+docker compose --env-file .env logs --tail 20 recorder                # one line per run that found something
+docker compose --env-file .env run --rm recorder pnpm --filter web record status
+docker compose --env-file .env run --rm recorder pnpm --filter web record wallet 0x<address>
+docker compose --env-file .env run --rm recorder pnpm --filter web record rebuild --yes   # empty and read again
+```
+The first start reads each network from the block its contracts were deployed at (a few minutes on public
+connections). When a network moves to new contracts, add them to `apps/web/src/lib/purchase-record/contracts.ts`.
+
 ## Rollback / teardown (scoped to this stack only)
 ```sh
 docker compose down                 # stop + remove our containers + network (keeps the data volume)
