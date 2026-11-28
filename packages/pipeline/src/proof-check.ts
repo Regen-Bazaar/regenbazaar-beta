@@ -397,8 +397,16 @@ export interface ProofCheckResult {
   error?: string;
 }
 
+/** What was read from a fetched page; handed to the caller privately (never part of the stored check result). */
+export interface PageReading {
+  text: string;
+  facts: PageFacts;
+  reader: "ai" | "pattern"; // which reader produced the facts: the AI page reader, or pattern matching only
+}
+
 export interface CheckOptions extends SafeFetchOptions {
   factExtractor?: ProofFactExtractor;
+  onPage?: (p: PageReading) => void;
   now?: () => Date;
   fetcher?: (url: string, opts: SafeFetchOptions) => Promise<FetchedPage>;
 }
@@ -432,16 +440,19 @@ export async function checkProofLink(url: string, claim: ProofClaim, opts: Check
   const raw = page.bytes.toString("utf8");
   const text = /html/i.test(page.contentType) ? htmlToText(raw) : raw.replace(/\s+/g, " ").slice(0, PROOF_TEXT_MAX_CHARS);
   const facts = extractFactsRegex(text);
+  let reader: PageReading["reader"] = "pattern";
   if (opts.factExtractor) {
     try {
       const llm = sanitizeFacts(await opts.factExtractor.extractFacts(text));
       facts.dates = [...new Set([...facts.dates, ...llm.dates])].sort();
       facts.numbers.push(...llm.numbers);
       facts.places.push(...llm.places);
+      reader = "ai";
     } catch {
       // regex facts only
     }
   }
+  opts.onPage?.({ text, facts, reader });
   return { ...base, flags: compareWithClaim(facts, claim, text) };
 }
 

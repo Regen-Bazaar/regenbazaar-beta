@@ -12,6 +12,22 @@ export interface StructuredCall {
   name: string; // tool name for the OpenAI-compatible path
   description: string;
   schema: Record<string, unknown>; // JSON schema of the object to return
+  job?: string; // run log: moderation | extract_actions | page_facts
+  instructionVersion?: string; // run log: bump when the instructions change
+}
+
+/** One line of the AI run log: a single provider attempt. Never holds the input text. */
+export interface LlmRunRecord {
+  job: string;
+  provider: "anthropic" | "openai-compatible";
+  model: string;
+  instructionVersion: string;
+  inputTokens: number | null;
+  outputTokens: number | null;
+  durationMs: number;
+  ok: boolean;
+  error: string | null;
+  output: unknown; // what the model returned, before any of our filters
 }
 
 export interface LlmOptions {
@@ -20,6 +36,8 @@ export interface LlmOptions {
   apiKey?: string;
   baseURL?: string; // openai-compatible only
   model?: string;
+  // Called after every provider attempt (success or failure). Not a provider choice: it does not pin a provider.
+  onRun?: (r: LlmRunRecord) => void;
 }
 
 const CLAUDE_MODEL = "claude-sonnet-5-5"; // chosen by packages/pipeline/eval/extract-eval.ts, see docs/DECISIONS.md
@@ -28,7 +46,13 @@ export function llmConfigured(): boolean {
   return Boolean(process.env.ANTHROPIC_API_KEY || process.env.DEEPSEEK_API_KEY);
 }
 
-type Runner = { label: string; run: (c: StructuredCall) => Promise<unknown> };
+type Usage = { inputTokens: number | null; outputTokens: number | null };
+type Runner = {
+  label: string;
+  provider: LlmRunRecord["provider"];
+  model: string;
+  run: (c: StructuredCall, usage: Usage) => Promise<unknown>;
+};
 
 // Structured outputs need additionalProperties: false on every object.
 function strictSchema(node: unknown): unknown {
@@ -44,7 +68,9 @@ function claudeRunner(apiKey: string, model: string): Runner {
   const client = new Anthropic({ apiKey, maxRetries: 1, timeout: 60_000 });
   return {
     label: `anthropic/${model}`,
-    async run(c) {
+    provider: "anthropic",
+    model,
+    async run(c, usage) {
       // Sonnet 5.5 rejects forced tool_choice; structured outputs return the same object as JSON text.
       const res = await client.messages.create({
         model,
@@ -53,6 +79,8 @@ function claudeRunner(apiKey: string, model: string): Runner {
         output_config: { effort: "low", format: { type: "json_schema", schema: strictSchema(c.schema) as Record<string, unknown> } },
         messages: [{ role: "user", content: c.user }],
       });
+      usage.inputTokens = res.usage?.input_tokens ?? null;
+      usage.outputTokens = res.usage?.output_tokens ?? null;
       if (res.stop_reason !== "end_turn") throw new Error(`stop_reason ${res.stop_reason}`);
       const text = res.content.find((b) => b.type === "text");
       if (!text || text.type !== "text") throw new Error("no text block");
@@ -65,7 +93,9 @@ function openaiRunner(apiKey: string | undefined, baseURL: string, model: string
   const client = new OpenAI({ apiKey, baseURL });
   return {
     label: `${baseURL}/${model}`,
-    async run(c) {
+    provider: "openai-compatible",
+    model,
+    async run(c, usage) {
       const res = await client.chat.completions.create({
         model,
         temperature: 0,
@@ -78,6 +108,8 @@ function openaiRunner(apiKey: string | undefined, baseURL: string, model: string
         tools: [{ type: "function", function: { name: c.name, description: c.description, parameters: c.schema } }],
         tool_choice: { type: "function", function: { name: c.name } },
       });
+      usage.inputTokens = res.usage?.prompt_tokens ?? null;
+      usage.outputTokens = res.usage?.completion_tokens ?? null;
       const call = res.choices[0]?.message?.tool_calls?.[0];
       if (!call || call.type !== "function") throw new Error("no tool call");
       return JSON.parse(call.function.arguments) as unknown;
@@ -111,9 +143,31 @@ export async function callStructured(c: StructuredCall, opts: LlmOptions = {}): 
   if (list.length === 0) throw new Error("no LLM provider configured");
   let last: unknown;
   for (const [i, r] of list.entries()) {
+    const usage: Usage = { inputTokens: null, outputTokens: null };
+    const started = Date.now();
+    const record = (ok: boolean, error: string | null, output: unknown) => {
+      try {
+        opts.onRun?.({
+          job: c.job ?? c.name,
+          provider: r.provider,
+          model: r.model,
+          instructionVersion: c.instructionVersion ?? "v1",
+          ...usage,
+          durationMs: Date.now() - started,
+          ok,
+          error,
+          output,
+        });
+      } catch {
+        // the run log never breaks the call
+      }
+    };
     try {
-      return await r.run(c);
+      const out = await r.run(c, usage);
+      record(true, null, out);
+      return out;
     } catch (e) {
+      record(false, ((e as Error)?.message ?? "failed").slice(0, 300), null);
       last = e;
       // Logs the provider and error only, never the submission text.
       if (i < list.length - 1) console.warn(`[llm] ${c.name} via ${r.label} failed, falling back: ${(e as Error).message?.slice(0, 200)}`);

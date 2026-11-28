@@ -252,6 +252,88 @@ export const withdrawalRequests = pgTable(
   ],
 );
 
+// ---- Validator workspace (release 1). All private, validators only: separate from impact_submissions because
+// that table is served whole by a public address. Migration 0008 only adds these tables.
+
+// One line per AI call (per provider attempt): which job, who answered, size, time, result or error.
+export const aiRuns = pgTable(
+  "ai_runs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    submissionId: uuid("submission_id").references(() => impactSubmissions.id), // null = no report yet (e.g. refused at moderation)
+    job: varchar("job", { length: 30 }).notNull(), // moderation | extract_actions | page_facts
+    provider: varchar("provider", { length: 20 }).notNull(), // anthropic | openai-compatible
+    model: varchar("model", { length: 120 }).notNull(),
+    instructionVersion: varchar("instruction_version", { length: 30 }).notNull(),
+    inputTokens: integer("input_tokens"),
+    outputTokens: integer("output_tokens"),
+    durationMs: integer("duration_ms").notNull(),
+    ok: boolean("ok").notNull(),
+    error: text("error"),
+    output: jsonb("output"), // what the model returned, before our filters; never public
+  },
+  (t) => [index("ai_runs_submission_idx").on(t.submissionId), index("ai_runs_created_idx").on(t.createdAt)],
+);
+
+// One fetched proof or photo link per impact: fingerprint, visible text, the facts read from it, which reader answered.
+export const proofPages = pgTable(
+  "proof_pages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    submissionId: uuid("submission_id")
+      .notNull()
+      .references(() => impactSubmissions.id),
+    kind: varchar("kind", { length: 10 }).notNull(), // proof | photo
+    url: text("url").notNull(),
+    finalUrl: text("final_url"),
+    fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull().defaultNow(),
+    httpStatus: integer("http_status"),
+    contentType: varchar("content_type", { length: 100 }),
+    sha256: varchar("sha256", { length: 64 }),
+    bytes: integer("bytes"),
+    truncated: boolean("truncated").notNull().default(false),
+    pageText: text("page_text"), // up to 20,000 characters; emptied when the impact is rejected
+    facts: jsonb("facts"), // dates, numbers, places read from the page
+    reader: varchar("reader", { length: 10 }).notNull().default("none"), // ai | pattern | none
+    error: text("error"),
+  },
+  (t) => [uniqueIndex("proof_pages_submission_url_idx").on(t.submissionId, t.url)],
+);
+
+// Per impact: review state, who opened it last, place names typed by a validator, state of the automatic proof fetch.
+export const reviewState = pgTable("review_state", {
+  submissionId: uuid("submission_id")
+    .primaryKey()
+    .references(() => impactSubmissions.id),
+  state: varchar("state", { length: 20 }).notNull().default("waiting"), // waiting (later: second look, waiting for the creator)
+  openedBy: uuid("opened_by").references(() => users.id),
+  openedByName: text("opened_by_name"), // copy at the moment of opening
+  openedAt: timestamp("opened_at", { withTimezone: true }),
+  placeNames: jsonb("place_names").notNull().default(sql`'[]'::jsonb`), // string[], typed by a validator
+  proofStatus: varchar("proof_status", { length: 10 }).notNull().default("none"), // none | running | done
+  proofStartedAt: timestamp("proof_started_at", { withTimezone: true }),
+  proofFinishedAt: timestamp("proof_finished_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Internal notes between validators. Only added, never edited or deleted. Never shown publicly.
+export const reviewNotes = pgTable(
+  "review_notes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    submissionId: uuid("submission_id")
+      .notNull()
+      .references(() => impactSubmissions.id),
+    authorId: uuid("author_id").references(() => users.id), // null = shared access code
+    authorName: text("author_name"), // copy at the moment of writing
+    authorWallet: varchar("author_wallet", { length: 42 }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("review_notes_submission_idx").on(t.submissionId)],
+);
+
 // DEPRECATED: not read by the engine (weights live in packages/impact-engine tables, versioned in code).
 // Kept so existing databases need no destructive migration.
 export const actionWeights = pgTable(

@@ -287,6 +287,9 @@ export function sanitizeActionsV02(actions: unknown): ExtractedActionV02[] {
   return out;
 }
 
+/** Which reader produced the action list the creator started from. Stored so the validator sees what really happened. */
+export type AiReadSource = "ai" | "fallback_error" | "fallback_empty" | "not_configured";
+
 export interface ProcessOptions {
   /** Optional LLM extractor; falls back to deterministic rule-based extraction when absent. */
   extractor?: LLMExtractor;
@@ -335,13 +338,19 @@ export async function processSubmission(db: DB, input: SubmissionInput, opts: Pr
   const version = opts.methodologyVersion ?? "v0.2";
   const sanitize = version === "v0.2" ? sanitizeActionsV02 : sanitizeActions;
   let actions: ExtractedActionV02[];
+  let aiRead: AiReadSource = "not_configured";
   if (opts.extractor) {
     // LLM extraction, with a deterministic rule-based fallback on error or empty output.
     try {
       actions = sanitize(await opts.extractor.extract(input.description));
-      if (actions.length === 0) actions = sanitize(ruleBasedExtract(input.description));
+      aiRead = "ai";
+      if (actions.length === 0) {
+        actions = sanitize(ruleBasedExtract(input.description));
+        aiRead = "fallback_empty";
+      }
     } catch {
       actions = sanitize(ruleBasedExtract(input.description));
+      aiRead = "fallback_error";
     }
   } else {
     actions = sanitize(ruleBasedExtract(input.description));
@@ -376,13 +385,14 @@ export async function processSubmission(db: DB, input: SubmissionInput, opts: Pr
   const submitterEdited = declared.length > 0 && !sameActions(declared, aiActions);
   if (declared.length > 0) actions = declared;
 
-  const ctx: ImpactContext & ImpactContextV02 & { aiActions?: ExtractedActionV02[]; submitterEdited?: boolean } = {
+  const ctx: ImpactContext & ImpactContextV02 & { aiActions?: ExtractedActionV02[]; submitterEdited?: boolean; aiRead?: AiReadSource } = {
     ...(input.context ?? {}),
   };
   delete ctx.esm; // ESM comes from a validator, never from the submitter
   if (declared.length > 0) {
     ctx.aiActions = aiActions;
     ctx.submitterEdited = submitterEdited;
+    ctx.aiRead = aiRead;
   }
   const withCost = input.cost ? { ...ctx, cost: input.cost } : ctx;
   if (!ctx.ecosystem && input.location?.ecosystem) ctx.ecosystem = input.location.ecosystem;

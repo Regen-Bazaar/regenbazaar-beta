@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAccount } from "wagmi";
 import {
   ACTION_WEIGHTS_V02,
@@ -143,6 +143,13 @@ export default function Tokenize() {
   // 2. actions (seeded from the text, then edited by the submitter)
   const [actions, setActions] = useState<ExtractedActionV02[]>([]);
   const [actionsFromText, setActionsFromText] = useState("");
+  // Which reader produced the list: "pending" while the AI is asked, "ai", or "keywords" (the AI did not answer or found nothing).
+  const [reader, setReader] = useState<"pending" | "ai" | "keywords">("pending");
+  const edited = useRef(false); // the creator changed the list: a late AI answer must not overwrite it
+  const textNow = useRef("");
+  textNow.current = description;
+  const stepNow = useRef(0);
+  stepNow.current = step;
   // 3. where
   const [country, setCountry] = useState("");
   const [ecosystem, setEcosystem] = useState("");
@@ -169,8 +176,24 @@ export default function Tokenize() {
   // Re-read the text when it changes, unless the submitter has already edited the list for this text.
   useEffect(() => {
     if (step === 1 && description !== actionsFromText) {
+      // Show the keyword reading at once, then ask the AI and replace it unless the creator already edited the list.
       setActions(ruleBasedExtract(description));
       setActionsFromText(description);
+      setReader("pending");
+      edited.current = false;
+      const asked = description;
+      fetch("/api/extract", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ description: asked }) })
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error("no answer"))))
+        .then((b: { reader?: string; actions?: ExtractedActionV02[] }) => {
+          if (textNow.current !== asked) return; // the text changed meanwhile
+          if (b.reader === "ai" && Array.isArray(b.actions) && b.actions.length > 0) {
+            if (!edited.current && stepNow.current === 1) setActions(b.actions); // never swap the list after the creator moved on
+            setReader("ai");
+          } else setReader("keywords");
+        })
+        .catch(() => {
+          if (textNow.current === asked) setReader("keywords");
+        });
     }
   }, [step, description, actionsFromText]);
 
@@ -231,8 +254,10 @@ export default function Tokenize() {
     setSpent({ materials: "3000", transport: "1500", food: "1200" });
   }
 
-  const updateAction = (i: number, patch: Partial<ExtractedActionV02>) =>
+  const updateAction = (i: number, patch: Partial<ExtractedActionV02>) => {
+    edited.current = true;
     setActions((xs) => xs.map((a, j) => (j === i ? { ...a, ...patch } : a)));
+  };
 
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ id: string; status: string; impactValue: number } | null>(null);
@@ -372,6 +397,11 @@ export default function Tokenize() {
 
           {step === 1 && (
             <div className="space-y-4">
+              <p className="text-sm text-subtle" role="status">
+                {reader === "pending" && "The AI is reading your text… (a simple keyword reading is shown meanwhile)."}
+                {reader === "ai" && <b>Read by the AI. It can be wrong: check every line.</b>}
+                {reader === "keywords" && <b>The AI did not answer, so this list comes from a simple keyword reader. Check every line carefully.</b>}
+              </p>
               <p className="text-sm text-subtle">
                 Actions found in your text. Correct numbers and units if needed; for planting, add the planted area or
                 density so carbon can be counted. Your corrections are shown to the validator next to the AI reading.
@@ -383,7 +413,10 @@ export default function Tokenize() {
                   <div key={`${a.actionType}-${i}`} className="card p-4">
                     <div className="flex items-center justify-between gap-3">
                       <span className="font-semibold">{actionLabel(a.actionType)}</span>
-                      <button type="button" className="link text-sm" onClick={() => setActions((xs) => xs.filter((_, j) => j !== i))}>
+                      <button type="button" className="link text-sm" onClick={() => {
+                          edited.current = true;
+                          setActions((xs) => xs.filter((_, j) => j !== i));
+                        }}>
                         Remove
                       </button>
                     </div>

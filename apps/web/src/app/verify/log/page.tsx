@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ErrorNote } from "../../../components/ErrorNote";
 import { ValidatorBar, sharedHeaders, useValidatorMe } from "../../../components/ValidatorBar";
+import { actionTitle, describeChange } from "../../../lib/log-format";
 
 type Line = {
   id: string;
@@ -22,8 +23,9 @@ type Line = {
 type Member = { id: string; name: string | null; wallet: string };
 
 const ACTIONS = [
-  "sign_in", "sign_in_refused", "sign_out", "proof_check", "set_proof_level", "set_esm", "approve", "reject", "request_info",
+  "sign_in", "sign_in_refused", "sign_out", "proof_check", "open_impact", "add_note", "set_place_names", "set_proof_level", "set_esm", "approve", "reject", "request_info",
   "partner_create", "partner_pause", "partner_resume", "partner_detach", "validator_add", "validator_remove", "role_change", "first_admin",
+  "withdraw_request", "withdraw_approve", "withdraw_reject", "edition_limit_lift",
 ];
 
 export default function Log() {
@@ -89,7 +91,7 @@ export default function Log() {
             <select className="field !w-auto" value={action} onChange={(e) => setAction(e.target.value)}>
               <option value="">All actions</option>
               {ACTIONS.map((a) => (
-                <option key={a} value={a}>{a.replace(/_/g, " ")}</option>
+                <option key={a} value={a}>{actionTitle(a)}</option>
               ))}
             </select>
             <input className="field !w-auto" placeholder="Impact / object id" value={object} onChange={(e) => setObject(e.target.value)} />
@@ -102,20 +104,15 @@ export default function Log() {
               <div key={l.id} className="card p-4 text-sm">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <div>
-                    <b>{l.action.replace(/_/g, " ")}</b>
+                    <b>{actionTitle(l.action)}</b>
                     {l.result === "failed" && <span className="ml-2 text-danger">failed: {l.error}</span>}
                     <span className="text-muted"> · {l.actorName ?? l.actorWallet ?? "unknown"}</span>
                   </div>
                   <time className="text-subtle">{new Date(l.createdAt).toLocaleString()}</time>
                 </div>
                 {l.objectId && <div className="mt-1 break-all font-mono text-xs text-subtle">{l.objectType} {l.objectId}</div>}
-                {(l.before != null || l.after != null) && (
-                  <div className="mt-1 break-all font-mono text-xs text-muted">
-                    {l.before != null && <>before {JSON.stringify(l.before)} </>}
-                    {l.after != null && <>after {JSON.stringify(l.after)}</>}
-                  </div>
-                )}
-                {l.note && <div className="mt-1 text-muted">Note: {l.note}</div>}
+                {describeChange(l) && <div className="mt-1 break-words text-muted">{describeChange(l)}</div>}
+                {l.note && <div className="mt-1 text-muted">Reason: {l.note}</div>}
               </div>
             ))}
           </div>
