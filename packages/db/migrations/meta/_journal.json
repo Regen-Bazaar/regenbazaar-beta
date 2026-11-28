@@ -57,6 +57,13 @@
       "when": 1795846960662,
       "tag": "0007_revision4_withdraw_edition_limit",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795850045055,
+      "tag": "0008_validator_workspace_r1",
+      "breakpoints": true
     }
   ]
 }

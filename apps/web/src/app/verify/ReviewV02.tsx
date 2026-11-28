@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import type { ReactNode } from "react";
 import type { IVResultV02, ProofFlag, ProofLevel } from "@rb/impact-engine";
 import { COST_CATEGORIES, PROOF_REQUIREMENTS, actionLabel, actionPhrase, costToUsd, labourCheck, type CostDeclaration } from "@rb/impact-engine";
 import { DomainScores } from "../../components/ImpactBadges";
 import { fmt } from "../../lib/impact-view";
+import { aiReadLabel } from "../../lib/review-marks";
 
 type Action = { actionType: string; quantity: number; unit: string; areaHa?: number; survivalRate?: number };
 export type ProofCheck = { url: string; checkedAt: string; sha256?: string; flags: ProofFlag[]; error?: string };
@@ -22,6 +23,7 @@ export type SubmissionV02 = {
     periodEnd?: string;
     aiActions?: Action[];
     submitterEdited?: boolean;
+    aiRead?: string; // which reader produced aiActions: ai | fallback_error | fallback_empty | not_configured
     cost?: CostDeclaration;
   } | null;
   location: { lat: number; lon: number; ecosystem?: string } | null;
@@ -39,41 +41,24 @@ export interface ReviewChoice {
 
 const LEVELS: ProofLevel[] = ["P0", "P1", "P2", "P3", "P4"];
 const ESM_OPTIONS = ["1.0", "1.1", "1.2", "1.3"];
-const SEVERITY: Record<string, string> = { ok: "text-ok", warn: "text-accent", fail: "text-danger" };
 const actionText = (a: Action) => actionPhrase(a, (n) => fmt(n, 2));
 
 export function ReviewV02({
   s,
-  token,
   choice,
   onChoice,
+  evidence,
+  consequence,
 }: {
   s: SubmissionV02;
-  token: string;
   choice: ReviewChoice;
   onChoice: (c: ReviewChoice) => void;
+  evidence: ReactNode; // stored proof pages, automatic checks, place names (Evidence.tsx)
+  consequence: ReactNode; // what each level would make the price, plain text under the level choice
 }) {
-  const [checks, setChecks] = useState<ProofCheck[] | null>(s.proofChecks);
-  const [checking, setChecking] = useState(false);
-  const [checkError, setCheckError] = useState("");
   const iv = s.ivResult;
   const c = s.context ?? {};
-  const links = s.proofLinks ?? [];
   const environment = iv?.domainScores.some((d) => d.domain === "environment");
-
-  async function runCheck() {
-    setChecking(true);
-    setCheckError("");
-    const res = await fetch(`/api/submissions/${s.id}/proof`, {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-admin-token": token },
-      body: "{}",
-    });
-    const body = await res.json().catch(() => ({}));
-    if (res.ok) setChecks(body.proofChecks ?? []);
-    else setCheckError(body.error ?? "check failed");
-    setChecking(false);
-  }
 
   return (
     <div className="mt-5 space-y-5 border-t border-line pt-5">
@@ -114,25 +99,29 @@ export function ReviewV02({
         </div>
       )}
 
-      {c.aiActions && (
-        <div className={`rounded-xl p-4 text-sm ${c.submitterEdited ? "border border-line-strong bg-accent-tint" : "bg-raised"}`}>
-          <b>{c.submitterEdited ? "The creator corrected the AI reading" : "The creator confirmed the AI reading"}</b>
-          <div className="mt-1 grid gap-2 sm:grid-cols-2">
-            <div>
-              <div className="label-mono">AI read</div>
-              {c.aiActions.map((a, i) => (
-                <div key={i}>{actionText(a)}</div>
-              ))}
-            </div>
-            <div>
-              <div className="label-mono">Scored (creator)</div>
-              {(s.extractedActions ?? []).map((a, i) => (
-                <div key={i}>{actionText(a)}</div>
-              ))}
+      {c.aiActions && (() => {
+        const label = aiReadLabel(c.aiRead);
+        const readerName = c.aiRead === "ai" ? "AI reading" : c.aiRead ? "Keyword parser reading" : "Automatic reading";
+        return (
+          <div className={`rounded-xl p-4 text-sm ${c.submitterEdited ? "border border-line-strong bg-accent-tint" : "bg-raised"}`}>
+            <b>{label.title}.</b> <b>{c.submitterEdited ? "The creator then changed the list." : "The creator confirmed the list."}</b>
+            <div className="mt-1 grid gap-2 sm:grid-cols-2">
+              <div>
+                <div className="label-mono">{readerName}</div>
+                {c.aiActions.map((a, i) => (
+                  <div key={i}>{actionText(a)}</div>
+                ))}
+              </div>
+              <div>
+                <div className="label-mono">Scored (the creator&apos;s final list)</div>
+                {(s.extractedActions ?? []).map((a, i) => (
+                  <div key={i}>{actionText(a)}</div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       <dl className="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
         <div>
@@ -193,42 +182,7 @@ export function ReviewV02({
 
       <CostPanel cost={c.cost} country={c.country} />
 
-      <div>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="label-mono">Proof links and AI flags</div>
-          {links.length > 0 && (
-            <button type="button" onClick={runCheck} disabled={checking} className="btn btn-secondary btn-sm">
-              {checking ? "Checking…" : checks ? "Check again" : "Check links"}
-            </button>
-          )}
-        </div>
-        {links.length === 0 && <p className="text-sm text-danger">No proof links: P0, cannot be listed.</p>}
-        {checkError && <p className="text-sm text-danger">{checkError}</p>}
-        <ul className="mt-2 space-y-2 text-sm">
-          {links.map((u) => {
-            const r = checks?.find((x) => x.url === u);
-            return (
-              <li key={u} className="break-all">
-                <a href={u} target="_blank" rel="noopener noreferrer nofollow ugc" className="link">
-                  {u}
-                </a>
-                {r && (
-                  <ul className="mt-1 space-y-0.5 pl-3">
-                    {r.flags.length === 0 && <li className="text-subtle">saved (no text to compare)</li>}
-                    {r.flags.map((f, i) => (
-                      <li key={i} className={SEVERITY[f.severity]}>
-                        {f.severity}: {f.detail}
-                      </li>
-                    ))}
-                    {r.sha256 && <li className="font-mono text-xs text-subtle">snapshot {r.sha256.slice(0, 16)}… · {r.checkedAt.slice(0, 16)}</li>}
-                  </ul>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-        <p className="mt-2 text-xs text-subtle">Flags inform you; they never set the level or the score.</p>
-      </div>
+      {evidence}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -283,6 +237,7 @@ export function ReviewV02({
           </div>
         )}
       </div>
+      {consequence}
     </div>
   );
 }

@@ -21,6 +21,7 @@ import { clientIp, rateLimit } from "../../../lib/rate-limit";
 import { findDuplicates } from "../../../lib/duplicates";
 import { currentNetwork } from "../../../lib/network-server";
 import { esmSuggestionFor } from "../../../lib/esm-layers";
+import { createRunRecorder } from "../../../lib/ai-runs";
 
 export const runtime = "nodejs";
 
@@ -142,8 +143,10 @@ export async function POST(req: Request) {
         .slice(0, MAX_MEDIA)
     : [];
 
-  const verdict = await moderate([`Organisation: ${orgName}`, `Title: ${title}`, description, ...mediaUris, ...proofLinks.value].join("\n"));
+  const recorder = createRunRecorder();
+  const verdict = await moderate([`Organisation: ${orgName}`, `Title: ${title}`, description, ...mediaUris, ...proofLinks.value].join("\n"), { onRun: recorder.onRun });
   if (!verdict.allowed) {
+    await recorder.flush(await getDb(), null);
     return NextResponse.json(
       { error: `submission rejected by content check (${verdict.category}). Please describe real-world impact only.` },
       { status: 422 },
@@ -152,7 +155,7 @@ export async function POST(req: Request) {
 
   const db = await getDb();
   const orgId = payoutWallet ? await findOrCreateOrg(db, orgName, getAddress(payoutWallet)) : await getDemoOrgId(db);
-  const extractor = llmConfigured() ? createDeepSeekExtractor() : undefined;
+  const extractor = llmConfigured() ? createDeepSeekExtractor({ onRun: recorder.onRun }) : undefined;
   // One report, one network: the report is listed only on the network selected when it was submitted.
   const chainId = (await currentNetwork()).chain.id;
 
@@ -175,6 +178,7 @@ export async function POST(req: Request) {
       },
       { extractor },
     );
+    await recorder.flush(db, submission.id);
     return NextResponse.json(
       {
         id: submission.id,
@@ -188,6 +192,7 @@ export async function POST(req: Request) {
       { status: 201 },
     );
   } catch {
+    await recorder.flush(db, null);
     return NextResponse.json({ error: "processing failed" }, { status: 500 });
   }
 }

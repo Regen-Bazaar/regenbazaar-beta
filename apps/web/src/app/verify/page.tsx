@@ -1,121 +1,93 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { DEFAULT_NETWORK_KEY, getNetwork, networkByChainId, type Network } from "../../lib/networks";
-import { FrameworkTag } from "../../components/FrameworkTag";
+import { DEFAULT_NETWORK_KEY, getNetwork, networkByChainId } from "../../lib/networks";
 import { ErrorNote } from "../../components/ErrorNote";
-import { ReviewV02, type ReviewChoice, type SubmissionV02 } from "./ReviewV02";
-import { fmt, headline, impactView } from "../../lib/impact-view";
-import { bpsToPercent } from "../../lib/partner-share";
-import { ValidatorBar, useValidatorMe } from "../../components/ValidatorBar";
+import { ValidatorBar, sharedHeaders, useValidatorMe } from "../../components/ValidatorBar";
+import { headline, impactView, fmt } from "../../lib/impact-view";
+import { historyText, usd, type CreatorHistorySummary, type Mark } from "../../lib/review-marks";
+import { actionTitle } from "../../lib/log-format";
 
-type Submission = {
+type Row = {
   id: string;
   title: string;
-  description: string;
-  domain: string | null;
-  ivValue: string | null;
+  createdAt: string;
+  status: string;
   chainId: number | null;
-  frameworkTags: { sdg: string[]; ebf: string[] } | null;
-  extractedActions: { actionType: string; quantity: number; unit: string }[] | null;
-  possibleDuplicates?: { id: string; title: string; status: string; reason: string }[];
-  mediaUris: string[] | null;
-  context: { regionCode?: string; periodStart?: string; periodEnd?: string } | null;
-  org: { name: string; wallet: string; verified: boolean } | null;
+  domain: string | null;
   methodologyVersion: string | null;
   domainScores: unknown;
+  ivValue: string | null;
   tablesVersion: string | null;
-} & Omit<SubmissionV02, "id" | "extractedActions" | "context">;
-
-type Approved = {
-  sub: Submission;
-  net: Network | undefined;
-  tokenId?: string;
-  easUid?: string;
-  attestTx?: string;
-  existing?: boolean;
+  proofLevel: string | null;
+  org: { name: string; wallet: string; verified: boolean } | null;
+  history: CreatorHistorySummary;
+  marks: Mark[];
+  priceFromUsd: number | null;
+  priceToUsd: number | null;
+  openedBy: string | null;
+  openedAt: string | null;
+  proofStatus: string;
+  decision: { decision: string; at: string; by: string | null } | null;
 };
 
-type PartnerOption = { id: string; name: string; feeBps: number; active: boolean };
+type Tab = "waiting" | "decided";
+type Sort = "oldest" | "newest" | "value";
 
-const netOf = (s: Submission) => (s.chainId == null ? getNetwork(DEFAULT_NETWORK_KEY) : networkByChainId(s.chainId));
-const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+const netName = (chainId: number | null) => (chainId == null ? getNetwork(DEFAULT_NETWORK_KEY) : networkByChainId(chainId))?.chain.name ?? `chain ${chainId}`;
+function ageText(iso: string, now = Date.now()): string {
+  const h = Math.max(0, Math.floor((now - new Date(iso).getTime()) / 3_600_000));
+  if (h < 1) return "under an hour";
+  if (h < 48) return `${h} h`;
+  return `${Math.floor(h / 24)} days`;
+}
+const date = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
 export default function Verify() {
-  const [subs, setSubs] = useState<Submission[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [notes, setNotes] = useState<Record<string, string>>({});
-  const [token, setToken] = useState("");
-  const [denied, setDenied] = useState(false);
-  const [error, setError] = useState("");
-  const [approved, setApproved] = useState<Approved[]>([]);
-  const [choices, setChoices] = useState<Record<string, ReviewChoice>>({});
-  const [partnerList, setPartnerList] = useState<PartnerOption[]>([]);
-  const [partnerOf, setPartnerOf] = useState<Record<string, string>>({});
   const me = useValidatorMe();
-
-  useEffect(() => {
-    try {
-      setToken(sessionStorage.getItem("rb_admin_token") ?? "");
-    } catch {}
-  }, []);
+  const [tab, setTab] = useState<Tab>("waiting");
+  const [scope, setScope] = useState<"all" | "mine">("all");
+  const [sort, setSort] = useState<Sort>("oldest");
+  const [rows, setRows] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<number | null>(null);
+  const [error, setError] = useState("");
+  const [unlockTick, setUnlockTick] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/submissions?status=pending_verification", { headers: { "x-admin-token": token } });
-    setDenied(res.status === 401);
-    setSubs(res.ok ? await res.json() : []);
-    if (res.ok) {
-      const pr = await fetch("/api/partners", { headers: { "x-admin-token": token } });
-      setPartnerList(pr.ok ? ((await pr.json()) as PartnerOption[]).filter((p) => p.active) : []);
+    setError("");
+    try {
+      const res = await fetch(`/api/review/queue?tab=${tab}&scope=${scope}`, { headers: sharedHeaders() });
+      setStatus(res.status);
+      if (res.ok) setRows(((await res.json()) as { rows: Row[] }).rows);
+      else setRows([]);
+    } catch {
+      setError("Could not load the list.");
     }
     setLoading(false);
-  }, [token]);
-
+  }, [tab, scope, unlockTick]);
   useEffect(() => {
     void load();
   }, [load]);
 
-  async function decide(id: string, decision: "approve" | "reject" | "request_info") {
-    setBusy(id);
-    setError("");
-    const c = choices[id];
-    const res = await fetch("/api/verifications", {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-admin-token": token },
-      body: JSON.stringify({
-        submissionId: id,
-        decision,
-        note: notes[id]?.trim() || undefined,
-        proofLevel: c?.proofLevel || undefined,
-        esm: c?.esm ? Number(c.esm) : undefined,
-        partnerId: decision === "approve" && partnerOf[id] ? partnerOf[id] : undefined,
-      }),
-    });
-    const body = await res.json().catch(() => ({}));
-    if (!res.ok) setError(body.error ?? "failed");
-    else if (decision === "approve") {
-      const sub = subs.find((x) => x.id === id)!;
-      const l = body.listings?.[0] ?? {};
-      setApproved((a) => [{ sub, net: netOf(sub), tokenId: l.tokenId, easUid: l.easUid, attestTx: l.attestTx, existing: l.existing }, ...a]);
-    }
-    setBusy(null);
-    await load();
-  }
+  const sorted = useMemo(() => {
+    const r = [...rows];
+    if (tab === "decided") return r;
+    if (sort === "newest") r.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+    else if (sort === "value") r.sort((a, b) => Number(b.ivValue ?? 0) - Number(a.ivValue ?? 0));
+    else r.sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt));
+    return r;
+  }, [rows, sort, tab]);
 
+  const denied = status === 401;
   return (
     <main className="page-wrap py-10 md:py-14">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="text-[clamp(2.5rem,4vw,3.5rem)]">Verification queue</h1>
-        <Link href="/verify/partners" className="btn btn-secondary btn-sm">
-          Partners
-        </Link>
-      </div>
+      <h1 className="text-[clamp(2.5rem,4vw,3.5rem)]">Verification queue</h1>
       <p className="mt-3 max-w-[70ch] text-lg text-muted">
-        Validator review by the Regen Bazaar team. Approving attests the claim on-chain and lists it in the
-        Marketplace of the one network it was submitted on. Submitted a report? It will appear in the Marketplace once reviewed.
+        Validator review by the Regen Bazaar team. Open an impact to read the claim, the creator, the proof and what to look at. Approving attests the claim
+        on-chain and lists it in the Marketplace of the one network it was submitted on.
       </p>
 
       <ValidatorBar me={me} current="queue" />
@@ -128,219 +100,103 @@ export default function Verify() {
             try {
               sessionStorage.setItem("rb_admin_token", t);
             } catch {}
-            setToken(t);
+            setUnlockTick((n) => n + 1);
           }}
         >
-          <input
-            name="token"
-            type="password"
-            placeholder="Validator access code"
-            className="field min-w-0 flex-1"
-          />
+          <input name="token" type="password" placeholder="Validator access code" className="field min-w-0 flex-1" />
           <button className="btn btn-secondary btn-sm">Unlock</button>
         </form>
       )}
-      {denied && me.mode === "shared" && token && <p className="mt-2 text-sm text-danger">Wrong access code.</p>}
       {error && <ErrorNote text={error} className="mt-4 text-danger" />}
 
-      {approved.map((a) => {
-        const explorer = a.net?.chain.blockExplorers?.default.url ?? "";
-        return (
-          <div key={a.sub.id} className="card mt-6 border-ok/40 bg-ok-tint p-6">
-            <div className="label-mono !text-ok">Approved{a.existing ? " (already listed)" : ""}</div>
-            <div className="mt-1 text-xl font-semibold leading-snug">{a.sub.title}</div>
-            <p className="mt-1 text-muted">
-              Attested on-chain and listed on <b>{a.net?.chain.name ?? "its network"}</b>
-              {a.tokenId && <> as tRWI #{a.tokenId}</>}, 100 editions.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Link href={`/submission/${a.sub.id}`} className="btn btn-primary btn-sm">
-                View listing
-              </Link>
-              {a.attestTx && explorer && (
-                <a href={`${explorer}/tx/${a.attestTx}`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
-                  Attestation transaction ↗
-                </a>
-              )}
-            </div>
-            {a.easUid && <div className="mt-3 break-all font-mono text-xs text-subtle">EAS UID {a.easUid}</div>}
+      {!denied && (
+        <>
+          <div className="mt-8 flex flex-wrap items-center gap-2 text-sm">
+            <button className={`btn btn-sm ${tab === "waiting" ? "btn-primary" : "btn-secondary"}`} onClick={() => setTab("waiting")}>
+              Waiting{tab === "waiting" && !loading ? ` (${rows.length})` : ""}
+            </button>
+            <button className={`btn btn-sm ${tab === "decided" ? "btn-primary" : "btn-secondary"}`} onClick={() => setTab("decided")}>
+              Decided{tab === "decided" && !loading ? ` (${rows.length})` : ""}
+            </button>
+            {tab === "decided" && (
+              <select className="field !w-auto" value={scope} onChange={(e) => setScope(e.target.value as "all" | "mine")} aria-label="Whose decisions">
+                <option value="all">All decisions</option>
+                <option value="mine">My decisions</option>
+              </select>
+            )}
+            {tab === "waiting" && (
+              <select className="field !w-auto" value={sort} onChange={(e) => setSort(e.target.value as Sort)} aria-label="Sort">
+                <option value="oldest">Oldest first</option>
+                <option value="newest">Newest first</option>
+                <option value="value">Largest first</option>
+              </select>
+            )}
           </div>
-        );
-      })}
 
-      {denied ? null : loading ? (
-        <p className="mt-10 text-muted">Loading…</p>
-      ) : subs.length === 0 && approved.length > 0 ? null : subs.length === 0 ? (
-        <p className="card mt-10 p-8 text-muted">Nothing pending. Submit one from the tokenize wizard.</p>
-      ) : (
-        <div className="mt-10 grid gap-5 2xl:grid-cols-2">
-          {subs.map((s) => (
-            <div key={s.id} className="card p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <div className="text-xl font-semibold leading-snug">{s.title}</div>
-                  <div className="mt-1 text-sm text-accent">
-                    Lists on {netOf(s)?.chain.name ?? `chain ${s.chainId}`}
-                  </div>
-                  <div className="mt-2 text-muted">{s.description}</div>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {s.frameworkTags?.sdg.map((t) => (
-                      <FrameworkTag key={t} kind="sdg" value={t} />
-                    ))}
-                    {s.frameworkTags?.ebf.map((t) => (
-                      <FrameworkTag key={t} kind="ebf" value={t} />
-                    ))}
-                  </div>
-                  <div className="mt-3 font-mono text-sm text-subtle">
-                    {(s.extractedActions ?? []).map((a) => `${a.quantity} ${a.unit}`).join(" · ")}
-                  </div>
-                </div>
-                <div className="shrink-0 text-right">
-                  {(() => {
-                    const v = impactView(s);
-                    const h = headline(v);
-                    return (
-                      <>
-                        <div className="label-mono">{h.label}</div>
-                        <div className="font-display text-3xl text-accent">{h.value}</div>
-                        <div className="text-xs text-subtle">{h.sub}</div>
-                        {v.version === "v0.2" && <div className="text-xs text-subtle">IV {fmt(v.iv)} · v0.2</div>}
-                      </>
-                    );
-                  })()}
-                </div>
-              </div>
-              <dl className="mt-4 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
-                <div>
-                  <dt className="inline text-subtle">Organisation: </dt>
-                  <dd className="inline">
-                    {s.org?.name ?? "unknown"}
-                    {s.org && !s.org.verified && <span className="text-subtle"> (not verified)</span>}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="inline text-subtle">Payout wallet: </dt>
-                  <dd className="inline font-mono">
-                    {s.org?.wallet ? (
-                      <a
-                        href={`${netOf(s)?.chain.blockExplorers?.default.url ?? ""}/address/${s.org.wallet}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="link"
-                        title={s.org.wallet}
-                      >
-                        {short(s.org.wallet)}
-                      </a>
-                    ) : (
-                      "none"
-                    )}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="inline text-subtle">Period: </dt>
-                  <dd className="inline">
-                    {s.context?.periodStart ?? "?"} to {s.context?.periodEnd ?? "?"}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="inline text-subtle">Region: </dt>
-                  <dd className="inline">{s.context?.regionCode?.replace(/_/g, " ") ?? "not given"}</dd>
-                </div>
-              </dl>
-              <div className="mt-3 text-sm">
-                <span className="text-subtle">Evidence: </span>
-                {(s.mediaUris ?? []).length === 0 ? (
-                  <span className="text-danger">none attached</span>
-                ) : (
-                  (s.mediaUris ?? []).map((u, i) => (
-                    <span key={u}>
-                      {i > 0 && " · "}
-                      <a href={u} target="_blank" rel="noopener noreferrer nofollow ugc" className="link">
-                        link {i + 1}
-                      </a>
-                    </span>
-                  ))
-                )}
-                {" · "}
-                <a href={`/submission/${s.id}`} target="_blank" rel="noopener noreferrer" className="link">
-                  Open full report ↗
-                </a>
-              </div>
-              {(s.possibleDuplicates ?? []).length > 0 && (
-                <div className="mt-4 rounded-xl border border-line-strong bg-accent-tint p-4 text-sm text-muted">
-                  <b className="text-accent">Possible duplicate: check before approving.</b>
-                  <ul className="mt-1 space-y-0.5">
-                    {s.possibleDuplicates!.map((d) => (
-                      <li key={d.id}>
-                        <a href={`/submission/${d.id}`} target="_blank" rel="noopener noreferrer" className="link">
-                          {d.title}
-                        </a>{" "}
-                        ({d.status.replace(/_/g, " ")}): {d.reason}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {s.methodologyVersion === "v0.2" && (
-                <ReviewV02
-                  s={s as unknown as SubmissionV02}
-                  token={token}
-                  choice={choices[s.id] ?? { proofLevel: "", esm: "" }}
-                  onChoice={(c) => setChoices((m) => ({ ...m, [s.id]: c }))}
-                />
-              )}
-              {partnerList.length > 0 && (
-                <label className="mt-5 block text-sm">
-                  <span className="text-subtle">Partner (optional): receives its share of every sale of this lot</span>
-                  <select
-                    value={partnerOf[s.id] ?? ""}
-                    onChange={(e) => setPartnerOf((m) => ({ ...m, [s.id]: e.target.value }))}
-                    className="field mt-1"
-                  >
-                    <option value="">No partner</option>
-                    {partnerList.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} · {bpsToPercent(p.feeBps)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-              <textarea
-                value={notes[s.id] ?? ""}
-                onChange={(e) => setNotes((n) => ({ ...n, [s.id]: e.target.value }))}
-                rows={2}
-                placeholder="Optional note / reason (required-by-convention for rejections)"
-                className="field mt-5"
-              />
-              <div className="mt-4 flex flex-wrap gap-3">
-                <button
-                  onClick={() => decide(s.id, "approve")}
-                  disabled={busy === s.id}
-                  className="btn btn-sm bg-green text-paper hover:bg-green-soft disabled:opacity-50"
-                >
-                  {busy === s.id ? "Attesting on-chain…" : "Approve & attest"}
-                </button>
-                {s.methodologyVersion === "v0.2" && (
-                  <button
-                    onClick={() => decide(s.id, "request_info")}
-                    disabled={busy === s.id}
-                    className="btn btn-secondary btn-sm"
-                  >
-                    Request more proof
-                  </button>
-                )}
-                <button
-                  onClick={() => decide(s.id, "reject")}
-                  disabled={busy === s.id}
-                  className="btn btn-sm border-danger/40 text-danger hover:border-danger"
-                >
-                  Reject
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+          {loading ? (
+            <p className="mt-8 text-muted">Loading…</p>
+          ) : sorted.length === 0 ? (
+            <p className="card mt-8 p-8 text-muted">{tab === "waiting" ? "Nothing waiting. New impacts appear here when a creator submits them." : "No decisions in this list yet."}</p>
+          ) : (
+            <ul className="mt-6 grid gap-3">
+              {sorted.map((r) => {
+                const v = impactView(r);
+                const h = headline(v);
+                return (
+                  <li key={r.id}>
+                    <Link href={`/verify/${r.id}`} className="card block p-5 hover:border-line-strong">
+                      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
+                        <div className="min-w-0 flex-1 basis-[22rem]">
+                          <div className="text-lg font-semibold leading-snug">{r.title}</div>
+                          <div className="mt-1 text-sm text-muted">
+                            {r.org?.name ?? "unknown creator"}
+                            {r.org && !r.org.verified ? " (not verified)" : ""} · {historyText(r.history)}
+                          </div>
+                          <div className="mt-1 text-xs text-subtle">
+                            {netName(r.chainId)}
+                            {r.domain ? ` · ${r.domain.replace(/_/g, " ")}` : ""} · submitted {date(r.createdAt)}
+                            {tab === "waiting" ? ` (${ageText(r.createdAt)} ago)` : ""}
+                          </div>
+                        </div>
+                        <div className="text-right text-sm">
+                          <div className="label-mono">{h.label}</div>
+                          <div className="font-display text-2xl text-accent">{h.value}</div>
+                          {r.priceFromUsd !== null && r.priceToUsd !== null && (
+                            <div className="text-xs text-subtle">
+                              price {usd(r.priceFromUsd)} to {usd(r.priceToUsd)} (P1 to P4)
+                            </div>
+                          )}
+                          {v.version === "v0.1" && <div className="text-xs text-subtle">methodology v0.1</div>}
+                        </div>
+                      </div>
+                      {tab === "waiting" ? (
+                        <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+                          {r.marks.length === 0 ? <span className="text-subtle">Nothing flagged by the rules</span> : null}
+                          {r.marks.map((m) => (
+                            <span key={m.code} className="rounded-full border border-line bg-raised px-2.5 py-0.5 text-muted">
+                              {m.text}
+                            </span>
+                          ))}
+                          <span className="ml-auto text-subtle">
+                            {r.openedBy ? `Opened by ${r.openedBy}${r.openedAt ? `, ${ageText(r.openedAt)} ago` : ""}` : "Not opened yet"}
+                            {r.proofStatus === "running" ? " · checks running" : ""}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="mt-3 text-sm text-muted">
+                          <b>{r.decision ? actionTitle(r.decision.decision) : r.status.replace(/_/g, " ")}</b>
+                          {r.decision?.by ? ` by ${r.decision.by}` : " by the shared access code"}
+                          {r.decision ? ` · ${date(r.decision.at)}` : ""}
+                          {r.proofLevel ? ` · proof ${r.proofLevel}` : ""} · {fmt(Number(r.ivValue ?? 0))} IV · status {r.status.replace(/_/g, " ")}
+                        </div>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </>
       )}
     </main>
   );

@@ -54,6 +54,8 @@ export function createDeepSeekExtractor(opts: DeepSeekExtractorOptions = {}): LL
     async extract(text: string): Promise<ExtractedAction[]> {
       const parsed = (await callStructured(
         {
+          job: "extract_actions",
+          instructionVersion: "extract-v1",
           system: SYSTEM,
           // Neutralise any closing tag inside the report so it cannot break out of the data wrapper.
           user: `<ngo_report>\n${text.replace(/<\/?ngo_report/gi, "")}\n</ngo_report>`,
@@ -95,6 +97,8 @@ export function createDeepSeekFactExtractor(opts: DeepSeekExtractorOptions = {})
     async extractFacts(text: string): Promise<unknown> {
       return callStructured(
         {
+          job: "page_facts",
+          instructionVersion: "facts-v1",
           system: FACTS_SYSTEM,
           user: `<proof_page>\n${text.replace(/<\/?proof_page/gi, "")}\n</proof_page>`,
           name: "list_page_facts",

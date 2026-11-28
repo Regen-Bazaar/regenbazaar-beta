@@ -223,7 +223,7 @@ test("no session: every guarded entry point refuses; the old x-admin-token heade
       ["GET submissions", await submissionsRoute.GET(req("/api/submissions?status=pending_verification", { headers }))],
       ["GET metadata", await metadataRoute.GET(req(`/api/submissions/${subId}/metadata`, { headers }), params(subId))],
       ["POST proof", await proofRoute.POST(req(`/api/submissions/${subId}/proof`, { method: "POST", headers, body: {} }), params(subId))],
-      ["POST verifications", await verificationsRoute.POST(req("/api/verifications", { method: "POST", headers, body: { submissionId: subId, decision: "reject" } }))],
+      ["POST verifications", await verificationsRoute.POST(req("/api/verifications", { method: "POST", headers, body: { submissionId: subId, decision: "reject", note: "does not match the evidence" } }))],
       ["GET partners", await partnersRoute.GET(req("/api/partners", { headers }))],
       ["POST partners", await partnersRoute.POST(req("/api/partners", { method: "POST", headers, body: { name: "P", payoutAddress: "0x" + "1".repeat(40), feeBps: 100 } }))],
       ["PATCH partner", await partnerRoute.PATCH(req(`/api/partners/${ZERO_UUID}`, { method: "PATCH", headers, body: { active: false } }), params(ZERO_UUID))],
@@ -252,9 +252,9 @@ test("a session cookie is not accepted on a changing request from another site",
   const v = await addUser("validator");
   const cookie = await signIn(v);
   const subId = await pendingSubmission();
-  const res = await verificationsRoute.POST(req("/api/verifications", { method: "POST", cookie, origin: "https://evil.example", body: { submissionId: subId, decision: "reject" } }));
+  const res = await verificationsRoute.POST(req("/api/verifications", { method: "POST", cookie, origin: "https://evil.example", body: { submissionId: subId, decision: "reject", note: "does not match the evidence" } }));
   assert.equal(res.status, 401);
-  const noOrigin = await verificationsRoute.POST(req("/api/verifications", { method: "POST", cookie, origin: null, body: { submissionId: subId, decision: "reject" } }));
+  const noOrigin = await verificationsRoute.POST(req("/api/verifications", { method: "POST", cookie, origin: null, body: { submissionId: subId, decision: "reject", note: "does not match the evidence" } }));
   assert.equal(noOrigin.status, 401);
 });
 
@@ -329,7 +329,7 @@ test("removed validator: next request to every guarded entry point is refused, a
     ["queue", await submissionsRoute.GET(req("/api/submissions?status=pending_verification", { cookie: vc }))],
     ["metadata", await metadataRoute.GET(req(`/api/submissions/${subId}/metadata`, { cookie: vc }), params(subId))],
     ["proof", await proofRoute.POST(req(`/api/submissions/${subId}/proof`, { method: "POST", cookie: vc, body: {} }), params(subId))],
-    ["verifications", await verificationsRoute.POST(req("/api/verifications", { method: "POST", cookie: vc, body: { submissionId: subId, decision: "reject" } }))],
+    ["verifications", await verificationsRoute.POST(req("/api/verifications", { method: "POST", cookie: vc, body: { submissionId: subId, decision: "reject", note: "does not match the evidence" } }))],
     ["partners", await partnersRoute.GET(req("/api/partners", { cookie: vc }))],
     ["log", await logRoute.GET(req("/api/action-log", { cookie: vc }))],
   ];
@@ -451,7 +451,7 @@ test("action log: a v0.2 review logs proof level and ESM with before and after",
     .insert(schema.impactSubmissions)
     .values({ orgId: await getDemoOrgId(db), title: "v02", description: "x", status: "pending_verification", ivValue: "100", methodologyVersion: "v0.2", extractedActions: [], context: {} })
     .returning();
-  const res = await verificationsRoute.POST(req("/api/verifications", { method: "POST", cookie: vc, body: { submissionId: s.id, decision: "request_info", proofLevel: "P1", esm: 1.1 } }));
+  const res = await verificationsRoute.POST(req("/api/verifications", { method: "POST", cookie: vc, body: { submissionId: s.id, decision: "request_info", note: "please add a dated photo", proofLevel: "P1", esm: 1.1 } }));
   assert.equal(res.status, 200);
   const pl = await logLines("set_proof_level");
   assert.equal(pl.length, 1);
@@ -511,7 +511,7 @@ test("switch: default is the old shared code; personal sign-in is off and a cook
     assert.equal(((await (await meRoute.GET(req("/api/auth/me"))).json()) as { mode: string }).mode, "shared");
     // shared access still works for a decision and the log line says so
     const subId = await pendingSubmission();
-    const r = await verificationsRoute.POST(req("/api/verifications", { method: "POST", headers: { "x-admin-token": process.env.ADMIN_TOKEN! }, body: { submissionId: subId, decision: "reject" } }));
+    const r = await verificationsRoute.POST(req("/api/verifications", { method: "POST", headers: { "x-admin-token": process.env.ADMIN_TOKEN! }, body: { submissionId: subId, decision: "reject", note: "does not match the evidence" } }));
     assert.equal(r.status, 200);
     const [line] = await logLines("reject");
     assert.equal(line.actorName, "shared access code");

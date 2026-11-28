@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { verifications, impactSubmissions, organizations, listings, partners } from "@rb/db/schema";
+import { verifications, impactSubmissions, organizations, listings, partners, proofPages, reviewNotes } from "@rb/db/schema";
 import { buildTokenMetadata, renderImpactCard } from "@rb/pipeline";
 import {
   clampEsm,
@@ -33,6 +33,8 @@ import { siteUrl } from "../../../lib/site";
 export const runtime = "nodejs";
 
 const MAX_EDITIONS = 100;
+const MIN_REASON_CHARS = 5;
+const MAX_REASON_CHARS = 2000;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type Hex = `0x${string}`;
@@ -193,6 +195,15 @@ export async function POST(req: Request) {
   const db = await getDb();
   const [target] = await db.select().from(impactSubmissions).where(eq(impactSubmissions.id, submissionId)).limit(1);
   if (!target) return NextResponse.json({ error: "submission not found" }, { status: 404 });
+  // The public reason (shown on the impact page to the creator and buyers): required for a rejection and for a request.
+  // Internal notes are a separate field (internalNote) and are never public.
+  const note = typeof body.note === "string" ? body.note.trim() : "";
+  if (note.length > MAX_REASON_CHARS) return NextResponse.json({ error: `the reason is limited to ${MAX_REASON_CHARS} characters` }, { status: 422 });
+  if ((decision === "reject" || decision === "request_info") && note.length < MIN_REASON_CHARS) {
+    return NextResponse.json({ error: "a public reason is required to reject or to request more proof (the creator and buyers will read it)" }, { status: 422 });
+  }
+  const internalNote = typeof body.internalNote === "string" ? body.internalNote.trim() : "";
+  if (internalNote.length > 4000) return NextResponse.json({ error: "an internal note is limited to 4000 characters" }, { status: 422 });
   const isV02 = target.methodologyVersion === "v0.2";
   if (decision === "approve" && isV02 && !isListable(proofLevel ?? parseProofLevel(target.proofLevel))) {
     return NextResponse.json({ error: "set a proof level P1–P4 before approving (P0 is not listed)" }, { status: 422 });
@@ -267,13 +278,25 @@ export async function POST(req: Request) {
     }
     partnerId = p.id;
   }
-  const note = typeof body.note === "string" ? body.note : null;
-  await db.insert(verifications).values({ submissionId, validatorId: actor.userId, decision, note });
+  await db.insert(verifications).values({ submissionId, validatorId: actor.userId, decision, note: note || null });
+  if (internalNote) {
+    const [n] = await db
+      .insert(reviewNotes)
+      .values({ submissionId, authorId: actor.userId, authorName: actor.name ?? (actor.via === "shared" ? "shared access code" : null), authorWallet: actor.wallet, body: internalNote })
+      .returning({ id: reviewNotes.id });
+    await logAction(db, actor, { action: "add_note", objectType: "impact", objectId: submissionId, after: { noteId: n.id, characters: internalNote.length } });
+  }
   const logDecision = (extra: { after?: unknown; error?: string }) =>
-    logAction(db, actor, { action: decision, objectType: "impact", objectId: submissionId, before: { status: target.status }, note, ...extra });
+    logAction(db, actor, { action: decision, objectType: "impact", objectId: submissionId, before: { status: target.status }, note: note || null, ...extra });
 
   if (decision === "reject") {
     await db.update(impactSubmissions).set({ status: "rejected", updatedAt: new Date() }).where(eq(impactSubmissions.id, submissionId));
+    // Stored proof page text is deleted when an impact is rejected (the fingerprint and the result stay).
+    try {
+      await db.update(proofPages).set({ pageText: null, facts: null }).where(eq(proofPages.submissionId, submissionId));
+    } catch (e) {
+      console.error("proof text cleanup failed", e instanceof Error ? e.message : e);
+    }
     await logDecision({ after: { status: "rejected" } });
     return NextResponse.json({ ok: true, status: "rejected" });
   }
