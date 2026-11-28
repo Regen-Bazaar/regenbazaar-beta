@@ -23,7 +23,8 @@ type Tags = { sdg: string[]; ebf: string[] } | null;
 type Search = { domain?: string; sdg?: string; ebf?: string; q?: string; proof?: string; sort?: string };
 const PROOF_FILTERS = ["P1", "P2", "P3", "P4"];
 const SORTS = [
-  ["", "Impact Value"],
+  ["", "Newest"],
+  ["iv", "Impact Value"],
   ["score", "Domain score"],
   ["price", "Price per edition"],
   ["value", "IV per $100"],
@@ -47,7 +48,7 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
       .from(impactSubmissions)
       .innerJoin(organizations, eq(impactSubmissions.orgId, organizations.id))
       .where(inArray(impactSubmissions.status, ["verified", "tokenized"]))
-      .orderBy(desc(impactSubmissions.ivValue))
+      .orderBy(desc(impactSubmissions.createdAt))
       .limit(120)
   ).map((r) => ({ ...r.s, orgName: r.orgName }));
 
@@ -103,7 +104,9 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
     const usd = Number(listingBySubmission.get(r.id)?.priceUsd ?? 0);
     return usd > 0 ? (Number(r.ivValue ?? 0) / usd) * 100 : -1;
   };
-  if (sp.sort === "value") {
+  if (sp.sort === "iv") {
+    rows.sort((a, b) => Number(b.ivValue ?? 0) - Number(a.ivValue ?? 0));
+  } else if (sp.sort === "value") {
     rows.sort((a, b) => ivPer100(b) - ivPer100(a));
   } else if (sp.sort === "score") {
     rows.sort((a, b) => (impactView(b).primary?.score ?? 0) - (impactView(a).primary?.score ?? 0));
@@ -158,7 +161,7 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
               <h2 className="label-mono mb-2.5">Sort by</h2>
               <div className="flex flex-wrap gap-2">
                 {SORTS.map(([v, label]) => (
-                  <Chip key={v || "iv"} label={label} on={(sp.sort ?? "") === v} href={hrefWith(sp, { sort: v })} />
+                  <Chip key={v || "newest"} label={label} on={(sp.sort ?? "") === v} href={hrefWith(sp, { sort: v })} />
                 ))}
               </div>
             </div>
