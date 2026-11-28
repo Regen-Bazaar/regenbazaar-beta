@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { and, desc, eq } from "drizzle-orm";
 import { impactSubmissions, listings, partners, verifications } from "@rb/db/schema";
 import { currentNetwork } from "../../../lib/network-server";
-import { networkByChainId, tokenInstanceUrl } from "../../../lib/networks";
+import { listingPriceUnit, networkByChainId, tokenInstanceUrl } from "../../../lib/networks";
 import { getDb } from "../../../lib/db";
 import { BuyButton } from "../../../components/BuyButton";
 import { SaleSplit } from "../../../components/SaleSplit";
@@ -308,8 +308,8 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="label-mono">Per edition</span>
                       <span className="text-xl font-semibold">
-                        {Number(formatUnits(BigInt(listing.pricePerEdition), NETWORK.saleCurrency.decimals)).toLocaleString("en-US", { maximumFractionDigits: 6 })}{" "}
-                        <span className="text-base font-normal text-muted">{NETWORK.saleCurrency.symbol}</span>
+                        {Number(formatUnits(BigInt(listing.pricePerEdition), listingPriceUnit(NETWORK, listing.contractGeneration).decimals)).toLocaleString("en-US", { maximumFractionDigits: 6 })}{" "}
+                        <span className="text-base font-normal text-muted">{listingPriceUnit(NETWORK, listing.contractGeneration).symbol}</span>
                       </span>
                     </div>
                     <SaleSplit partner={partner ?? null} />

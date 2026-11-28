@@ -31,6 +31,31 @@ export function usdPerUnit(_currency: SaleCurrency): number {
   return 1;
 }
 
+/** Revision 4 listings store the price per edition in USD with this many decimals, independent of the coin. */
+export const USD_PRICE_DECIMALS = 6;
+
+/** Coins a buyer may pay with on this network: the revision 4 list, else today's single sale currency. */
+export function buyerCurrencies(net: Pick<Network, "primarySaleVersion" | "saleCurrency" | "saleCurrencies">): SaleCurrency[] {
+  return net.primarySaleVersion === 3 ? (net.saleCurrencies ?? []) : [net.saleCurrency];
+}
+
+/** The listed coin with this address (case-insensitive), or undefined when it is not accepted here. */
+export function findBuyerCurrency(net: Pick<Network, "primarySaleVersion" | "saleCurrency" | "saleCurrencies">, address: string): SaleCurrency | undefined {
+  const a = address.toLowerCase();
+  return buyerCurrencies(net).find((c) => c.address.toLowerCase() === a);
+}
+
+/** Exact conversion of a USD amount (USD_PRICE_DECIMALS) into a stablecoin's own units. Refuses coins with fewer decimals. */
+export function usdToTokenUnits(usd: bigint, c: Pick<SaleCurrency, "decimals">): bigint {
+  if (!Number.isInteger(c.decimals) || c.decimals < USD_PRICE_DECIMALS) throw new Error(`a coin with ${c.decimals} decimals cannot hold a USD price exactly`);
+  return usd * 10n ** BigInt(c.decimals - USD_PRICE_DECIMALS);
+}
+
+/** Unit a listing's stored pricePerEdition is in: USD for revision 4 listings, else the network's sale currency. */
+export function listingPriceUnit(net: Network, contractGeneration: number): { decimals: number; symbol: string } {
+  return contractGeneration === 4 ? { decimals: USD_PRICE_DECIMALS, symbol: "USD" } : { decimals: net.saleCurrency.decimals, symbol: net.saleCurrency.symbol };
+}
+
 export interface Network {
   key: NetworkKey;
   chain: Chain;
@@ -38,11 +63,18 @@ export interface Network {
   eas: Hex;
   schemaUID: Hex;
   primarySale: Hex;
-  // RegenPrimarySale voucher version at `primarySale`: 1 = no partner share, 2 = partner share (EIP-712 domain "2").
-  // Flip to 2 together with the v2 address after the redeploy (docs/AUDIT.md, 2026-09-27).
-  primarySaleVersion: 1 | 2;
+  // RegenPrimarySale voucher version at `primarySale`: 1 = no partner share, 2 = partner share (EIP-712 domain "2"),
+  // 3 = contract revision 4 (RegenPrimarySaleV3 + TRWIV4 + ImpactClaim v2 attestation, stablecoins only).
+  // Flip to 3 only together with the revision 4 addresses (primarySale, trwi, schemaUID, marketplace) after the
+  // owner's yes; every network stays on 2 until then.
+  primarySaleVersion: 1 | 2 | 3;
+  // Revision 4 resale marketplace (RegenMarketplaceV2); unset before the switch.
+  marketplace?: Hex;
   trwi: Hex;
   saleCurrency: SaleCurrency;
+  // Revision 4 (primarySaleVersion 3) only: every stablecoin the buyer may choose at purchase (owner decision
+  // 28.11.2026). Listings then carry a USD price, converted per coin. Unused while the network is on 2.
+  saleCurrencies?: SaleCurrency[];
   // Token ids already used on-chain outside the app (scripts); the app's next tokenId starts above this.
   tokenIdFloor?: number;
 }
@@ -68,6 +100,12 @@ function celoSepolia(): Network {
     primarySaleVersion: 2,
     trwi: "0xA1A10570534681606eF67Bc8DDeda6061Dd8a8f0",
     saleCurrency: { address: NATIVE, symbol: "CELO", decimals: 18 },
+    // Revision 4 (owner decision 28.11.2026): Circle USDC (developers.circle.com/stablecoins/usdc-contract-addresses)
+    // and Celo's dollar USDm (docs.mento.org/mento-v3/build/deployments/addresses, docs.celo.org token contracts).
+    saleCurrencies: [
+      { address: "0x01C5C0122039549AD1493B8220cABEdD739BC44E", symbol: "USDC", decimals: 6 },
+      { address: "0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b", symbol: "USDm (Celo dollar)", decimals: 18 },
+    ],
   };
 }
 
@@ -98,6 +136,8 @@ function arbitrumSepolia(): Network {
           { address: "0x738B0C655E050320764EA1A7191BEA226B053410", symbol: "tUSDG", decimals: 6, testMint: true }
         : // Paxos Global Dollar (USDG) testnet token — docs.paxos.com/guides/stablecoin/usdg/testnet
           { address: "0xFFC95faa3d63Cde504a05B567C600B78C0b41892", symbol: "USDG", decimals: 6 },
+    // Revision 4 (owner decision 28.11.2026): Circle USDC only, developers.circle.com/stablecoins/usdc-contract-addresses.
+    saleCurrencies: [{ address: "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d", symbol: "USDC", decimals: 6 }],
   };
 }
 

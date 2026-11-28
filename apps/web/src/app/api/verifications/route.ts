@@ -17,14 +17,15 @@ import {
   type ProofLevel,
 } from "@rb/impact-engine";
 import { eq, sql } from "drizzle-orm";
-import { parseUnits } from "viem";
+import { parseUnits, zeroAddress } from "viem";
 import { getDb } from "../../../lib/db";
 import { pinFile, pinJson } from "../../../lib/ipfs";
-import { onchainEnabled, attestImpact, hasCode, ivToWei } from "../../../lib/onchain";
+import { onchainEnabled, attestImpact, hasCode, ivToWei, type ImpactClaimV2Extra } from "../../../lib/onchain";
 import { partnerShareError } from "../../../lib/partner-share";
-import { DEFAULT_NETWORK_KEY, NATIVE, getNetwork, isNetworkKey, networkByChainId, usdPerUnit, type Network } from "../../../lib/networks";
+import { DEFAULT_NETWORK_KEY, NATIVE, USD_PRICE_DECIMALS, getNetwork, isNetworkKey, networkByChainId, usdPerUnit, type Network } from "../../../lib/networks";
 import type { DB } from "@rb/db";
-import { requireActor } from "../../../lib/validator-auth";
+import { requireActor, type Actor } from "../../../lib/validator-auth";
+import { attestationValidator, contractGenerationOf } from "../../../lib/revision4";
 import { logAction } from "../../../lib/action-log";
 import { cardHeadline } from "../../../lib/impact-view";
 import { siteUrl } from "../../../lib/site";
@@ -38,7 +39,7 @@ type Hex = `0x${string}`;
 
 // On approve (v2 lazy mint): pin metadata -> EAS attest (platform) -> register an off-chain primary
 // LISTING (no mint; the buyer lazily mints on redeem via a signed voucher). Returns the listing refs.
-async function registerListing(db: DB, net: Network, submissionId: string, partnerId: string | null) {
+async function registerListing(db: DB, net: Network, submissionId: string, partnerId: string | null, actor: Actor) {
   // One report, one listing: if this impact is already listed on ANY network, never list it again
   // (re-approving is idempotent and a report is never mirrored onto a second chain).
   const [existing] = await db.select().from(listings).where(eq(listings.submissionId, submissionId)).limit(1);
@@ -90,7 +91,24 @@ async function registerListing(db: DB, net: Network, submissionId: string, partn
   });
 
   const metadataURI = await pinJson(meta); // ipfs://<cid>
-  const { uid, txHash } = await attestImpact(net, ngo, s.ivValue, metadataURI); // platform attests provenance
+  // Revision 4 (primarySaleVersion 3) writes the v2 attestation: proof level, methodology, validator, partner.
+  let claimV2: ImpactClaimV2Extra | undefined;
+  if (net.primarySaleVersion === 3) {
+    let partnerWallet = zeroAddress as Hex;
+    if (partnerId) {
+      const [p] = await db.select().from(partners).where(eq(partners.id, partnerId)).limit(1);
+      if (!p) throw new Error("partner not found");
+      partnerWallet = p.payoutAddress as Hex;
+    }
+    claimV2 = {
+      proofLevel: proofLevel ? Number(proofLevel.slice(1)) : 0,
+      methodologyVersion: s.methodologyVersion ?? "v0.1",
+      validator: attestationValidator(actor), // approving validator's sign-in wallet; zero in shared mode
+      partner: partnerWallet,
+      transferable: true,
+    };
+  }
+  const { uid, txHash } = await attestImpact(net, ngo, s.ivValue, metadataURI, claimV2); // platform attests provenance
 
   // assign the next on-chain tokenId off-chain (collection materializes on first redeem)
   const [{ m }] = await db
@@ -101,7 +119,10 @@ async function registerListing(db: DB, net: Network, submissionId: string, partn
   const floor = BigInt(net.tokenIdFloor ?? 0);
   const tokenId = ((last > floor ? last : floor) + 1n).toString();
 
-  const { address: currency, decimals } = net.saleCurrency;
+  // Revision 4: the buyer picks the stablecoin at purchase, so the listing keeps a USD price (USD_PRICE_DECIMALS)
+  // and the zero address as "coin chosen at purchase"; the voucher route converts it per coin.
+  const revision4 = contractGenerationOf(net) === 4;
+  const { address: currency, decimals } = revision4 ? { address: NATIVE, decimals: USD_PRICE_DECIMALS } : net.saleCurrency;
   // v0.2 (D4): price in USD = IV × rate × P × C, settled in the sale currency at its USD value.
   // v0.1 reports keep the v0.1 rule (IV × rate in the sale currency).
   // Price from IV × rate × P × E; declared costs only raise it (E ≤ 1.5).
@@ -129,6 +150,7 @@ async function registerListing(db: DB, net: Network, submissionId: string, partn
     partnerId,
     nonce: 0,
     active: true,
+    contractGeneration: contractGenerationOf(net),
   });
 
   return { network: net.key, tokenId, easUid: uid, attestTx: txHash, metadataURI, pricePerEditionWei, existing: false, partnerId };
@@ -236,11 +258,11 @@ export async function POST(req: Request) {
     if (!p || !p.active) return NextResponse.json({ error: "partner not found or not active" }, { status: 422 });
     const bad = partnerShareError(p);
     if (bad) return NextResponse.json({ error: bad }, { status: 422 });
-    if (net.primarySaleVersion !== 2) {
+    if (net.primarySaleVersion < 2) {
       return NextResponse.json({ error: `partner share is not available on ${net.chain.name} yet` }, { status: 422 });
     }
     // A contract partner may reject native payouts and block every sale of the listing (docs/AUDIT.md).
-    if (net.saleCurrency.address === NATIVE && (await hasCode(net, p.payoutAddress as Hex))) {
+    if (contractGenerationOf(net) !== 4 && net.saleCurrency.address === NATIVE && (await hasCode(net, p.payoutAddress as Hex))) {
       return NextResponse.json({ error: "a contract partner address needs a stablecoin listing" }, { status: 422 });
     }
     partnerId = p.id;
@@ -264,7 +286,7 @@ export async function POST(req: Request) {
   if (onchainEnabled() && net) {
     let result;
     try {
-      result = await registerListing(db, net, submissionId, partnerId);
+      result = await registerListing(db, net, submissionId, partnerId, actor);
     } catch (e) {
       // Keep it in the queue so the reviewer sees the failure and can retry (re-approving is idempotent).
       const error = e instanceof Error ? e.message.slice(0, 300) : "listing failed";

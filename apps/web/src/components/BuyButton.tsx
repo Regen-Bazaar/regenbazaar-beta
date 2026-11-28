@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { NO_WALLET_HINT } from "../lib/wallet";
-import { NATIVE, erc20Abi, feeOverrides, redeemAbiV1, redeemAbiV2 } from "../lib/chain";
+import { NATIVE, erc20Abi, feeOverrides, redeemAbiV1, redeemAbiV2, redeemAbiV3 } from "../lib/chain";
+import { buyerCurrencies } from "../lib/networks";
 import { useNetwork } from "./NetworkProvider";
 import { useConnectWallet } from "./useConnectWallet";
 import { ErrorNote } from "./ErrorNote";
@@ -24,6 +25,11 @@ type VoucherJson = {
   partnerFeeBps: string;
   nonce: string;
   deadline: string;
+  // v3 (contract revision 4) only
+  recipient?: `0x${string}`;
+  resaleFeeBps?: string;
+  resalePartnerBps?: string;
+  mintCap?: string;
 };
 
 /** Connect → fetch a platform-signed voucher → (approve ERC-20 if needed) → redeem (pay + lazily mint 1 edition). */
@@ -39,6 +45,11 @@ export function BuyButton({ listingId }: { listingId: string }) {
   const [state, setState] = useState<"idle" | "busy" | "done" | "error">("idle");
   const [msg, setMsg] = useState("");
   const [tx, setTx] = useState("");
+  // Revision 4: the buyer chooses the stablecoin (owner decision 28.11.2026); today's networks have exactly one.
+  const coins = net.primarySaleVersion === 3 ? buyerCurrencies(net) : [];
+  const [picked, setCoin] = useState<{ net: string; coin: string } | null>(null);
+  // A choice made on another network never carries over: fall back to this network's first coin.
+  const coin = picked && picked.net === net.key ? picked.coin : (coins[0]?.address ?? "");
 
   async function buy() {
     if (!isConnected) {
@@ -49,12 +60,12 @@ export function BuyButton({ listingId }: { listingId: string }) {
     setMsg("");
     try {
       if (chainId !== chain.id) await switchChainAsync({ chainId: chain.id });
-      const res = await fetch(`/api/listings/${listingId}/voucher`);
+      const res = await fetch(`/api/listings/${listingId}/voucher${coin ? `?currency=${encodeURIComponent(coin)}` : ""}`);
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "voucher unavailable");
       const { voucher, signature, version } = (await res.json()) as {
         voucher: VoucherJson;
         signature: `0x${string}`;
-        version: 1 | 2;
+        version: 1 | 2 | 3;
       };
 
       const v = {
@@ -105,10 +116,26 @@ export function BuyButton({ listingId }: { listingId: string }) {
         ...(await feeOverrides(publicClient)),
       } as const;
       // The server signs for the contract version deployed on this network; send the matching tuple.
-      const hash =
-        version === 2
-          ? await writeContractAsync({ ...common, abi: redeemAbiV2, args: [{ ...v, ...partner }, amount, signature] })
-          : await writeContractAsync({ ...common, abi: redeemAbiV1, args: [v, amount, signature] });
+      let hash: `0x${string}`;
+      if (version === 3) {
+        if (!voucher.recipient || voucher.resaleFeeBps === undefined || voucher.resalePartnerBps === undefined || voucher.mintCap === undefined) {
+          throw new Error("voucher is missing revision 4 fields");
+        }
+        const v3 = {
+          ...v,
+          ...partner,
+          recipient: voucher.recipient,
+          resaleFeeBps: BigInt(voucher.resaleFeeBps),
+          resalePartnerBps: BigInt(voucher.resalePartnerBps),
+          mintCap: BigInt(voucher.mintCap),
+        };
+        // Stablecoins only on revision 4: no value is ever sent.
+        hash = await writeContractAsync({ ...common, value: undefined, abi: redeemAbiV3, args: [v3, amount, signature] });
+      } else if (version === 2) {
+        hash = await writeContractAsync({ ...common, abi: redeemAbiV2, args: [{ ...v, ...partner }, amount, signature] });
+      } else {
+        hash = await writeContractAsync({ ...common, abi: redeemAbiV1, args: [v, amount, signature] });
+      }
       setTx(hash);
       setState("done");
     } catch (e) {
@@ -131,6 +158,18 @@ export function BuyButton({ listingId }: { listingId: string }) {
   }
   return (
     <div className="mt-4">
+      {coins.length > 1 && (
+        <label className="mb-2 flex items-center justify-between gap-3 text-sm text-muted">
+          Pay with
+          <select value={coin} onChange={(e) => setCoin({ net: net.key, coin: e.target.value })} disabled={state === "busy"} className="field w-auto">
+            {coins.map((c) => (
+              <option key={c.address} value={c.address}>
+                {c.symbol}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <button
         onClick={buy}
         disabled={state === "busy"}

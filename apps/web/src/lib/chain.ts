@@ -45,6 +45,29 @@ export const redeemAbiV2 = redeemAbiFor([
   ...VOUCHER_TAIL,
 ] as const);
 
+// v3 (contract revision 4): RegenPrimarySaleV3.Voucher, field order must match VOUCHER_TYPEHASH.
+export const redeemAbiV3 = redeemAbiFor([
+  { name: "tokenId", type: "uint256" },
+  { name: "creator", type: "address" },
+  { name: "totalIV", type: "uint256" },
+  { name: "maxEditions", type: "uint256" },
+  { name: "pricePerEdition", type: "uint256" },
+  { name: "currency", type: "address" },
+  { name: "beneficiary", type: "address" },
+  { name: "recipient", type: "address" },
+  { name: "easUID", type: "bytes32" },
+  { name: "metadataURI", type: "string" },
+  { name: "royaltyBps", type: "uint96" },
+  { name: "feeBps", type: "uint96" },
+  { name: "partner", type: "address" },
+  { name: "partnerFeeBps", type: "uint96" },
+  { name: "resaleFeeBps", type: "uint96" },
+  { name: "resalePartnerBps", type: "uint96" },
+  { name: "mintCap", type: "uint256" },
+  { name: "nonce", type: "uint256" },
+  { name: "deadline", type: "uint256" },
+] as const);
+
 export const erc20Abi = [
   {
     type: "function",
@@ -112,3 +135,18 @@ export async function feeOverrides(client: {
     return {};
   }
 }
+
+/** TRWIV4 (contract revision 4): retire writes a contribution statement; `inNameOf` is public and permanent. */
+export const trwiV4RetireAbi = [
+  {
+    type: "function",
+    name: "retire",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "tokenId", type: "uint256" },
+      { name: "amount", type: "uint256" },
+      { name: "inNameOf", type: "string" },
+    ],
+    outputs: [{ name: "statementId", type: "uint256" }],
+  },
+] as const;

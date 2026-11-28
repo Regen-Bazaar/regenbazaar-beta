@@ -6,7 +6,7 @@ import { BuyButton } from "../../components/BuyButton";
 import { SaleSplit } from "../../components/SaleSplit";
 import { TestTokens } from "../../components/TestTokens";
 import { currentNetwork } from "../../lib/network-server";
-import { DEFAULT_NETWORK_KEY, getNetwork } from "../../lib/networks";
+import { DEFAULT_NETWORK_KEY, getNetwork, listingPriceUnit } from "../../lib/networks";
 import { formatUnits } from "viem";
 import { FrameworkTag } from "../../components/FrameworkTag";
 import { ProofBadge, VersionBadge } from "../../components/ImpactBadges";
@@ -59,6 +59,7 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
       pricePerEdition: listings.pricePerEdition,
       maxEditions: listings.maxEditions,
       priceUsd: listings.priceUsd,
+      contractGeneration: listings.contractGeneration,
       partnerName: partners.name,
       partnerFeeBps: partners.feeBps,
     })
@@ -295,9 +296,9 @@ export default async function Marketplace({ searchParams }: { searchParams: Prom
                           <>
                             {listing.priceUsd != null && <span>${(Number(listing.priceUsd) / listing.maxEditions).toLocaleString("en-US", { maximumFractionDigits: 4 })} </span>}
                             <span className={listing.priceUsd != null ? "text-sm font-normal text-muted" : ""}>
-                              {Number(formatUnits(BigInt(listing.pricePerEdition), NETWORK.saleCurrency.decimals)).toLocaleString("en-US", { maximumFractionDigits: 6 })}
+                              {Number(formatUnits(BigInt(listing.pricePerEdition), listingPriceUnit(NETWORK, listing.contractGeneration).decimals)).toLocaleString("en-US", { maximumFractionDigits: 6 })}
                             </span>{" "}
-                            <span className="text-base font-normal text-muted">{NETWORK.saleCurrency.symbol}</span>
+                            <span className="text-base font-normal text-muted">{listingPriceUnit(NETWORK, listing.contractGeneration).symbol}</span>
                           </>
                         ) : (
                           <span className="text-base font-normal text-subtle">not listed</span>

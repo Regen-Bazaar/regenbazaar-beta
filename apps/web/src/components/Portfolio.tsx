@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useAccount, useReadContracts, useSwitchChain, useWriteContract, usePublicClient } from "wagmi";
 import { NO_WALLET_HINT } from "../lib/wallet";
 import { tokenInstanceUrl } from "../lib/networks";
-import { feeOverrides, trwiAbi } from "../lib/chain";
+import { feeOverrides, trwiAbi, trwiV4RetireAbi } from "../lib/chain";
 import { useNetwork } from "./NetworkProvider";
 import { useConnectWallet } from "./useConnectWallet";
 import { ErrorNote } from "./ErrorNote";
@@ -76,14 +76,26 @@ export function Portfolio({ items }: { items: PortfolioItem[] }) {
     setRetireTx("");
     try {
       if (chainId !== chain.id) await switchChainAsync({ chainId: chain.id });
-      const hash = await writeContractAsync({
-        address: TRWI,
-        abi: trwiAbi,
-        functionName: "retire",
-        args: [BigInt(tokenId), amount],
-        chainId: chain.id,
-        ...(await feeOverrides(publicClient)),
-      });
+      const fees = await feeOverrides(publicClient);
+      // Revision 4 writes a contribution statement; the optional "in the name of" text stays empty for now.
+      const hash =
+        net.primarySaleVersion === 3
+          ? await writeContractAsync({
+              address: TRWI,
+              abi: trwiV4RetireAbi,
+              functionName: "retire",
+              args: [BigInt(tokenId), amount, ""],
+              chainId: chain.id,
+              ...fees,
+            })
+          : await writeContractAsync({
+              address: TRWI,
+              abi: trwiAbi,
+              functionName: "retire",
+              args: [BigInt(tokenId), amount],
+              chainId: chain.id,
+              ...fees,
+            });
       await publicClient?.waitForTransactionReceipt({ hash });
       setMsg(`Retired ${amount} edition${amount === 1n ? "" : "s"} in your name.`);
       setRetireTx(hash);
