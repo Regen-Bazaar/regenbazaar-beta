@@ -150,6 +150,7 @@ contract DeployRevision4 is Script {
     }
 
     /// @dev The address answers the ERC-20 reads the sale and marketplace rely on, with 6..18 decimals.
+    ///      Probes a fixed address: forge script refuses `address(this)` in a script.
     function _isStablecoin(address token) internal view returns (bool) {
         (bool ok, bytes memory ret) = token.staticcall(abi.encodeWithSignature("decimals()"));
         if (!ok || ret.length != 32) return false;
@@ -157,7 +158,7 @@ contract DeployRevision4 is Script {
         if (dec < 6 || dec > 18) return false;
         (ok, ret) = token.staticcall(abi.encodeWithSignature("totalSupply()"));
         if (!ok || ret.length != 32) return false;
-        (ok, ret) = token.staticcall(abi.encodeWithSignature("balanceOf(address)", address(this)));
+        (ok, ret) = token.staticcall(abi.encodeWithSignature("balanceOf(address)", address(0xdEaD)));
         return ok && ret.length == 32;
     }
 
