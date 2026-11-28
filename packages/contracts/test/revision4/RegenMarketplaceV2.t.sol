@@ -101,6 +101,38 @@ contract RegenMarketplaceV2Test is Revision4Base {
         assertEq(q.creatorPaid + q.platformPaid + q.partnerPaid + q.sellerPaid, q.total);
     }
 
+    function test_Resale_SixDecimalCoin_ExactUnits() public {
+        MockStable6R usdc = new MockStable6R();
+        vm.prank(admin);
+        market.setCurrencyAllowed(address(usdc), true);
+        _issue(1, partner, 3);
+        vm.startPrank(buyer);
+        trwi.setApprovalForAll(address(market), true);
+        uint256 id = market.list(1, 3, 3_333_333, address(usdc)); // 3.333333 USD
+        vm.stopPrank();
+        usdc.mint(buyer2, 9_999_999);
+        vm.startPrank(buyer2);
+        usdc.approve(address(market), 9_999_999);
+        market.buy(id, 3);
+        vm.stopPrank();
+        assertEq(usdc.balanceOf(creator), 249_999); // 2.5% rounded down
+        assertEq(usdc.balanceOf(feeRecipient), 249_999);
+        assertEq(usdc.balanceOf(partner), 249_999);
+        assertEq(usdc.balanceOf(buyer), 9_250_002, "seller gets the rest, incl. rounding");
+        assertEq(usdc.balanceOf(address(market)), 0);
+    }
+
+    function test_Resale_EighteenDecimalCoin_ExactUnits() public {
+        _issue(1, partner, 3);
+        uint256 id = _list(buyer, 1, 3, 3_333_333 * 1e12);
+        uint256 total = 9_999_999 * 1e12;
+        uint256 before = usd.balanceOf(creator);
+        _buyResale(buyer2, id, 3, total);
+        assertEq(usd.balanceOf(creator) - before, 249_999_975 * 1e9);
+        assertEq(usd.balanceOf(buyer), total - 3 * (249_999_975 * 1e9), "seller 92.5% exact");
+        assertEq(usd.balanceOf(address(market)), 0);
+    }
+
     // ---- withdrawn / revoked / non-transferable are refused ----
 
     function test_Withdrawn_CannotBeListed() public {
@@ -276,5 +308,11 @@ contract RegenMarketplaceV2Test is Revision4Base {
         vm.prank(admin);
         market.setFeeRecipient(stranger);
         assertEq(market.feeRecipient(), stranger);
+    }
+}
+
+contract MockStable6R is MockERC20 {
+    function decimals() public pure override returns (uint8) {
+        return 6;
     }
 }

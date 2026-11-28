@@ -55,10 +55,14 @@ abstract contract DeployRevision4Checks is Test {
         c.deployTestStablecoin = true;
     }
 
+    /// Payment coin of the cycle: the stand-in when one was deployed, else the first listed stablecoin.
+    address internal coin;
+
     function _deploy(DeployRevision4.Config memory c) internal {
         script = new DeployRevision4();
         cfg = c;
         d = script.deployAs(c, deployer);
+        coin = d.testStablecoin != address(0) ? d.testStablecoin : c.currencies[0];
     }
 
     // ---- role checks ----
@@ -89,8 +93,12 @@ abstract contract DeployRevision4Checks is Test {
         assertEq(address(m.trwi()), d.trwi);
         assertEq(address(t.eas()), cfg.eas);
         assertEq(t.impactClaimSchema(), d.schemaUID);
-        assertTrue(s.allowedCurrency(d.testStablecoin));
-        assertTrue(m.allowedCurrency(d.testStablecoin));
+        assertTrue(s.allowedCurrency(coin));
+        assertTrue(m.allowedCurrency(coin));
+        for (uint256 i = 0; i < cfg.currencies.length; ++i) {
+            assertTrue(s.allowedCurrency(cfg.currencies[i]));
+            assertTrue(m.allowedCurrency(cfg.currencies[i]));
+        }
 
         // timelock: only the admin wallet proposes/executes/cancels; nobody administers it but itself
         assertEq(tl.getMinDelay(), DELAY);
@@ -194,7 +202,7 @@ abstract contract DeployRevision4Checks is Test {
 
     function _cycleSales() internal {
         TRWIV4 t = TRWIV4(d.trwi);
-        TestUSDG usd = TestUSDG(d.testStablecoin);
+        TestUSDG usd = TestUSDG(coin);
 
         // attest: only the attester key may write the new format
         bytes memory claim = abi.encode(creator, 1000 ether, "ipfs://cycle", uint8(3), "v0.2", address(0), partner, true);
@@ -220,7 +228,7 @@ abstract contract DeployRevision4Checks is Test {
         // resell with split (4 editions at 25 tUSDG = 100)
         vm.startPrank(buyer);
         t.setApprovalForAll(d.marketplace, true);
-        uint256 id = RegenMarketplaceV2(d.marketplace).list(1, 4, 25e6, d.testStablecoin);
+        uint256 id = RegenMarketplaceV2(d.marketplace).list(1, 4, 25e6, coin);
         vm.stopPrank();
         _fund(usd, buyer2, 100e6);
         vm.startPrank(buyer2);
@@ -242,7 +250,7 @@ abstract contract DeployRevision4Checks is Test {
 
     function _cycleWithdraw() internal {
         TRWIV4 t = TRWIV4(d.trwi);
-        TestUSDG usd = TestUSDG(d.testStablecoin);
+        TestUSDG usd = TestUSDG(coin);
         // withdraw a false claim (second impact): withdrawer marks, attester revokes in EAS
         vm.prank(attester);
         bytes32 uid2 = _attest(
@@ -320,7 +328,7 @@ abstract contract DeployRevision4Checks is Test {
             totalIV: 1000 ether,
             maxEditions: 100,
             pricePerEdition: 10e6,
-            currency: d.testStablecoin,
+            currency: coin,
             beneficiary: creator,
             recipient: address(0),
             easUID: uid,
@@ -342,12 +350,9 @@ abstract contract DeployRevision4Checks is Test {
         return abi.encodePacked(r, s, vv);
     }
 
+    /// Funds a test buyer by writing the balance (works for the stand-in and for USDC on a fork).
     function _fund(TestUSDG usd, address to, uint256 amount) internal {
-        while (amount > 0) {
-            uint256 m = amount > usd.MAX_MINT() ? usd.MAX_MINT() : amount;
-            usd.mint(to, m);
-            amount -= m;
-        }
+        deal(address(usd), to, usd.balanceOf(to) + amount);
     }
 }
 
@@ -444,44 +449,46 @@ contract DeployRevision4Test is DeployRevision4Checks {
 
 /// @dev Fork tests: the real deploy script against an in-process copy of each live test network (forge's own
 ///      fork, no local node). The existing EAS + SchemaRegistry of the network are reused, as in production.
-///      Skipped unless FORK_ARBITRUM_SEPOLIA_RPC / FORK_ROBINHOOD_TESTNET_RPC / FORK_CELO_SEPOLIA_RPC are set.
+///      Skipped unless FORK_ARBITRUM_SEPOLIA_RPC / FORK_CELO_SEPOLIA_RPC are set.
 contract DeployRevision4ForkTest is DeployRevision4Checks {
-    function _fork(string memory envKey, address eas, address registry) internal {
+    function _fork(string memory envKey, address eas, address registry, address[] memory currencies) internal {
         string memory rpc = vm.envOr(envKey, string(""));
         if (bytes(rpc).length == 0) {
             vm.skip(true);
             return;
         }
         vm.createSelectFork(rpc);
-        _deploy(_config(eas, registry));
+        DeployRevision4.Config memory c = _config(eas, registry);
+        c.currencies = currencies;
+        c.deployTestStablecoin = false; // official test stablecoins exist on both networks
+        _deploy(c);
         _checkRoles();
         _checkDeployerCannotAct();
         _checkTimelock();
         _cycle();
     }
 
-    // Addresses from deployments/*.json (the EAS + SchemaRegistry the network already uses).
+    // EAS + SchemaRegistry from deployments/*.json; coins: owner decision 28.11.2026, Circle USDC
+    // (developers.circle.com/stablecoins/usdc-contract-addresses). Robinhood is out of the plan until the owner decides.
     function test_Fork_ArbitrumSepolia() public {
+        address[] memory coins = new address[](1);
+        coins[0] = 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d; // USDC
         _fork(
             "FORK_ARBITRUM_SEPOLIA_RPC",
             0x95cD0E3bDbC670e057416D65C89B584a9a24d95d,
-            0xa5dB5eC4d2F1435f7cb3504414981347E28340b4
-        );
-    }
-
-    function test_Fork_RobinhoodTestnet() public {
-        _fork(
-            "FORK_ROBINHOOD_TESTNET_RPC",
-            0x95cD0E3bDbC670e057416D65C89B584a9a24d95d,
-            0xa5dB5eC4d2F1435f7cb3504414981347E28340b4
+            0xa5dB5eC4d2F1435f7cb3504414981347E28340b4,
+            coins
         );
     }
 
     function test_Fork_CeloSepolia() public {
+        address[] memory coins = new address[](1);
+        coins[0] = 0x01C5C0122039549AD1493B8220cABEdD739BC44E; // USDC
         _fork(
             "FORK_CELO_SEPOLIA_RPC",
             0x82448c9c9b95Da5dCe9905F9C59CcCA0DF346df8,
-            0x28747503194756DF51503902949c66D2F3579625
+            0x28747503194756DF51503902949c66D2F3579625,
+            coins
         );
     }
 }

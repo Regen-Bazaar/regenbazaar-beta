@@ -292,6 +292,46 @@ contract RegenPrimarySaleV3Test is Revision4Base {
         sale.redeem(v, 0, sig);
     }
 
+    // ---- currencies: 6- and 18-decimal stablecoins (owner decision 28.11.2026: USDC, Celo dollar) ----
+
+    function _splitIn(address coin, uint256 price) internal {
+        vm.prank(admin);
+        sale.setCurrencyAllowed(coin, true);
+        bytes32 uid = _attest(partner);
+        RegenPrimarySaleV3.Voucher memory v = _voucher(1, uid, partner, 500);
+        v.currency = coin;
+        v.pricePerEdition = price;
+        bytes memory sig = _sign(v);
+        uint256 total = 3 * price;
+        MockERC20(coin).mint(buyer, total);
+        vm.startPrank(buyer);
+        MockERC20(coin).approve(address(sale), total);
+        sale.redeem(v, 3, sig);
+        vm.stopPrank();
+        IERC20Like c = IERC20Like(coin);
+        assertEq(c.balanceOf(feeRecipient), (total * 250) / 10_000, "platform 2.5%");
+        assertEq(c.balanceOf(partner), (total * 500) / 10_000, "partner 5%");
+        assertEq(c.balanceOf(creatorPayout), total - (total * 250) / 10_000 - (total * 500) / 10_000, "creator rest");
+        assertEq(c.balanceOf(address(sale)), 0);
+        assertEq(c.balanceOf(buyer), 0);
+    }
+
+    function test_Split_SixDecimalCoin_ExactUnits() public {
+        MockStable6 usdc = new MockStable6();
+        _splitIn(address(usdc), 12_345_678); // 12.345678 USD
+        assertEq(usdc.balanceOf(feeRecipient), 925_925);
+        assertEq(usdc.balanceOf(partner), 1_851_851);
+        assertEq(usdc.balanceOf(creatorPayout), 34_259_258);
+    }
+
+    function test_Split_EighteenDecimalCoin_ExactUnits() public {
+        MockERC20 usdm = new MockERC20();
+        _splitIn(address(usdm), 12_345_678 * 1e12); // the same 12.345678 USD in 18 decimals
+        assertEq(usdm.balanceOf(feeRecipient), 925_925_850_000_000_000);
+        assertEq(usdm.balanceOf(partner), 1_851_851_700_000_000_000);
+        assertEq(usdm.balanceOf(creatorPayout), 34_259_256_450_000_000_000);
+    }
+
     // ---- mintCap: edition limit (owner decision 28.11.2026) ----
 
     function _capped(bytes32 uid, uint256 cap) internal view returns (RegenPrimarySaleV3.Voucher memory v) {
@@ -464,5 +504,16 @@ contract RegenPrimarySaleV3Test is Revision4Base {
         vm.expectRevert(sel);
         sale.redeem(v, 1, sig);
         vm.stopPrank();
+    }
+}
+
+interface IERC20Like {
+    function balanceOf(address) external view returns (uint256);
+}
+
+/// @dev 6-decimal stand-in with an unrestricted mint, like USDC on a test network.
+contract MockStable6 is MockERC20 {
+    function decimals() public pure override returns (uint8) {
+        return 6;
     }
 }
