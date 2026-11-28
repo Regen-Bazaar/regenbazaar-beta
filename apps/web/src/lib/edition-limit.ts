@@ -1,7 +1,8 @@
 // Edition limit (site rule, owner decision 27.11.2026, contract-revision.md 5.5 point 1). The only bound on the
 // loss if a false claim passes the gates: a new creator or a P1 impact sells at most LIMITED_EDITIONS until
 // a validator confirms P2 or higher, OPEN_AFTER_DAYS pass after the first sale with no dispute, or an admin
-// lifts it. Applies to revision 4 networks only. The numbers live here and nowhere else.
+// lifts it. Applies to revision 4 networks only. The numbers live here and nowhere else. The cap is signed
+// into each voucher as `mintCap` (RegenPrimarySaleV3, owner decision 28.11.2026), so the contract enforces it.
 import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import { impactSubmissions, listings, withdrawalRequests } from "@rb/db/schema";
 import type { DB } from "@rb/db";

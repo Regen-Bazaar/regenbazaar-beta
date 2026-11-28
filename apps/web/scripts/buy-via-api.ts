@@ -9,7 +9,7 @@ const res = await fetch(`${process.env.APP_URL ?? "https://app.regenbazaar.com"}
 const j = await res.json();
 if (!res.ok) throw new Error(JSON.stringify(j));
 const v = j.voucher;
-const { partner, partnerFeeBps, recipient, resaleFeeBps, resalePartnerBps, ...v1 } = v;
+const { partner, partnerFeeBps, recipient, resaleFeeBps, resalePartnerBps, mintCap, ...v1 } = v;
 const voucher = { ...v1, tokenId: BigInt(v.tokenId), totalIV: BigInt(v.totalIV), maxEditions: BigInt(v.maxEditions), pricePerEdition: BigInt(v.pricePerEdition), royaltyBps: BigInt(v.royaltyBps), feeBps: BigInt(v.feeBps), nonce: BigInt(v.nonce), deadline: BigInt(v.deadline) };
 console.log("voucher from app:", j.chainId, j.contract, "v" + j.version, "partner", partner, partnerFeeBps, "currency", v.currency, "price", v.pricePerEdition);
 const pk = process.env.PK!; const account = privateKeyToAccount((pk.startsWith("0x") ? pk : `0x${pk}`) as Hex);
@@ -24,7 +24,7 @@ if (!native) {
 }
 const value = native ? total : 0n;
 const h = j.version === 3
-  ? await wallet.writeContract({ address: j.contract, abi: redeemAbiV3, functionName: "redeem", args: [{ ...voucher, partner, partnerFeeBps: BigInt(partnerFeeBps), recipient, resaleFeeBps: BigInt(resaleFeeBps), resalePartnerBps: BigInt(resalePartnerBps) }, amount, j.signature] })
+  ? await wallet.writeContract({ address: j.contract, abi: redeemAbiV3, functionName: "redeem", args: [{ ...voucher, partner, partnerFeeBps: BigInt(partnerFeeBps), recipient, resaleFeeBps: BigInt(resaleFeeBps), resalePartnerBps: BigInt(resalePartnerBps), mintCap: BigInt(mintCap) }, amount, j.signature] })
   : j.version === 2
   ? await wallet.writeContract({ address: j.contract, abi: redeemAbiV2, functionName: "redeem", args: [{ ...voucher, partner, partnerFeeBps: BigInt(partnerFeeBps) }, amount, j.signature], value })
   : await wallet.writeContract({ address: j.contract, abi: redeemAbiV1, functionName: "redeem", args: [voucher, amount, j.signature], value });

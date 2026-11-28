@@ -22,6 +22,7 @@ const voucher: ImpactVoucher = {
   partnerFeeBps: 500n,
   resaleFeeBps: 250n,
   resalePartnerBps: 250n,
+  mintCap: 25n,
   nonce: 3n,
   deadline: 1_900_000_000n,
 };
@@ -42,7 +43,7 @@ const claimHash = keccak256(
   }),
 );
 
-const EXPECTED_DIGEST: Hex = "0x6bfd130421a1906f0e952819e8313fd163b2d6255a423b365da3b906e70acf41";
+const EXPECTED_DIGEST: Hex = "0x7e67f565398588f74e89cc4adc7f9dbe8de0de1d712ace3d5b2ff8f9b0e3e098";
 const EXPECTED_CLAIM: Hex = "0x492ab7ac6e0cba8713a2b96ece84ef22e10ca314227bfaf30b81f587d808f2d0";
 console.log("voucher digest", digest);
 console.log("claim hash    ", claimHash);

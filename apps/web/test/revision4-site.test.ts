@@ -348,3 +348,20 @@ test("withdraw: a failed on-chain step leaves the request open, logs the error, 
   assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, fixed.ops, resolveV4)).status, 200);
   assert.deepEqual(fixed.calls, { withdraw: 0, revoke: 1 });
 });
+
+// ---- mintCap in the v3 voucher (owner decision 28.11.2026) ----------------------------------------------------
+
+test("voucher v3: the mint cap must be present and between 1 and maxEditions", async () => {
+  const { voucherV3Message } = await import("../src/lib/onchain");
+  const v = {
+    tokenId: 1n, creator: CREATOR as `0x${string}`, totalIV: 1n, maxEditions: 100n, pricePerEdition: 1n,
+    currency: CREATOR as `0x${string}`, beneficiary: CREATOR as `0x${string}`, easUID: ("0x" + "4".repeat(64)) as `0x${string}`,
+    metadataURI: "ipfs://x", royaltyBps: 250n, feeBps: 250n, partner: "0x0000000000000000000000000000000000000000" as `0x${string}`,
+    partnerFeeBps: 0n, nonce: 0n, deadline: 1n, resaleFeeBps: 250n, resalePartnerBps: 0n,
+  };
+  assert.throws(() => voucherV3Message(v), /mint cap/);
+  assert.throws(() => voucherV3Message({ ...v, mintCap: 0n }), /mint cap/);
+  assert.throws(() => voucherV3Message({ ...v, mintCap: 101n }), /mint cap/);
+  assert.equal(voucherV3Message({ ...v, mintCap: BigInt(EDITION_LIMIT.limitedEditions) }).mintCap, 25n);
+  assert.equal(voucherV3Message({ ...v, mintCap: 100n }).mintCap, 100n);
+});

@@ -105,6 +105,7 @@ export const VOUCHER_TYPES_V3 = {
     { name: "partnerFeeBps", type: "uint96" },
     { name: "resaleFeeBps", type: "uint96" },
     { name: "resalePartnerBps", type: "uint96" },
+    { name: "mintCap", type: "uint256" },
     { name: "nonce", type: "uint256" },
     { name: "deadline", type: "uint256" },
   ],
@@ -177,6 +178,7 @@ export interface ImpactVoucher {
   recipient?: Hex;
   resaleFeeBps?: bigint;
   resalePartnerBps?: bigint;
+  mintCap?: bigint; // editions that may exist after the purchase (edition limit: 25 while it holds, else maxEditions)
 }
 
 export function onchainEnabled(): boolean {
@@ -280,19 +282,20 @@ export async function signVoucher(net: Network, v: ImpactVoucher): Promise<Hex> 
     return wallet.signTypedData({ account, domain, types: VOUCHER_TYPES_V3, primaryType: "Voucher", message: voucherV3Message(v) });
   }
   if (net.primarySaleVersion === 2) {
-    const { recipient: _r, resaleFeeBps: _rf, resalePartnerBps: _rp, ...v2 } = v;
+    const { recipient: _r, resaleFeeBps: _rf, resalePartnerBps: _rp, mintCap: _mc, ...v2 } = v;
     return wallet.signTypedData({ account, domain, types: VOUCHER_TYPES_V2, primaryType: "Voucher", message: v2 });
   }
   if (v.partner !== zeroAddress || v.partnerFeeBps !== 0n) throw new Error("partner share needs RegenPrimarySale v2");
-  const { partner: _p, partnerFeeBps: _f, recipient: _r, resaleFeeBps: _rf, resalePartnerBps: _rp, ...v1 } = v;
+  const { partner: _p, partnerFeeBps: _f, recipient: _r, resaleFeeBps: _rf, resalePartnerBps: _rp, mintCap: _mc, ...v1 } = v;
   return wallet.signTypedData({ account, domain, types: VOUCHER_TYPES_V1, primaryType: "Voucher", message: v1 });
 }
 
 /** The v3 message with every field present (a missing resale share would sign a different voucher). */
 export function voucherV3Message(v: ImpactVoucher) {
   if (v.resaleFeeBps === undefined || v.resalePartnerBps === undefined) throw new Error("v3 voucher needs resale shares");
+  if (v.mintCap === undefined || v.mintCap <= 0n || v.mintCap > v.maxEditions) throw new Error("v3 voucher needs a mint cap of 1..maxEditions");
   if (v.partner === zeroAddress && v.resalePartnerBps !== 0n) throw new Error("resale partner share without a partner");
-  return { ...v, recipient: v.recipient ?? zeroAddress, resaleFeeBps: v.resaleFeeBps, resalePartnerBps: v.resalePartnerBps };
+  return { ...v, recipient: v.recipient ?? zeroAddress, resaleFeeBps: v.resaleFeeBps, resalePartnerBps: v.resalePartnerBps, mintCap: v.mintCap };
 }
 
 // ---- revision 4: withdraw a false claim, revoke its attestation, read minted editions ----

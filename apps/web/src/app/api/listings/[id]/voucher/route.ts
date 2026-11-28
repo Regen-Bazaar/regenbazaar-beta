@@ -36,7 +36,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   }
   if (l.withdrawnAt) return NextResponse.json({ error: "this impact was withdrawn" }, { status: 409 });
 
-  // Edition limit (revision 4 only): refuse to sign once the limited editions are sold.
+  // Edition limit (revision 4 only): the signed mintCap binds it on-chain; refuse to sign once nothing is left.
+  let mintCap: bigint | undefined;
   if (net.primarySaleVersion === 3) {
     let minted: number;
     try {
@@ -53,6 +54,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     const limit = editionLimit(await limitFactsFor(db, l.id, now));
     const bad = editionLimitError(limit, minted, 1);
     if (bad) return NextResponse.json({ error: bad, limit }, { status: 409 });
+    mintCap = BigInt(limit.cap);
   }
 
   // Partner share (RegenPrimarySale v2). A listing with a partner is never sold without the partner's share.
@@ -93,6 +95,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     voucher.recipient = zeroAddress;
     voucher.resaleFeeBps = BigInt(RESALE_FEE_BPS);
     voucher.resalePartnerBps = partner === zeroAddress ? 0n : BigInt(RESALE_PARTNER_BPS);
+    voucher.mintCap = mintCap;
   }
   const signature = await signVoucher(net, voucher);
 
@@ -123,6 +126,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
             recipient: voucher.recipient,
             resaleFeeBps: voucher.resaleFeeBps?.toString(),
             resalePartnerBps: voucher.resalePartnerBps?.toString(),
+            mintCap: voucher.mintCap?.toString(),
           }
         : {}),
     },

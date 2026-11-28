@@ -28,6 +28,7 @@ type VoucherJson = {
   recipient?: `0x${string}`;
   resaleFeeBps?: string;
   resalePartnerBps?: string;
+  mintCap?: string;
 };
 
 /** Connect → fetch a platform-signed voucher → (approve ERC-20 if needed) → redeem (pay + lazily mint 1 edition). */
@@ -111,7 +112,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
       // The server signs for the contract version deployed on this network; send the matching tuple.
       let hash: `0x${string}`;
       if (version === 3) {
-        if (!voucher.recipient || voucher.resaleFeeBps === undefined || voucher.resalePartnerBps === undefined) {
+        if (!voucher.recipient || voucher.resaleFeeBps === undefined || voucher.resalePartnerBps === undefined || voucher.mintCap === undefined) {
           throw new Error("voucher is missing revision 4 fields");
         }
         const v3 = {
@@ -120,6 +121,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
           recipient: voucher.recipient,
           resaleFeeBps: BigInt(voucher.resaleFeeBps),
           resalePartnerBps: BigInt(voucher.resalePartnerBps),
+          mintCap: BigInt(voucher.mintCap),
         };
         // Stablecoins only on revision 4: no value is ever sent.
         hash = await writeContractAsync({ ...common, value: undefined, abi: redeemAbiV3, args: [v3, amount, signature] });

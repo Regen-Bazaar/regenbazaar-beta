@@ -63,6 +63,7 @@ export const redeemAbiV3 = redeemAbiFor([
   { name: "partnerFeeBps", type: "uint96" },
   { name: "resaleFeeBps", type: "uint96" },
   { name: "resalePartnerBps", type: "uint96" },
+  { name: "mintCap", type: "uint256" },
   { name: "nonce", type: "uint256" },
   { name: "deadline", type: "uint256" },
 ] as const);
