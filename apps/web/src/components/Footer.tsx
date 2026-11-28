@@ -14,7 +14,7 @@ const ELSEWHERE: { href: string; label: string; icon: IconName }[] = [
   { href: "https://github.com/Regen-Bazaar/regenbazaar-beta", label: "GitHub", icon: "doc" },
 ];
 
-const LINK = "inline-flex min-h-11 items-center gap-1.5 text-meta text-muted hover:text-fg";
+const LINK = "inline-flex min-h-11 min-w-11 items-center gap-1.5 text-meta text-muted hover:text-fg";
 
 /** Compact footer: one line on desktop, three on a phone (link icons are dropped there to keep each group on one line). The four main destinations are in the app bar and the tab bar, not here. */
 export function Footer() {
