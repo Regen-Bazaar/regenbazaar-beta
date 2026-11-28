@@ -15,6 +15,8 @@ import {
   integer,
   jsonb,
   boolean,
+  bigint,
+  primaryKey,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
@@ -332,6 +334,71 @@ export const reviewNotes = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("review_notes_submission_idx").on(t.submissionId)],
+);
+
+// ---- Purchase record (gamification v1). Filled by the purchase record job from the chain; nothing here is
+// user input, and all three tables can be emptied and rebuilt from the chain. Migration 0009 only adds them.
+
+// One row per on-chain event: edition bought (sale contract), transferred (token contract, mint and burn
+// included) or retired (token contract). Addresses are stored lowercase.
+export const editionEvents = pgTable(
+  "edition_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    chainId: integer("chain_id").notNull(),
+    contract: varchar("contract", { length: 42 }).notNull(), // contract that emitted the event
+    tokenContract: varchar("token_contract", { length: 42 }).notNull(), // tRWI contract the editions belong to
+    kind: varchar("kind", { length: 12 }).notNull(), // bought | transferred | retired
+    tokenId: numeric("token_id", { precision: 78, scale: 0 }).notNull(),
+    amount: numeric("amount", { precision: 78, scale: 0 }).notNull(), // editions
+    wallet: varchar("wallet", { length: 42 }), // bought: who received the editions; retired: the holder
+    fromAddress: varchar("from_address", { length: 42 }), // transferred only (zero address = mint)
+    toAddress: varchar("to_address", { length: 42 }), // transferred only (zero address = burn)
+    payer: varchar("payer", { length: 42 }), // bought only
+    currency: varchar("currency", { length: 42 }), // bought only (zero address = native coin)
+    totalPaid: numeric("total_paid", { precision: 78, scale: 0 }), // bought only, smallest unit of the currency
+    statementId: numeric("statement_id", { precision: 78, scale: 0 }), // retired on revision 4 only
+    inNameOf: text("in_name_of"), // retired on revision 4 only; public on the chain
+    blockNumber: bigint("block_number", { mode: "number" }).notNull(),
+    blockTime: timestamp("block_time", { withTimezone: true }).notNull(),
+    txHash: varchar("tx_hash", { length: 66 }).notNull(),
+    logIndex: integer("log_index").notNull(),
+    batchIndex: integer("batch_index").notNull().default(0), // position inside a batch transfer
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // the same event read twice is stored once
+    uniqueIndex("edition_events_log_idx").on(t.chainId, t.txHash, t.logIndex, t.batchIndex),
+    index("edition_events_wallet_idx").on(t.wallet),
+    index("edition_events_token_idx").on(t.chainId, t.tokenContract, t.tokenId),
+  ],
+);
+
+// Recalculated from edition_events: what each wallet holds and has retired of each tRWI.
+export const holdings = pgTable(
+  "holdings",
+  {
+    chainId: integer("chain_id").notNull(),
+    tokenContract: varchar("token_contract", { length: 42 }).notNull(),
+    tokenId: numeric("token_id", { precision: 78, scale: 0 }).notNull(),
+    wallet: varchar("wallet", { length: 42 }).notNull(),
+    editionsHeld: numeric("editions_held", { precision: 78, scale: 0 }).notNull().default("0"),
+    editionsRetired: numeric("editions_retired", { precision: 78, scale: 0 }).notNull().default("0"),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.chainId, t.tokenContract, t.tokenId, t.wallet] }), index("holdings_wallet_idx").on(t.wallet)],
+);
+
+// Last block the job has read, per contract (a contract added later starts from its own first block).
+export const recordCursors = pgTable(
+  "record_cursors",
+  {
+    chainId: integer("chain_id").notNull(),
+    contract: varchar("contract", { length: 42 }).notNull(),
+    lastBlock: bigint("last_block", { mode: "number" }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(), // last successful read
+  },
+  (t) => [primaryKey({ columns: [t.chainId, t.contract] })],
 );
 
 // DEPRECATED: not read by the engine (weights live in packages/impact-engine tables, versioned in code).
