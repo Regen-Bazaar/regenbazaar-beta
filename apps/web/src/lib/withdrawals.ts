@@ -147,8 +147,16 @@ export async function decideRequest(
       await save({ [field]: hash });
     }
     if (hash !== "0x" && (await chain.waitForTx(net, hash)) !== "success") {
-      await save({ [field]: null }); // reverted: forget it so the next attempt sends again
-      throw new Error(`${field === "withdrawTx" ? "withdraw" : "revoke"} transaction reverted (${hash})`);
+      // A revert is usually a duplicate of a step another attempt already finished (TRWIV4 and EAS refuse repeats,
+      // so a duplicate changes nothing and costs one fee). Ask the chain again: send() returns null when done.
+      await save({ [field]: null });
+      const again = await send();
+      if (again !== null) {
+        await save({ [field]: again });
+        throw new Error(`${field === "withdrawTx" ? "withdraw" : "revoke"} transaction reverted (${hash}); resent as ${again}, retry to confirm`);
+      }
+      hash = "0x";
+      await save({ [field]: hash });
     }
     return hash;
   };

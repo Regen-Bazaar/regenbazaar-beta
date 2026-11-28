@@ -557,10 +557,11 @@ test("withdraw: a reverted transaction is forgotten, so the next attempt sends i
   };
   assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 502);
   const [mid] = await db.select().from(schema.withdrawalRequests);
-  assert.equal(mid.withdrawTx, null);
+  assert.equal(mid.withdrawTx, "0x" + "c".repeat(64), "the resent transaction's hash is saved");
+  assert.equal(sent.withdraw, 2, "resent once after the revert");
   reverted = false;
   assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 200);
-  assert.equal(sent.withdraw, 2);
+  assert.equal(sent.withdraw, 2, "the retry only waited for the saved hash");
 });
 
 test("withdraw: an attempt whose lease expired during a chain call stops after takeover and never reaches the next step", async () => {
@@ -595,4 +596,77 @@ test("withdraw: an attempt whose lease expired during a chain call stops after t
   assert.deepEqual(firstCalls, { withdraw: 1, revoke: 0 }, "it never sent the revoke");
   const [after] = await db.select().from(schema.withdrawalRequests);
   assert.deepEqual([after.status, after.decidedBy], ["approved", b.id]);
+});
+
+test("withdraw: takeover while a send is in flight: the duplicate reverts harmlessly and the request still ends approved once", async () => {
+  const v = await addUser("validator");
+  const a = await addUser("admin");
+  const b = await addUser("admin");
+  const l = await insertListing({ generation: 4 });
+  await fileRequest(db, v.actor, { listingId: l.id, reason: "photos are from another project" }, resolveV4);
+  const [r] = await db.select().from(schema.withdrawalRequests);
+  // A tiny chain: the first withdraw that lands marks the impact; a later one reverts (AlreadyWithdrawn).
+  const chainState = { withdrawn: false, revoked: false, sends: 0 };
+  const hashes = new Map<string, "success" | "reverted">();
+  let n = 0;
+  const tx = (ok: boolean) => {
+    const h = ("0x" + (++n).toString(16).padStart(64, "0")) as Hex;
+    hashes.set(h, ok ? "success" : "reverted");
+    return h;
+  };
+  let release!: () => void;
+  const gate = new Promise<void>((res) => (release = res));
+  let firstSend = true;
+  const real = {
+    sendWithdraw: async () => {
+      if (chainState.withdrawn) return null;
+      chainState.sends++;
+      if (firstSend) {
+        firstSend = false;
+        await gate; // the first attempt stalls inside the send, before its hash is saved
+        const ok = !chainState.withdrawn;
+        chainState.withdrawn = true;
+        return tx(ok);
+      }
+      chainState.withdrawn = true;
+      return tx(true);
+    },
+    sendRevoke: async () => {
+      if (chainState.revoked) return null;
+      chainState.revoked = true;
+      return tx(true);
+    },
+    waitForTx: async (_n: unknown, h: Hex) => hashes.get(h) ?? "reverted",
+  };
+  const first = decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, real, resolveV4);
+  await new Promise((res) => setTimeout(res, 20));
+  await db.update(schema.withdrawalRequests).set({ claimedAt: new Date(Date.now() - 11 * 60_000) }).where(eq(schema.withdrawalRequests.id, r.id));
+  assert.equal((await decideRequest(db, b.actor, r.id, { decision: "approve", note: null }, real, resolveV4)).status, 200);
+  release();
+  assert.equal((await first).status, 409, "the stale attempt is fenced off after its send");
+  assert.equal(chainState.sends, 2, "at most one duplicate send, which reverted on-chain");
+  const [after] = await db.select().from(schema.withdrawalRequests);
+  assert.deepEqual([after.status, after.decidedBy], ["approved", b.id]);
+  assert.ok(chainState.withdrawn && chainState.revoked);
+});
+
+test("withdraw: a revert because the step was already done on-chain counts as done", async () => {
+  const v = await addUser("validator");
+  const a = await addUser("admin");
+  const l = await insertListing({ generation: 4 });
+  await fileRequest(db, v.actor, { listingId: l.id, reason: "photos are from another project" }, resolveV4);
+  const [r] = await db.select().from(schema.withdrawalRequests);
+  let withdrawn = false;
+  const ops = {
+    sendWithdraw: async () => {
+      if (withdrawn) return null;
+      withdrawn = true; // someone else's transaction lands first; ours reverts
+      return ("0x" + "9".repeat(64)) as Hex;
+    },
+    sendRevoke: async () => ("0x" + "8".repeat(64)) as Hex,
+    waitForTx: async (_n: unknown, h: Hex) => (h === "0x" + "9".repeat(64) ? ("reverted" as const) : ("success" as const)),
+  };
+  assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 200);
+  const [after] = await db.select().from(schema.withdrawalRequests);
+  assert.deepEqual([after.status, after.withdrawTx], ["approved", "0x"]);
 });
