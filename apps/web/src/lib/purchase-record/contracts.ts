@@ -49,8 +49,10 @@ const CELO_TRWI = "0xA1A10570534681606eF67Bc8DDeda6061Dd8a8f0";
 
 export const RECORDED_CHAINS: RecordedChain[] = [
   {
-    chainId: 421614, // Arbitrum Sepolia (limit of the public connection: 10,000,000 blocks)
-    maxRange: 5_000_000,
+    // Arbitrum Sepolia. The public connection answers 10,000,000 blocks for one contract and one event, but only
+    // 100,000 when a request names several contracts or events, as the job's requests do.
+    chainId: 421614,
+    maxRange: 90_000,
     confirmations: 150,
     contracts: [
       token(ARB_TRWI, 3, 312199931),
@@ -67,8 +69,8 @@ export const RECORDED_CHAINS: RecordedChain[] = [
     ],
   },
   {
-    chainId: 46630, // Robinhood Chain testnet (limit: 10,000,000 blocks)
-    maxRange: 5_000_000,
+    chainId: 46630, // Robinhood Chain testnet (same limits as Arbitrum Sepolia)
+    maxRange: 90_000,
     confirmations: 240,
     contracts: [
       token(RH_TRWI, 3, 123616235),
