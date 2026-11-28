@@ -20,10 +20,6 @@ const ppAcma = localFont({
   display: "swap",
 });
 
-const THEME_SCRIPT = `(function(){var t;try{t=localStorage.getItem("rb-theme")}catch(e){}
-if(t!=="light"&&t!=="dark"){t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"}
-document.documentElement.dataset.theme=t})()`;
-
 const DESCRIPTION =
   "We turn verified real-world impact into a tradable asset class, for creators to tokenize impact and for buyers to purchase it. Testnet beta.";
 
@@ -47,9 +43,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang="en" className={`${ebGaramond.variable} ${ppAcma.variable}`} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col antialiased">
-        {/* Resolve the theme before first paint: saved choice, else the system setting. Static string, no user data.
-            First child of <body>, not in <head>: a hand-written <head> script is the suspected cause of React error #418. */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         <Providers networkKey={network.key}>
           <Nav />
           <div className="flex-1">{children}</div>
