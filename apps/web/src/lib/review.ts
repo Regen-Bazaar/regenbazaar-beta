@@ -69,7 +69,7 @@ async function claimFor(db: DB, s: Sub, placeNames: string[]): Promise<ProofClai
   };
 }
 
-export type ProofRun = { started: boolean; reason?: "already_running" | "done" | "no_links" | "limited" | "not_found"; checks?: ProofCheckResult[] };
+export type ProofRun = { started: boolean; reason?: "already_running" | "done" | "no_links" | "limited" | "not_found" | "rejected"; checks?: ProofCheckResult[] };
 
 /**
  * Fetches the impact's proof and photo links, stores the page text privately, writes the automatic checks.
@@ -79,6 +79,7 @@ export type ProofRun = { started: boolean; reason?: "already_running" | "done" |
 export async function runProofFetch(db: DB, id: string, actor: Actor | null, opts: { manual?: boolean; placeNames?: string[] } = {}): Promise<ProofRun> {
   const [s] = await db.select().from(impactSubmissions).where(eq(impactSubmissions.id, id)).limit(1);
   if (!s) return { started: false, reason: "not_found" };
+  if (s.status === "rejected") return { started: false, reason: "rejected" }; // page text of a rejected impact is not stored again
   const { proof, photo } = linksOf(s);
   if (!proof.length && !photo.length) return { started: false, reason: "no_links" };
   const before = await ensureState(db, id);
@@ -105,6 +106,7 @@ export async function runProofFetch(db: DB, id: string, actor: Actor | null, opt
   }
   const recorder = createRunRecorder();
   try {
+    if (opts.placeNames) await db.update(reviewState).set({ placeNames: opts.placeNames, updatedAt: new Date() }).where(eq(reviewState.submissionId, id));
     const placeNames = opts.placeNames ?? cleanPlaceNames(claimed[0].placeNames);
     const claim = await claimFor(db, s, placeNames);
     const factExtractor =
@@ -131,6 +133,9 @@ export async function runProofFetch(db: DB, id: string, actor: Actor | null, opt
       .flatMap((o) => (o.checks as ProofCheckResult[]).filter((r) => r.sha256).map((r) => ({ submissionId: o.id, sha256: r.sha256! })));
     const checked = duplicateFlags(results, seen);
     await db.update(impactSubmissions).set({ proofChecks: checked, updatedAt: new Date() }).where(eq(impactSubmissions.id, id));
+    // Rejected while the fetch ran: keep fingerprints and results, never the page text.
+    const [now] = await db.select({ status: impactSubmissions.status }).from(impactSubmissions).where(eq(impactSubmissions.id, id)).limit(1);
+    const keepText = now?.status !== "rejected";
     for (const [i, j] of jobs.entries()) {
       const r = results[i];
       const reading = readings.get(j.url);
@@ -145,8 +150,8 @@ export async function runProofFetch(db: DB, id: string, actor: Actor | null, opt
         sha256: r.sha256 ?? null,
         bytes: r.bytes ?? null,
         truncated: r.truncated ?? false,
-        pageText: reading?.text ?? null,
-        facts: reading?.facts ?? null,
+        pageText: keepText ? (reading?.text ?? null) : null,
+        facts: keepText ? (reading?.facts ?? null) : null,
         reader: reading?.reader ?? "none",
         error: r.error ?? null,
       };

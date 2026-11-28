@@ -38,6 +38,10 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ reader: "keywords", reason: "error", actions: keywords() });
   } finally {
-    await recorder.flush(await getDb(), null);
+    try {
+      await recorder.flush(await getDb(), null);
+    } catch {
+      // the run log never changes the answer
+    }
   }
 }

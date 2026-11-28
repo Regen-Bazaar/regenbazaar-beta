@@ -521,3 +521,16 @@ test("links from creators are rendered as plain links only for http(s)", () => {
   const src = readFileSync(join(import.meta.dirname, "../src/lib/safe-link.ts"), "utf8");
   assert.match(src, /https?:/);
 });
+
+test("a rejected impact's proof text is not stored again by a manual check; a refused check does not save place names", async () => {
+  const o = await org("j1");
+  const s = await impact(o.id, { status: "rejected" });
+  const calls: string[] = [];
+  fakeSite(calls);
+  const v = await addUser("validator");
+  const res = await proofRoute.POST(req(`/api/submissions/${s.id}/proof`, { method: "POST", cookie: v.cookie, body: { placeNames: ["Somewhere"] } }), params(s.id));
+  assert.equal(res.status, 409);
+  assert.equal(calls.length, 0);
+  assert.equal((await db.select().from(schema.proofPages)).length, 0);
+  assert.equal((await db.select().from(schema.reviewState)).length, 0, "place names were not saved by a refused check");
+});

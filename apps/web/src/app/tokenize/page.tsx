@@ -148,6 +148,8 @@ export default function Tokenize() {
   const edited = useRef(false); // the creator changed the list: a late AI answer must not overwrite it
   const textNow = useRef("");
   textNow.current = description;
+  const stepNow = useRef(0);
+  stepNow.current = step;
   // 3. where
   const [country, setCountry] = useState("");
   const [ecosystem, setEcosystem] = useState("");
@@ -185,7 +187,7 @@ export default function Tokenize() {
         .then((b: { reader?: string; actions?: ExtractedActionV02[] }) => {
           if (textNow.current !== asked) return; // the text changed meanwhile
           if (b.reader === "ai" && Array.isArray(b.actions) && b.actions.length > 0) {
-            if (!edited.current) setActions(b.actions);
+            if (!edited.current && stepNow.current === 1) setActions(b.actions); // never swap the list after the creator moved on
             setReader("ai");
           } else setReader("keywords");
         })

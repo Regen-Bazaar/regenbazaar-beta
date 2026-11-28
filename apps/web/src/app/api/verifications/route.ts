@@ -278,6 +278,16 @@ export async function POST(req: Request) {
     }
     partnerId = p.id;
   }
+  if (decision === "reject") {
+    // Stored proof page text is deleted when an impact is rejected (fingerprints and results stay). If this fails,
+    // nothing is rejected yet and the validator can try again.
+    try {
+      await db.update(proofPages).set({ pageText: null, facts: null }).where(eq(proofPages.submissionId, submissionId));
+    } catch (e) {
+      console.error("proof text cleanup failed", e instanceof Error ? e.message : e);
+      return NextResponse.json({ error: "could not delete the stored proof text; the impact was not rejected, try again" }, { status: 500 });
+    }
+  }
   await db.insert(verifications).values({ submissionId, validatorId: actor.userId, decision, note: note || null });
   if (internalNote) {
     const [n] = await db
@@ -291,12 +301,6 @@ export async function POST(req: Request) {
 
   if (decision === "reject") {
     await db.update(impactSubmissions).set({ status: "rejected", updatedAt: new Date() }).where(eq(impactSubmissions.id, submissionId));
-    // Stored proof page text is deleted when an impact is rejected (the fingerprint and the result stay).
-    try {
-      await db.update(proofPages).set({ pageText: null, facts: null }).where(eq(proofPages.submissionId, submissionId));
-    } catch (e) {
-      console.error("proof text cleanup failed", e instanceof Error ? e.message : e);
-    }
     await logDecision({ after: { status: "rejected" } });
     return NextResponse.json({ ok: true, status: "rejected" });
   }
