@@ -3,7 +3,7 @@ import { SITE_URL } from "../lib/site";
 import type { ReactNode } from "react";
 import localFont from "next/font/local";
 import { Footer } from "../components/Footer";
-import { Nav } from "../components/Nav";
+import { Nav, TabBar } from "../components/Nav";
 import { Providers } from "../components/Providers";
 import { currentNetwork } from "../lib/network-server";
 import "./globals.css";
@@ -47,6 +47,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <Nav />
           <div className="flex-1">{children}</div>
           <Footer />
+          {/* Room for the fixed phone tab bar, so it never covers the end of the page. */}
+          <div className="h-[calc(56px+env(safe-area-inset-bottom))] lg:hidden" aria-hidden="true" />
+          <TabBar />
         </Providers>
       </body>
     </html>

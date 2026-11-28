@@ -36,6 +36,11 @@
   --rb-tabbar-h: 56px;
   color-scheme: light;
 }
+@media (min-width: 1024px) {
+  :root {
+    --rb-appbar-h: 68px;
+  }
+}
 
 @theme inline {
   --color-bg: var(--rb-bg);

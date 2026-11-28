@@ -1,21 +1,23 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
 import { NATIVE, enabledNetworks } from "../lib/networks";
 import { setNetworkCookie, useNetwork } from "./NetworkProvider";
+import { Icon } from "./ui/Icon";
+import { Sheet } from "./ui/Sheet";
 
-/** Network choice for the whole site. `compact` = inline list for the mobile menu. */
-export function NetworkSwitcher({ compact = false }: { compact?: boolean }) {
+/** Network choice for the whole site: a chip in the app bar that names the (test) network and opens the list. */
+export function NetworkSwitcher() {
   const current = useNetwork();
   const router = useRouter();
   const [pending, start] = useTransition();
-  const menu = useRef<HTMLDetailsElement>(null);
+  const [open, setOpen] = useState(false);
   const { isConnected, chainId } = useAccount();
   const { switchChain } = useSwitchChain();
   const pick = (key: (typeof current)["key"]) => {
-    if (menu.current) menu.current.open = false;
+    setOpen(false);
     // Ask the wallet to follow (adds the network if it is missing); declining keeps the site choice.
     const target = enabledNetworks().find((n) => n.key === key)!.chain.id;
     if (isConnected && chainId !== target) switchChain({ chainId: target });
@@ -23,55 +25,45 @@ export function NetworkSwitcher({ compact = false }: { compact?: boolean }) {
     setNetworkCookie(key);
     start(() => router.refresh());
   };
-
-  if (compact) {
-    return (
-      <div className="px-1 py-2">
-        <p className="label-mono mb-1 px-2">Network</p>
-        {enabledNetworks().map((n) => (
-          <button
-            key={n.key}
-            onClick={() => pick(n.key)}
-            className={`block w-full rounded-lg px-2 py-1.5 text-left text-sm ${n.key === current.key ? "bg-raised text-accent" : "text-fg hover:bg-raised"}`}
-          >
-            {n.key === current.key ? "● " : "○ "}
-            {n.chain.name} · {n.saleCurrency.symbol}
-          </button>
-        ))}
-      </div>
-    );
-  }
+  // Wallet on another network: on a narrow phone the "Switch network" button takes the chip's place.
+  const wrong = isConnected && chainId !== current.chain.id;
 
   return (
-    <details ref={menu} className="relative">
-      <summary
-        title="Choose network"
-        className="flex cursor-pointer list-none items-center gap-2 whitespace-nowrap rounded-full border border-line-strong bg-surface px-3.5 py-1.5 text-xs text-fg hover:border-accent"
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        title="Test network, no real money. Choose network"
+        aria-haspopup="dialog"
+        className={`netchip min-w-0 ${wrong ? "max-sm:hidden" : ""}`}
       >
-        <span className="h-2 w-2 rounded-full bg-ok" aria-hidden="true" />
-        {pending ? "Switching…" : current.chain.name} ▾
-      </summary>
-      <div className="card absolute right-0 z-50 mt-3 w-72 p-2 shadow-xl">
-        <p className="label-mono px-2 pb-1">Choose network</p>
-        {enabledNetworks().map((n) => (
-          <button
-            key={n.key}
-            onClick={() => pick(n.key)}
-            className={`block w-full rounded-lg px-2 py-2 text-left text-sm hover:bg-raised ${n.key === current.key ? "text-accent" : "text-fg"}`}
-          >
-            {n.key === current.key ? "● " : "○ "}
-            {n.chain.name}
-            <span className="block pl-4 text-xs text-subtle">
-              pay in {n.saleCurrency.symbol}
-              {n.saleCurrency.address === NATIVE
-                ? " (native, Celo faucet)"
-                : n.saleCurrency.testMint
-                  ? " (one-click test tokens)"
-                  : " (Paxos test faucet)"}
-            </span>
-          </button>
-        ))}
-      </div>
-    </details>
+        <span className="truncate">{pending ? "Switching…" : current.chain.name}</span>
+      </button>
+      <Sheet open={open} onClose={() => setOpen(false)} title="Network" menu>
+        <p className="-mt-2 text-label text-subtle">Each impact lives on one network. The list shows the one you choose.</p>
+        {enabledNetworks().map((n) => {
+          const on = n.key === current.key;
+          return (
+            <button key={n.key} type="button" onClick={() => pick(n.key)} aria-current={on ? "true" : undefined} className="opt">
+              <span className="icbox">
+                <Icon name="globe" />
+              </span>
+              <span>
+                <b>{n.chain.name}</b>
+                <span className="label">
+                  pay in {n.saleCurrency.symbol}
+                  {n.saleCurrency.address === NATIVE
+                    ? " (native, Celo faucet)"
+                    : n.saleCurrency.testMint
+                      ? " (one-click test tokens)"
+                      : " (Paxos test faucet)"}
+                </span>
+              </span>
+              {on && <Icon name="check" title="Chosen" />}
+            </button>
+          );
+        })}
+      </Sheet>
+    </>
   );
 }
