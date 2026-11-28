@@ -112,7 +112,9 @@ contract TRWIV4Test is Revision4Base {
 
     function test_Mint_RevertsAboveMaxEditions() public {
         bytes32 uid = _issue(1, address(0), 99);
-        _expectRedeemRevertAmount(_voucher(1, uid, address(0), 0), 2, TRWIV4.ExceedsMax.selector);
+        RegenPrimarySaleV3.Voucher memory v = _voucher(1, uid, address(0), 0);
+        v.mintCap = 1000; // the token's own maximum still holds above any voucher cap
+        _expectRedeemRevertAmount(v, 2, TRWIV4.ExceedsMax.selector);
     }
 
     function test_Mint_OnlyMinter() public {

@@ -331,6 +331,7 @@ abstract contract DeployRevision4Checks is Test {
             partnerFeeBps: 500,
             resaleFeeBps: 250,
             resalePartnerBps: 250,
+            mintCap: 100,
             nonce: 0,
             deadline: block.timestamp + 1 hours
         });

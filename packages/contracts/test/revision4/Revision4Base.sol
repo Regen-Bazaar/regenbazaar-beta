@@ -151,6 +151,7 @@ abstract contract Revision4Base is Test {
             partnerFeeBps: partnerFeeBps,
             resaleFeeBps: 250,
             resalePartnerBps: partner_ == address(0) ? 0 : 250,
+            mintCap: EDITIONS,
             nonce: 0,
             deadline: block.timestamp + 1 hours
         });

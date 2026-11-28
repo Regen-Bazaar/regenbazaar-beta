@@ -20,6 +20,8 @@ import { TRWIV4 } from "./TRWIV4.sol";
 /// @dev    Split rules and caps are those of version 2. New in version 3: `recipient`, the resale shares
 ///         fixed per impact at first sale (`resaleFeeBps`, `resalePartnerBps`), and the partner must equal
 ///         the attested partner (checked by TRWIV4). EIP-712 domain ("RegenPrimarySale", "3").
+///         `mintCap` (owner decision 28.11.2026) bounds the editions that may exist after the purchase; the
+///         site signs 25 while the edition limit holds and 100 after it lifts.
 ///         Roles: DEFAULT_ADMIN_ROLE = timelock; SIGNER_ROLE = voucher signer key; GUARDIAN_ROLE pauses only.
 contract RegenPrimarySaleV3 is AccessControl, ReentrancyGuard, Pausable, EIP712 {
     using SafeERC20 for IERC20;
@@ -32,7 +34,7 @@ contract RegenPrimarySaleV3 is AccessControl, ReentrancyGuard, Pausable, EIP712 
     uint96 internal constant BPS = 10_000;
 
     bytes32 public constant VOUCHER_TYPEHASH = keccak256(
-        "Voucher(uint256 tokenId,address creator,uint256 totalIV,uint256 maxEditions,uint256 pricePerEdition,address currency,address beneficiary,address recipient,bytes32 easUID,string metadataURI,uint96 royaltyBps,uint96 feeBps,address partner,uint96 partnerFeeBps,uint96 resaleFeeBps,uint96 resalePartnerBps,uint256 nonce,uint256 deadline)"
+        "Voucher(uint256 tokenId,address creator,uint256 totalIV,uint256 maxEditions,uint256 pricePerEdition,address currency,address beneficiary,address recipient,bytes32 easUID,string metadataURI,uint96 royaltyBps,uint96 feeBps,address partner,uint96 partnerFeeBps,uint96 resaleFeeBps,uint96 resalePartnerBps,uint256 mintCap,uint256 nonce,uint256 deadline)"
     );
 
     TRWIV4 public immutable trwi;
@@ -58,6 +60,7 @@ contract RegenPrimarySaleV3 is AccessControl, ReentrancyGuard, Pausable, EIP712 
         uint96 partnerFeeBps; // partner share of this sale (0 when no partner)
         uint96 resaleFeeBps; // platform share on resale, fixed at first sale
         uint96 resalePartnerBps; // partner share on resale, fixed at first sale
+        uint256 mintCap; // editions of this impact that may exist after this purchase (site edition limit)
         uint256 nonce;
         uint256 deadline;
     }
@@ -90,6 +93,7 @@ contract RegenPrimarySaleV3 is AccessControl, ReentrancyGuard, Pausable, EIP712 
     error StaleVoucher();
     error BadSignature();
     error BadCurrency();
+    error ExceedsMintCap();
 
     constructor(address admin, address trwi_, address feeRecipient_) EIP712("RegenPrimarySale", "3") {
         if (admin == address(0) || trwi_ == address(0) || feeRecipient_ == address(0)) revert BadParams();
@@ -109,6 +113,10 @@ contract RegenPrimarySaleV3 is AccessControl, ReentrancyGuard, Pausable, EIP712 
         if (!allowedCurrency[v.currency]) revert BadCurrency();
         address signer = ECDSA.recover(_hashTypedDataV4(_voucherStructHash(v)), sig);
         if (!hasRole(SIGNER_ROLE, signer)) revert BadSignature();
+
+        // Edition limit: checked against the editions already minted on-chain, so a voucher reused within
+        // its hour, or one signed before others were sold, can never push the total above its cap.
+        if (trwi.collection(v.tokenId).minted + amount > v.mintCap) revert ExceedsMintCap();
 
         address to = v.recipient == address(0) ? msg.sender : v.recipient;
         Payout memory p = _payout(v, amount);
@@ -191,7 +199,7 @@ contract RegenPrimarySaleV3 is AccessControl, ReentrancyGuard, Pausable, EIP712 
                 ),
                 abi.encode(v.currency, v.beneficiary, v.recipient, v.easUID, keccak256(bytes(v.metadataURI))),
                 abi.encode(v.royaltyBps, v.feeBps, v.partner, v.partnerFeeBps, v.resaleFeeBps),
-                abi.encode(v.resalePartnerBps, v.nonce, v.deadline)
+                abi.encode(v.resalePartnerBps, v.mintCap, v.nonce, v.deadline)
             )
         );
     }

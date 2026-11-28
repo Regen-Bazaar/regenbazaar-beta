@@ -292,6 +292,115 @@ contract RegenPrimarySaleV3Test is Revision4Base {
         sale.redeem(v, 0, sig);
     }
 
+    // ---- mintCap: edition limit (owner decision 28.11.2026) ----
+
+    function _capped(bytes32 uid, uint256 cap) internal view returns (RegenPrimarySaleV3.Voucher memory v) {
+        v = _voucher(1, uid, address(0), 0);
+        v.mintCap = cap;
+    }
+
+    function test_MintCap_25_AllowsExactly25() public {
+        bytes32 uid = _attest(address(0));
+        _redeem(buyer, _capped(uid, 25), 25);
+        assertEq(trwi.collection(1).minted, 25);
+    }
+
+    function test_MintCap_25_The26thEditionReverts() public {
+        bytes32 uid = _attest(address(0));
+        _redeem(buyer, _capped(uid, 25), 25);
+        _expectRevert(_capped(uid, 25), RegenPrimarySaleV3.ExceedsMintCap.selector);
+    }
+
+    function test_MintCap_25_OneBuyOf26Reverts() public {
+        bytes32 uid = _attest(address(0));
+        RegenPrimarySaleV3.Voucher memory v = _capped(uid, 25);
+        bytes memory sig = _sign(v);
+        usd.mint(buyer, 26 * PRICE);
+        vm.startPrank(buyer);
+        usd.approve(address(sale), 26 * PRICE);
+        vm.expectRevert(RegenPrimarySaleV3.ExceedsMintCap.selector);
+        sale.redeem(v, 26, sig);
+        vm.stopPrank();
+        assertEq(usd.balanceOf(buyer), 26 * PRICE, "nothing paid");
+    }
+
+    function test_MintCap_100_AllowsAll() public {
+        bytes32 uid = _attest(address(0));
+        _redeem(buyer, _capped(uid, 25), 25);
+        _redeem(buyer2, _capped(uid, 100), 75);
+        assertEq(trwi.collection(1).minted, 100);
+    }
+
+    function test_MintCap_BelowAlreadyMinted_Reverts() public {
+        bytes32 uid = _attest(address(0));
+        _redeem(buyer, _capped(uid, 100), 30);
+        _expectRevert(_capped(uid, 25), RegenPrimarySaleV3.ExceedsMintCap.selector);
+    }
+
+    /// A cap-25 voucher signed at 0 sold cannot be used once others bought editions elsewhere.
+    function test_MintCap_OldVoucherRespectsLaterSales() public {
+        bytes32 uid = _attest(address(0));
+        RegenPrimarySaleV3.Voucher memory old = _capped(uid, 25);
+        bytes memory oldSig = _sign(old);
+        _redeem(buyer2, _capped(uid, 25), 20); // another buyer, another voucher
+        usd.mint(buyer, 6 * PRICE);
+        vm.startPrank(buyer);
+        usd.approve(address(sale), 6 * PRICE);
+        vm.expectRevert(RegenPrimarySaleV3.ExceedsMintCap.selector);
+        sale.redeem(old, 6, oldSig);
+        sale.redeem(old, 5, oldSig); // exactly up to the cap is still fine
+        vm.stopPrank();
+        assertEq(trwi.collection(1).minted, 25);
+    }
+
+    /// Replaying the same voucher within its hour adds up against the cap.
+    function test_MintCap_ReplayWithinTheHourRespectsCap() public {
+        bytes32 uid = _attest(address(0));
+        RegenPrimarySaleV3.Voucher memory v = _capped(uid, 25);
+        bytes memory sig = _sign(v);
+        usd.mint(buyer, 30 * PRICE);
+        vm.startPrank(buyer);
+        usd.approve(address(sale), 30 * PRICE);
+        sale.redeem(v, 10, sig);
+        vm.warp(block.timestamp + 30 minutes);
+        sale.redeem(v, 15, sig);
+        vm.expectRevert(RegenPrimarySaleV3.ExceedsMintCap.selector);
+        sale.redeem(v, 1, sig);
+        vm.stopPrank();
+        assertEq(trwi.collection(1).minted, 25);
+    }
+
+    function test_MintCap_IsSigned_CannotBeRaised() public {
+        bytes32 uid = _attest(address(0));
+        RegenPrimarySaleV3.Voucher memory v = _capped(uid, 25);
+        bytes memory sig = _sign(v);
+        v.mintCap = 100;
+        usd.mint(buyer, PRICE);
+        vm.startPrank(buyer);
+        usd.approve(address(sale), PRICE);
+        vm.expectRevert(RegenPrimarySaleV3.BadSignature.selector);
+        sale.redeem(v, 1, sig);
+        vm.stopPrank();
+    }
+
+    function testFuzz_MintCap_NeverExceeded(uint8 first, uint8 second, uint8 cap) public {
+        cap = uint8(bound(cap, 1, EDITIONS));
+        first = uint8(bound(first, 1, EDITIONS));
+        second = uint8(bound(second, 1, EDITIONS));
+        bytes32 uid = _attest(address(0));
+        if (first <= cap) _redeem(buyer, _capped(uid, cap), first);
+        uint256 minted = trwi.collection(1).minted;
+        RegenPrimarySaleV3.Voucher memory v = _capped(uid, cap);
+        bytes memory sig = _sign(v);
+        usd.mint(buyer2, uint256(second) * PRICE);
+        vm.startPrank(buyer2);
+        usd.approve(address(sale), uint256(second) * PRICE);
+        if (minted + second > cap) vm.expectRevert(RegenPrimarySaleV3.ExceedsMintCap.selector);
+        sale.redeem(v, second, sig);
+        vm.stopPrank();
+        assertLe(trwi.collection(1).minted, cap);
+    }
+
     // ---- item 15 + 7: roles ----
 
     function test_Guardian_PausesButCannotUnpause() public {

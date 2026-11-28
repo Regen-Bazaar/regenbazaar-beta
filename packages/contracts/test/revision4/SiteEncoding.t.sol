@@ -10,7 +10,7 @@ import { TRWIV4 } from "../../src/revision4/TRWIV4.sol";
 ///      If either side changes one field, this test or that script fails, before any purchase can.
 contract SiteEncodingTest is Test {
     address internal constant SALE = 0x00000000000000000000000000000000000Ca1e3;
-    bytes32 internal constant SITE_VOUCHER_DIGEST = 0x6bfd130421a1906f0e952819e8313fd163b2d6255a423b365da3b906e70acf41;
+    bytes32 internal constant SITE_VOUCHER_DIGEST = 0x7e67f565398588f74e89cc4adc7f9dbe8de0de1d712ace3d5b2ff8f9b0e3e098;
     bytes32 internal constant SITE_CLAIM_HASH = 0x492ab7ac6e0cba8713a2b96ece84ef22e10ca314227bfaf30b81f587d808f2d0;
 
     function _voucher() internal pure returns (RegenPrimarySaleV3.Voucher memory) {
@@ -31,6 +31,7 @@ contract SiteEncodingTest is Test {
             partnerFeeBps: 500,
             resaleFeeBps: 250,
             resalePartnerBps: 250,
+            mintCap: 25,
             nonce: 3,
             deadline: 1_900_000_000
         });

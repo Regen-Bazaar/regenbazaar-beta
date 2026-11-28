@@ -369,6 +369,11 @@
             "internalType": "uint96"
           },
           {
+            "name": "mintCap",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
             "name": "nonce",
             "type": "uint256",
             "internalType": "uint256"
@@ -498,6 +503,11 @@
             "name": "resalePartnerBps",
             "type": "uint96",
             "internalType": "uint96"
+          },
+          {
+            "name": "mintCap",
+            "type": "uint256",
+            "internalType": "uint256"
           },
           {
             "name": "nonce",
@@ -930,6 +940,11 @@
   {
     "type": "error",
     "name": "EnforcedPause",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ExceedsMintCap",
     "inputs": []
   },
   {
