@@ -139,22 +139,30 @@ export async function decideRequest(
     if (rows.length === 0) throw new LostClaim();
   };
   // One chain step: reuse a saved hash (a retry only waits for it), otherwise send, save the hash at once, then wait.
+  // True while a transaction may be out on the network without its hash saved: then the lease is kept on failure,
+  // so no retry can send again before it expires.
+  let unsavedSend = false;
   const step = async (saved: Hex | null, send: () => Promise<Hex | null>, field: "withdrawTx" | "revokeTx"): Promise<Hex> => {
     let hash = saved;
     if (!hash) {
       await save({}); // still the holder, lease renewed for this step
+      unsavedSend = true;
       hash = (await send()) ?? "0x"; // "0x" = already in place on-chain, nothing sent
       await save({ [field]: hash });
+      unsavedSend = false;
     }
     if (hash !== "0x" && (await chain.waitForTx(net, hash)) !== "success") {
       // A revert is usually a duplicate of a step another attempt already finished (TRWIV4 and EAS refuse repeats,
       // so a duplicate changes nothing and costs one fee). Ask the chain again: send() returns null when done.
       await save({ [field]: null });
+      unsavedSend = true;
       const again = await send();
       if (again !== null) {
         await save({ [field]: again });
+        unsavedSend = false;
         throw new Error(`${field === "withdrawTx" ? "withdraw" : "revoke"} transaction reverted (${hash}); resent as ${again}, retry to confirm`);
       }
+      unsavedSend = false;
       hash = "0x";
       await save({ [field]: hash });
     }
@@ -167,7 +175,9 @@ export async function decideRequest(
   } catch (e) {
     if (e instanceof LostClaim) return fail(409, "another admin is finishing this withdrawal; try again in a few minutes");
     const error = e instanceof Error ? e.message.slice(0, 300) : "on-chain step failed";
-    await db.update(withdrawalRequests).set({ claimedAt: null }).where(mine); // release the lease for a retry
+    // Release the lease for an immediate retry, unless a transaction may be out unrecorded: then keep it, so the
+    // next attempt waits out the lease instead of sending the same step again.
+    if (!unsavedSend) await db.update(withdrawalRequests).set({ claimedAt: null }).where(mine);
     await logAction(db, actor, { action: "withdraw_approve", objectType: "listing", objectId: l.id, before: { requestId: r.id }, after: { withdrawTx, revokeTx }, note, error });
     return fail(502, `withdrawal not finished, retry: ${error}`);
   }

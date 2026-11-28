@@ -354,6 +354,10 @@ test("withdraw: a failed on-chain step keeps the request claimed (not rejectable
   assert.equal(failed[0].result, "failed");
 
   const fixed = fakeChain();
+  // The revoke send threw, so it may have gone out: the claim is kept and an immediate retry is refused ...
+  assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, fixed.ops, resolveV4)).status, 409);
+  // ... and once the lease has run out, the retry finishes without repeating the withdraw.
+  await db.update(schema.withdrawalRequests).set({ claimedAt: new Date(Date.now() - 11 * 60_000) }).where(eq(schema.withdrawalRequests.id, r.id));
   assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, fixed.ops, resolveV4)).status, 200);
   assert.deepEqual(fixed.calls, { withdraw: 0, revoke: 1 });
 });
@@ -669,4 +673,27 @@ test("withdraw: a revert because the step was already done on-chain counts as do
   assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 200);
   const [after] = await db.select().from(schema.withdrawalRequests);
   assert.deepEqual([after.status, after.withdrawTx], ["approved", "0x"]);
+});
+
+test("withdraw: if saving a sent transaction's hash fails, the claim is kept and an immediate retry is refused", async () => {
+  const v = await addUser("validator");
+  const a = await addUser("admin");
+  const l = await insertListing({ generation: 4 });
+  await fileRequest(db, v.actor, { listingId: l.id, reason: "photos are from another project" }, resolveV4);
+  const [r] = await db.select().from(schema.withdrawalRequests);
+  const sent = { withdraw: 0 };
+  const ops = {
+    sendWithdraw: async () => {
+      sent.withdraw++;
+      return ("0x" + "1".repeat(80)) as Hex; // longer than the column: the hash save fails after the send
+    },
+    sendRevoke: async () => ("0x" + "2".repeat(64)) as Hex,
+    waitForTx: async () => "success" as const,
+  };
+  assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 502);
+  const [mid] = await db.select().from(schema.withdrawalRequests);
+  assert.equal(mid.status, "approving");
+  assert.ok(mid.claimedAt, "the claim is still held");
+  assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 409, "no second send before the lease runs out");
+  assert.equal(sent.withdraw, 1);
 });
