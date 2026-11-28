@@ -453,3 +453,49 @@ test("onchain: a server with only the revision 4 signer key counts as configured
     delete process.env.VOUCHER_SIGNER_PRIVATE_KEY;
   }
 });
+
+test("withdraw: two overlapping approvals send the chain steps once; the second is refused while the first runs", async () => {
+  const v = await addUser("validator");
+  const a = await addUser("admin");
+  const b = await addUser("admin");
+  const l = await insertListing({ generation: 4 });
+  await fileRequest(db, v.actor, { listingId: l.id, reason: "photos are from another project" }, resolveV4);
+  const [r] = await db.select().from(schema.withdrawalRequests);
+  const calls = { withdraw: 0, revoke: 0 };
+  let release!: () => void;
+  const gate = new Promise<void>((res) => (release = res));
+  const slow = {
+    withdraw: async () => {
+      calls.withdraw++;
+      await gate;
+      return ("0x" + "a".repeat(64)) as `0x${string}`;
+    },
+    revoke: async () => {
+      calls.revoke++;
+      return ("0x" + "b".repeat(64)) as `0x${string}`;
+    },
+  };
+  const first = decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, slow, resolveV4);
+  await new Promise((res) => setTimeout(res, 20)); // the first attempt now holds the claim
+  const second = await decideRequest(db, b.actor, r.id, { decision: "approve", note: null }, slow, resolveV4);
+  assert.equal(second.status, 409);
+  release();
+  assert.equal((await first).status, 200);
+  assert.deepEqual(calls, { withdraw: 1, revoke: 1 });
+  const [after] = await db.select().from(schema.withdrawalRequests);
+  assert.equal(after.status, "approved");
+});
+
+test("withdraw: an expired claim can be taken over, and the old holder cannot finalise", async () => {
+  const v = await addUser("validator");
+  const a = await addUser("admin");
+  const l = await insertListing({ generation: 4 });
+  await fileRequest(db, v.actor, { listingId: l.id, reason: "photos are from another project" }, resolveV4);
+  const [r] = await db.select().from(schema.withdrawalRequests);
+  // a crashed attempt left the claim 11 minutes ago
+  await db
+    .update(schema.withdrawalRequests)
+    .set({ status: "approving", claimToken: "00000000-0000-4000-8000-0000000000aa", claimedAt: new Date(Date.now() - 11 * 60_000) })
+    .where(eq(schema.withdrawalRequests.id, r.id));
+  assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, fakeChain().ops, resolveV4)).status, 200);
+});

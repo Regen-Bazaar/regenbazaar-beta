@@ -444,6 +444,21 @@ contract DeployRevision4Test is DeployRevision4Checks {
         script.validate(c, deployer);
     }
 
+    function test_Validate_RejectsAnERC20ThatIsNotOnTheChainsApprovedList() public {
+        script = new DeployRevision4();
+        DeployRevision4.Config memory c = _config(address(eas), address(registry));
+        c.deployTestStablecoin = false;
+        c.currencies = new address[](1);
+        c.currencies[0] = address(new TestUSDG()); // passes every ERC-20 read, but is no approved coin
+        vm.chainId(421614);
+        vm.expectRevert(abi.encodeWithSelector(DeployRevision4.BadConfig.selector, "currency is not approved for this chain"));
+        script.validate(c, deployer);
+        vm.chainId(46630); // Robinhood: no list, out of the plan
+        vm.expectRevert(abi.encodeWithSelector(DeployRevision4.BadConfig.selector, "currency is not approved for this chain"));
+        script.validate(c, deployer);
+        assertEq(script.approvedCurrencies(11142220).length, 2);
+    }
+
     function test_Validate_RejectsDeployerAsRoleHolder() public {
         DeployRevision4.Config memory c = _config(address(eas), address(registry));
         c.guardian = deployer;

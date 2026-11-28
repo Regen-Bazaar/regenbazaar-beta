@@ -110,7 +110,34 @@ contract DeployRevision4 is Script {
         for (uint256 i = 0; i < c.currencies.length; ++i) {
             if (c.currencies[i].code.length == 0) revert BadConfig("currency has no code");
             if (!_isStablecoin(c.currencies[i])) revert BadConfig("currency is not an ERC-20 stablecoin (6..18 decimals)");
+            if (block.chainid != LOCAL_CHAIN && !_isApproved(block.chainid, c.currencies[i])) {
+                revert BadConfig("currency is not approved for this chain");
+            }
         }
+    }
+
+    uint256 internal constant LOCAL_CHAIN = 31337; // forge's own chain in tests: mocks allowed
+
+    /// @notice The only payment coins revision 4 may allow per chain (owner decision 28.11.2026). Circle USDC from
+    ///         developers.circle.com/stablecoins/usdc-contract-addresses; USDm (Celo dollar) from
+    ///         docs.mento.org/mento-v3/build/deployments/addresses. A chain without a list cannot be deployed to.
+    function approvedCurrencies(uint256 chainId) public pure returns (address[] memory list) {
+        if (chainId == 421614) {
+            list = new address[](1);
+            list[0] = 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d; // USDC, Arbitrum Sepolia
+        } else if (chainId == 11142220) {
+            list = new address[](2);
+            list[0] = 0x01C5C0122039549AD1493B8220cABEdD739BC44E; // USDC, Celo Sepolia
+            list[1] = 0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b; // USDm (Celo dollar), Celo Sepolia
+        }
+    }
+
+    function _isApproved(uint256 chainId, address token) internal pure returns (bool) {
+        address[] memory list = approvedCurrencies(chainId);
+        for (uint256 i = 0; i < list.length; ++i) {
+            if (list[i] == token) return true;
+        }
+        return false;
     }
 
     /// @notice Networks where the labelled, publicly mintable TestUSDG stand-in may ever be deployed.

@@ -17,6 +17,7 @@ build/
 packages/contracts/out/
 packages/contracts/cache/
 packages/contracts/broadcast/
+packages/contracts/rollback/
 packages/contracts/lib/
 
 # ponder

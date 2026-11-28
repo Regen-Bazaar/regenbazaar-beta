@@ -1,5 +1,5 @@
 {
-  "id": "b00cab16-de56-4fa5-b8ae-1ca90482d54a",
+  "id": "2b53f8d9-b928-4be5-a030-41440164871d",
   "prevId": "6e0d5bd6-4d48-46ce-9b52-b79c727b5611",
   "version": "7",
   "dialect": "postgresql",
@@ -1292,6 +1292,18 @@
         "revoke_tx": {
           "name": "revoke_tx",
           "type": "varchar(66)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "claim_token": {
+          "name": "claim_token",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "claimed_at": {
+          "name": "claimed_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         },

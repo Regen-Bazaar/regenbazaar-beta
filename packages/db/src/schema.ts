@@ -240,6 +240,9 @@ export const withdrawalRequests = pgTable(
     decisionNote: text("decision_note"),
     withdrawTx: varchar("withdraw_tx", { length: 66 }), // TRWIV4.withdraw
     revokeTx: varchar("revoke_tx", { length: 66 }), // EAS revoke
+    // Exclusive claim of one approval attempt (lease): only its holder runs chain steps and finalises.
+    claimToken: uuid("claim_token"),
+    claimedAt: timestamp("claimed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

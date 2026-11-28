@@ -2,7 +2,8 @@
 // request with a reason; only an admin approves or rejects; every step goes to the action log. On approval the
 // impact is marked withdrawn on TRWIV4 and its attestation is revoked in EAS, then the listing is closed.
 // Revision 4 networks only: on today's contracts there is nothing on-chain to withdraw, so requests are refused.
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
+import { and, desc, eq, inArray, isNull, lt, or } from "drizzle-orm";
 import { listings, withdrawalRequests } from "@rb/db/schema";
 import type { DB } from "@rb/db";
 import { logAction } from "./action-log";
@@ -15,6 +16,8 @@ type Hex = `0x${string}`;
 
 export const REASON_MIN = 10;
 export const REASON_MAX = 2000;
+// An approval attempt holds the request this long; longer than the two chain steps with their receipt waits.
+export const CLAIM_LEASE_MS = 10 * 60_000;
 
 export interface ChainOps {
   withdraw(net: Network, easUid: Hex, reasonURI: string): Promise<Hex | null>;
@@ -102,13 +105,26 @@ export async function decideRequest(
 
   const net = revision4Network(l, resolve);
   if (typeof net === "string") return fail(409, net);
-  // Claim the request before any irreversible step; from here it can only end as approved.
+  // Exclusive claim before any irreversible step: one attempt at a time holds the lease; from here the request
+  // can only end as approved. A failed attempt releases the lease so a retry can start at once.
+  const token = randomUUID();
+  const now0 = new Date();
+  const staleBefore = new Date(now0.getTime() - CLAIM_LEASE_MS);
   const claimed = await db
     .update(withdrawalRequests)
-    .set({ status: "approving", decidedBy: actor.userId })
-    .where(and(eq(withdrawalRequests.id, r.id), inArray(withdrawalRequests.status, ["open", "approving"])))
+    .set({ status: "approving", decidedBy: actor.userId, claimToken: token, claimedAt: now0 })
+    .where(
+      and(
+        eq(withdrawalRequests.id, r.id),
+        or(
+          eq(withdrawalRequests.status, "open"),
+          and(eq(withdrawalRequests.status, "approving"), or(isNull(withdrawalRequests.claimedAt), lt(withdrawalRequests.claimedAt, staleBefore))),
+        ),
+      ),
+    )
     .returning({ withdrawTx: withdrawalRequests.withdrawTx, revokeTx: withdrawalRequests.revokeTx });
-  if (claimed.length === 0) return fail(409, "request is no longer open");
+  if (claimed.length === 0) return fail(409, "another admin is finishing this withdrawal; try again in a few minutes");
+  const mine = and(eq(withdrawalRequests.id, r.id), eq(withdrawalRequests.claimToken, token));
   const easUid = l.easUid as Hex;
   let withdrawTx: Hex | null = claimed[0].withdrawTx as Hex | null;
   let revokeTx: Hex | null = claimed[0].revokeTx as Hex | null;
@@ -117,25 +133,30 @@ export async function decideRequest(
     // work already done on-chain ("0x" = it was already in place), so retries never repeat a transaction.
     if (!withdrawTx) {
       withdrawTx = (await chain.withdraw(net, easUid, siteUrl(`/submission/${l.submissionId}`))) ?? "0x";
-      await db.update(withdrawalRequests).set({ withdrawTx }).where(eq(withdrawalRequests.id, r.id));
+      await db.update(withdrawalRequests).set({ withdrawTx }).where(mine);
     }
     if (!revokeTx) {
       revokeTx = (await chain.revoke(net, easUid)) ?? "0x";
-      await db.update(withdrawalRequests).set({ revokeTx }).where(eq(withdrawalRequests.id, r.id));
+      await db.update(withdrawalRequests).set({ revokeTx }).where(mine);
     }
   } catch (e) {
     const error = e instanceof Error ? e.message.slice(0, 300) : "on-chain step failed";
+    await db.update(withdrawalRequests).set({ claimedAt: null }).where(mine); // release the lease for a retry
     await logAction(db, actor, { action: "withdraw_approve", objectType: "listing", objectId: l.id, before: { requestId: r.id }, after: { withdrawTx, revokeTx }, note, error });
     return fail(502, `withdrawal not finished, retry: ${error}`);
   }
   const now = new Date();
-  await db.transaction(async (tx) => {
-    await tx
+  const finished = await db.transaction(async (tx) => {
+    const rows = await tx
       .update(withdrawalRequests)
-      .set({ status: "approved", decidedBy: actor.userId, decidedAt: now, decisionNote: note, withdrawTx, revokeTx })
-      .where(and(eq(withdrawalRequests.id, r.id), eq(withdrawalRequests.status, "approving")));
+      .set({ status: "approved", decidedBy: actor.userId, decidedAt: now, decisionNote: note, withdrawTx, revokeTx, claimedAt: null })
+      .where(and(mine, eq(withdrawalRequests.status, "approving")))
+      .returning({ id: withdrawalRequests.id });
+    if (rows.length === 0) return false; // the lease expired and another attempt took over: it finalises
     await tx.update(listings).set({ withdrawnAt: now, withdrawnReason: r.reason, active: false }).where(eq(listings.id, l.id));
+    return true;
   });
+  if (!finished) return fail(409, "another admin is finishing this withdrawal; try again in a few minutes");
   await logAction(db, actor, {
     action: "withdraw_approve",
     objectType: "listing",

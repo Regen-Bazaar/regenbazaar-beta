@@ -10,6 +10,8 @@ CREATE TABLE "withdrawal_requests" (
 	"decision_note" text,
 	"withdraw_tx" varchar(66),
 	"revoke_tx" varchar(66),
+	"claim_token" uuid,
+	"claimed_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
