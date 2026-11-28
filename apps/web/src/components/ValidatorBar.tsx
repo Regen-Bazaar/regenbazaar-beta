@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useAccount, useSignMessage } from "wagmi";
+import { useAccount } from "wagmi";
+import { stringToHex } from "viem";
 import { createSiweMessage } from "viem/siwe";
 import { NONCE_TTL_MS, SIGN_IN_STATEMENT } from "../lib/validator-constants";
 import { useConnectWallet } from "./useConnectWallet";
@@ -49,15 +50,14 @@ const roleLabel = (r: string) => (r === "admin" ? "admin" : "reviewer");
 
 /** Personal mode only: sign-in with a wallet signature, or who is signed in with links to team and log. Nothing in shared mode. */
 export function ValidatorBar({ me, current }: { me: Me; current?: "queue" | "partners" | "team" | "log" }) {
-  const { address, isConnected, chainId } = useAccount();
-  const { signMessageAsync } = useSignMessage();
+  const { address, isConnected, chainId, connector } = useAccount();
   const { connectAny, isPending } = useConnectWallet();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [wantSign, setWantSign] = useState(false);
 
   const signIn = useCallback(async () => {
-    if (!address) return;
+    if (!address || !connector) return;
     setBusy(true);
     setError("");
     try {
@@ -76,7 +76,16 @@ export function ValidatorBar({ me, current }: { me: Me; current?: "queue" | "par
         issuedAt: now,
         expirationTime: new Date(now.getTime() + NONCE_TTL_MS),
       });
-      const signature = await signMessageAsync({ message });
+      // Ask the wallet directly. A sign-in signature is valid on any network, while wagmi's signMessage makes a
+      // WalletConnect wallet "switch" to the network it is already on, which fails when that is not one of ours
+      // (a phone wallet left on Ethereum mainnet: "Chain not configured").
+      const provider = (await connector.getProvider()) as {
+        request(args: { method: string; params: unknown[] }): Promise<unknown>;
+      };
+      const signature = (await provider.request({
+        method: "personal_sign",
+        params: [stringToHex(message), address],
+      })) as string;
       const res = await fetch("/api/auth/sign-in", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -90,7 +99,7 @@ export function ValidatorBar({ me, current }: { me: Me; current?: "queue" | "par
       setBusy(false);
       setWantSign(false);
     }
-  }, [address, chainId, signMessageAsync]);
+  }, [address, chainId, connector]);
 
   useEffect(() => {
     if (wantSign && isConnected && address && !busy) void signIn();
