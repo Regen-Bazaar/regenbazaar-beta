@@ -6,7 +6,6 @@ import { useEffect, useRef } from "react";
 import { ConnectButton } from "./ConnectButton";
 import { Logo } from "./Logo";
 import { NetworkSwitcher } from "./NetworkSwitcher";
-import { ThemeToggle } from "./ThemeToggle";
 
 // Verify is reviewer-only (password) and deliberately not in the menu; reviewers use /verify directly.
 const MAIN = [
@@ -75,7 +74,6 @@ export function Nav() {
           <div className="hidden md:block">
             <NetworkSwitcher />
           </div>
-          <ThemeToggle />
           <ConnectButton />
 
           {/* compact screens (no-JS disclosure) */}
