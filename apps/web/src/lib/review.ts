@@ -103,10 +103,10 @@ export async function runProofFetch(db: DB, id: string, actor: Actor | null, opt
     await release(prevStatus, false);
     return { started: false, reason: "limited" };
   }
+  const recorder = createRunRecorder();
   try {
     const placeNames = opts.placeNames ?? cleanPlaceNames(claimed[0].placeNames);
     const claim = await claimFor(db, s, placeNames);
-    const recorder = createRunRecorder();
     const factExtractor =
       proofDeps.factExtractor === undefined ? (llmConfigured() ? createDeepSeekFactExtractor({ onRun: recorder.onRun }) : undefined) : (proofDeps.factExtractor ?? undefined);
     const jobs = [...proof.map((url) => ({ url, kind: "proof" as const })), ...photo.filter((u) => !proof.includes(u)).map((url) => ({ url, kind: "photo" as const }))];
@@ -152,13 +152,14 @@ export async function runProofFetch(db: DB, id: string, actor: Actor | null, opt
       };
       await db.insert(proofPages).values(row).onConflictDoUpdate({ target: [proofPages.submissionId, proofPages.url], set: row });
     }
-    await recorder.flush(db, id);
     await release("done");
     await logAction(db, actor, { action: "proof_check", objectType: "impact", objectId: id, after: { links: jobs.length, ...(opts.manual ? {} : { auto: true }) } });
     return { started: true, checks: checked };
   } catch (e) {
     await release(prevStatus, false).catch(() => {});
     throw e;
+  } finally {
+    await recorder.flush(db, id); // the AI calls made are logged even when the run failed half way
   }
 }
 

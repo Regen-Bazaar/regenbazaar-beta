@@ -53,7 +53,9 @@ export function Evidence({
   const [places, setPlaces] = useState(placeNames.join(", "));
   const [busy, setBusy] = useState<"" | "check" | "places">("");
   const [error, setError] = useState("");
-  useEffect(() => setPlaces(placeNames.join(", ")), [placeNames]);
+  // Reset only when the saved names really change; a reload that returns the same names must not wipe what is being typed.
+  const savedKey = placeNames.join(", ");
+  useEffect(() => setPlaces(savedKey), [savedKey]);
   const all = [...proofLinks.map((u) => ({ u, kind: "proof" as const })), ...photoLinks.filter((u) => !proofLinks.includes(u)).map((u) => ({ u, kind: "photo" as const }))];
   const names = () => places.split(",").map((p) => p.trim()).filter(Boolean).slice(0, 5);
 
