@@ -47,7 +47,9 @@ export function BuyButton({ listingId }: { listingId: string }) {
   const [tx, setTx] = useState("");
   // Revision 4: the buyer chooses the stablecoin (owner decision 28.11.2026); today's networks have exactly one.
   const coins = net.primarySaleVersion === 3 ? buyerCurrencies(net) : [];
-  const [coin, setCoin] = useState<string>(coins[0]?.address ?? "");
+  const [picked, setCoin] = useState<{ net: string; coin: string } | null>(null);
+  // A choice made on another network never carries over: fall back to this network's first coin.
+  const coin = picked && picked.net === net.key ? picked.coin : (coins[0]?.address ?? "");
 
   async function buy() {
     if (!isConnected) {
@@ -159,7 +161,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
       {coins.length > 1 && (
         <label className="mb-2 flex items-center justify-between gap-3 text-sm text-muted">
           Pay with
-          <select value={coin} onChange={(e) => setCoin(e.target.value)} disabled={state === "busy"} className="field w-auto">
+          <select value={coin} onChange={(e) => setCoin({ net: net.key, coin: e.target.value })} disabled={state === "busy"} className="field w-auto">
             {coins.map((c) => (
               <option key={c.address} value={c.address}>
                 {c.symbol}
