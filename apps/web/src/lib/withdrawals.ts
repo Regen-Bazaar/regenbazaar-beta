@@ -7,6 +7,7 @@ import { and, desc, eq, inArray, isNull, lt, or } from "drizzle-orm";
 import { listings, withdrawalRequests } from "@rb/db/schema";
 import type { DB } from "@rb/db";
 import { logAction } from "./action-log";
+import { NotSentError } from "./chain-errors";
 import { networkByChainId, type Network } from "./networks";
 import { contractGenerationOf } from "./revision4";
 import { siteUrl } from "./site";
@@ -21,6 +22,7 @@ export const CLAIM_LEASE_MS = 10 * 60_000;
 
 /** Chain steps, split so a sent transaction's hash is saved before its receipt is awaited. Null = already done. */
 export interface ChainOps {
+  /** Sends throw NotSentError when they fail before anything reaches the network. */
   sendWithdraw(net: Network, easUid: Hex, reasonURI: string): Promise<Hex | null>;
   sendRevoke(net: Network, easUid: Hex): Promise<Hex | null>;
   waitForTx(net: Network, hash: Hex): Promise<"success" | "reverted">;
@@ -146,22 +148,33 @@ export async function decideRequest(
   let unsavedSend = false;
   const step = async (saved: Hex | null, send: () => Promise<Hex | null>, field: "withdrawTx" | "revokeTx"): Promise<Hex> => {
     let hash = saved;
+    const name = field === "withdrawTx" ? "withdraw" : "revoke";
     if (!hash) {
       await save({}); // still the holder, lease renewed for this step
       unsavedSend = true;
-      hash = (await send()) ?? "0x"; // "0x" = already in place on-chain, nothing sent
+      let sent: Hex | null;
+      try {
+        sent = await send();
+      } catch (e) {
+        if (e instanceof NotSentError) unsavedSend = false; // refused before broadcast: a retry may start at once
+        // Usually another attempt's transaction landed first and this send was refused as a repeat: then the
+        // step is in place and this attempt carries on.
+        if (!(await chain.isDone(net, easUid, name))) throw e;
+        sent = null;
+      }
+      hash = sent ?? "0x"; // "0x" = already in place on-chain, nothing sent
       await save({ [field]: hash });
       unsavedSend = false;
     }
     if (hash !== "0x" && (await chain.waitForTx(net, hash)) !== "success") {
       // A revert is usually a duplicate of a step another attempt already finished (TRWIV4 and EAS refuse repeats,
       // so it changes nothing). Check the chain read-only; never resend in the same attempt.
-      if (await chain.isDone(net, easUid, field === "withdrawTx" ? "withdraw" : "revoke")) {
+      if (await chain.isDone(net, easUid, name)) {
         hash = "0x";
         await save({ [field]: hash });
       } else {
         await save({ [field]: null }); // forget it: the next attempt sends the step once
-        throw new Error(`${field === "withdrawTx" ? "withdraw" : "revoke"} transaction reverted (${hash}); retry to send it again`);
+        throw new Error(`${name} transaction reverted (${hash}); retry to send it again`);
       }
     }
     return hash;
