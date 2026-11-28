@@ -107,6 +107,9 @@ contract DeployRevision4 is Script {
         }
         if (c.currencies.length == 0 && !c.deployTestStablecoin) revert BadConfig("no stablecoin");
         if (c.deployTestStablecoin && !isTestNetwork(block.chainid)) revert BadConfig("test stablecoin on a non-test chain");
+        if (block.chainid != LOCAL_CHAIN && approvedCurrencies(block.chainid).length == 0) {
+            revert BadConfig("no approved currency list for this chain");
+        }
         for (uint256 i = 0; i < c.currencies.length; ++i) {
             if (c.currencies[i].code.length == 0) revert BadConfig("currency has no code");
             if (!_isStablecoin(c.currencies[i])) revert BadConfig("currency is not an ERC-20 stablecoin (6..18 decimals)");
@@ -141,8 +144,9 @@ contract DeployRevision4 is Script {
     }
 
     /// @notice Networks where the labelled, publicly mintable TestUSDG stand-in may ever be deployed.
+    ///         Official test stablecoins exist on every chain in the plan, so only forge's local chain qualifies.
     function isTestNetwork(uint256 chainId) public pure returns (bool) {
-        return chainId == 421614 || chainId == 11142220 || chainId == 46630 || chainId == 31337;
+        return chainId == LOCAL_CHAIN;
     }
 
     /// @dev The address answers the ERC-20 reads the sale and marketplace rely on, with 6..18 decimals.

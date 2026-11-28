@@ -19,10 +19,14 @@ export const REASON_MAX = 2000;
 // An approval attempt holds the request this long; longer than the two chain steps with their receipt waits.
 export const CLAIM_LEASE_MS = 10 * 60_000;
 
+/** Chain steps, split so a sent transaction's hash is saved before its receipt is awaited. Null = already done. */
 export interface ChainOps {
-  withdraw(net: Network, easUid: Hex, reasonURI: string): Promise<Hex | null>;
-  revoke(net: Network, easUid: Hex): Promise<Hex | null>; // null = already revoked
+  sendWithdraw(net: Network, easUid: Hex, reasonURI: string): Promise<Hex | null>;
+  sendRevoke(net: Network, easUid: Hex): Promise<Hex | null>;
+  waitForTx(net: Network, hash: Hex): Promise<"success" | "reverted">;
 }
+
+class LostClaim extends Error {}
 
 export type Result = { status: number; body: Record<string, unknown> };
 const fail = (status: number, error: string): Result => ({ status, body: { error } });
@@ -128,18 +132,32 @@ export async function decideRequest(
   const easUid = l.easUid as Hex;
   let withdrawTx: Hex | null = claimed[0].withdrawTx as Hex | null;
   let revokeTx: Hex | null = claimed[0].revokeTx as Hex | null;
+  // Every progress write is fenced by the claim token and renews the lease; if another attempt took over, this one
+  // stops before its next chain call.
+  const save = async (patch: Partial<typeof withdrawalRequests.$inferInsert>) => {
+    const rows = await db.update(withdrawalRequests).set({ ...patch, claimedAt: new Date() }).where(mine).returning({ id: withdrawalRequests.id });
+    if (rows.length === 0) throw new LostClaim();
+  };
+  // One chain step: reuse a saved hash (a retry only waits for it), otherwise send, save the hash at once, then wait.
+  const step = async (saved: Hex | null, send: () => Promise<Hex | null>, field: "withdrawTx" | "revokeTx"): Promise<Hex> => {
+    let hash = saved;
+    if (!hash) {
+      await save({}); // still the holder, lease renewed for this step
+      hash = (await send()) ?? "0x"; // "0x" = already in place on-chain, nothing sent
+      await save({ [field]: hash });
+    }
+    if (hash !== "0x" && (await chain.waitForTx(net, hash)) !== "success") {
+      await save({ [field]: null }); // reverted: forget it so the next attempt sends again
+      throw new Error(`${field === "withdrawTx" ? "withdraw" : "revoke"} transaction reverted (${hash})`);
+    }
+    return hash;
+  };
   try {
-    // On-chain first: the listing is only marked withdrawn once the token refuses the impact. Both steps skip
-    // work already done on-chain ("0x" = it was already in place), so retries never repeat a transaction.
-    if (!withdrawTx) {
-      withdrawTx = (await chain.withdraw(net, easUid, siteUrl(`/submission/${l.submissionId}`))) ?? "0x";
-      await db.update(withdrawalRequests).set({ withdrawTx }).where(mine);
-    }
-    if (!revokeTx) {
-      revokeTx = (await chain.revoke(net, easUid)) ?? "0x";
-      await db.update(withdrawalRequests).set({ revokeTx }).where(mine);
-    }
+    // On-chain first: the listing is only marked withdrawn once the token refuses the impact.
+    withdrawTx = await step(withdrawTx, () => chain.sendWithdraw(net, easUid, siteUrl(`/submission/${l.submissionId}`)), "withdrawTx");
+    revokeTx = await step(revokeTx, () => chain.sendRevoke(net, easUid), "revokeTx");
   } catch (e) {
+    if (e instanceof LostClaim) return fail(409, "another admin is finishing this withdrawal; try again in a few minutes");
     const error = e instanceof Error ? e.message.slice(0, 300) : "on-chain step failed";
     await db.update(withdrawalRequests).set({ claimedAt: null }).where(mine); // release the lease for a retry
     await logAction(db, actor, { action: "withdraw_approve", objectType: "listing", objectId: l.id, before: { requestId: r.id }, after: { withdrawTx, revokeTx }, note, error });

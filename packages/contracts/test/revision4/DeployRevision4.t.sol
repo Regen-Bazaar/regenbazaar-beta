@@ -439,6 +439,9 @@ contract DeployRevision4Test is DeployRevision4Checks {
         script.validate(c, deployer);
 
         c = _config(address(eas), address(registry));
+        vm.chainId(46630); // the stand-in is refused on every real chain, Robinhood included
+        vm.expectRevert(abi.encodeWithSelector(DeployRevision4.BadConfig.selector, "test stablecoin on a non-test chain"));
+        script.validate(c, deployer);
         vm.chainId(1);
         vm.expectRevert(abi.encodeWithSelector(DeployRevision4.BadConfig.selector, "test stablecoin on a non-test chain"));
         script.validate(c, deployer);
@@ -454,7 +457,7 @@ contract DeployRevision4Test is DeployRevision4Checks {
         vm.expectRevert(abi.encodeWithSelector(DeployRevision4.BadConfig.selector, "currency is not approved for this chain"));
         script.validate(c, deployer);
         vm.chainId(46630); // Robinhood: no list, out of the plan
-        vm.expectRevert(abi.encodeWithSelector(DeployRevision4.BadConfig.selector, "currency is not approved for this chain"));
+        vm.expectRevert(abi.encodeWithSelector(DeployRevision4.BadConfig.selector, "no approved currency list for this chain"));
         script.validate(c, deployer);
         assertEq(script.approvedCurrencies(11142220).length, 2);
     }

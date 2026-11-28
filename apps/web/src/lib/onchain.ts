@@ -403,25 +403,25 @@ export async function mintedOnChain(net: Network, tokenId: bigint): Promise<bigi
   return c.minted;
 }
 
-/** Mark the impact withdrawn on TRWIV4 (WITHDRAWER key). Skips the call when it is already marked. */
-export async function withdrawOnChain(net: Network, easUid: Hex, reasonURI: string): Promise<Hex | null> {
+/**
+ * Send TRWIV4.withdraw (WITHDRAWER key) without waiting for it. Null when the impact is already marked, so a
+ * retry never sends a second transaction. The caller saves the hash, then calls waitForTx.
+ */
+export async function sendWithdraw(net: Network, easUid: Hex, reasonURI: string): Promise<Hex | null> {
   requireRevision4(net);
   const { account, wallet, pub } = clients(net, "withdrawer");
   const done = await pub.readContract({ address: net.trwi, abi: trwiV4Abi, functionName: "withdrawnUID", args: [easUid] });
   if (done) return null;
-  const hash = await wallet.writeContract({ address: net.trwi, abi: trwiV4Abi, functionName: "withdraw", args: [easUid, reasonURI], account, chain: net.chain });
-  const r = await pub.waitForTransactionReceipt({ hash });
-  if (r.status !== "success") throw new Error(`withdraw reverted (${hash})`);
-  return hash;
+  return wallet.writeContract({ address: net.trwi, abi: trwiV4Abi, functionName: "withdraw", args: [easUid, reasonURI], account, chain: net.chain });
 }
 
-/** Revoke the ImpactClaim attestation in EAS (ATTESTER key, the original attester). Null when already revoked. */
-export async function revokeOnChain(net: Network, easUid: Hex): Promise<Hex | null> {
+/** Send the EAS revoke (ATTESTER key, the original attester) without waiting. Null when already revoked. */
+export async function sendRevoke(net: Network, easUid: Hex): Promise<Hex | null> {
   requireRevision4(net);
   const { account, wallet, pub } = clients(net, "attester");
   const att = await pub.readContract({ address: net.eas, abi: easGetAttestationAbi, functionName: "getAttestation", args: [easUid] });
   if (att.revocationTime !== 0n) return null;
-  const hash = await wallet.writeContract({
+  return wallet.writeContract({
     address: net.eas,
     abi: easRevokeAbi,
     functionName: "revoke",
@@ -429,7 +429,11 @@ export async function revokeOnChain(net: Network, easUid: Hex): Promise<Hex | nu
     account,
     chain: net.chain,
   });
-  const r = await pub.waitForTransactionReceipt({ hash });
-  if (r.status !== "success") throw new Error(`revoke reverted (${hash})`);
-  return hash;
+}
+
+/** Wait (at most 5 minutes, well inside the approval lease) for a sent transaction; "reverted" if it failed. */
+export async function waitForTx(net: Network, hash: Hex): Promise<"success" | "reverted"> {
+  const pub = createPublicClient({ chain: net.chain, transport: http(rpcFor(net)) });
+  const r = await pub.waitForTransactionReceipt({ hash, timeout: 300_000 });
+  return r.status === "success" ? "success" : "reverted";
 }
