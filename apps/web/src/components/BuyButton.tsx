@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { NO_WALLET_HINT } from "../lib/wallet";
 import { NATIVE, erc20Abi, feeOverrides, redeemAbiV1, redeemAbiV2, redeemAbiV3 } from "../lib/chain";
+import { buyerCurrencies } from "../lib/networks";
 import { useNetwork } from "./NetworkProvider";
 import { useConnectWallet } from "./useConnectWallet";
 import { ErrorNote } from "./ErrorNote";
@@ -44,6 +45,9 @@ export function BuyButton({ listingId }: { listingId: string }) {
   const [state, setState] = useState<"idle" | "busy" | "done" | "error">("idle");
   const [msg, setMsg] = useState("");
   const [tx, setTx] = useState("");
+  // Revision 4: the buyer chooses the stablecoin (owner decision 28.11.2026); today's networks have exactly one.
+  const coins = net.primarySaleVersion === 3 ? buyerCurrencies(net) : [];
+  const [coin, setCoin] = useState<string>(coins[0]?.address ?? "");
 
   async function buy() {
     if (!isConnected) {
@@ -54,7 +58,7 @@ export function BuyButton({ listingId }: { listingId: string }) {
     setMsg("");
     try {
       if (chainId !== chain.id) await switchChainAsync({ chainId: chain.id });
-      const res = await fetch(`/api/listings/${listingId}/voucher`);
+      const res = await fetch(`/api/listings/${listingId}/voucher${coin ? `?currency=${encodeURIComponent(coin)}` : ""}`);
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "voucher unavailable");
       const { voucher, signature, version } = (await res.json()) as {
         voucher: VoucherJson;
@@ -152,6 +156,18 @@ export function BuyButton({ listingId }: { listingId: string }) {
   }
   return (
     <div className="mt-4">
+      {coins.length > 1 && (
+        <label className="mb-2 flex items-center justify-between gap-3 text-sm text-muted">
+          Pay with
+          <select value={coin} onChange={(e) => setCoin(e.target.value)} disabled={state === "busy"} className="field w-auto">
+            {coins.map((c) => (
+              <option key={c.address} value={c.address}>
+                {c.symbol}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <button
         onClick={buy}
         disabled={state === "busy"}

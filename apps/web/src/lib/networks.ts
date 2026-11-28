@@ -31,6 +31,31 @@ export function usdPerUnit(_currency: SaleCurrency): number {
   return 1;
 }
 
+/** Revision 4 listings store the price per edition in USD with this many decimals, independent of the coin. */
+export const USD_PRICE_DECIMALS = 6;
+
+/** Coins a buyer may pay with on this network: the revision 4 list, else today's single sale currency. */
+export function buyerCurrencies(net: Pick<Network, "primarySaleVersion" | "saleCurrency" | "saleCurrencies">): SaleCurrency[] {
+  return net.primarySaleVersion === 3 ? (net.saleCurrencies ?? []) : [net.saleCurrency];
+}
+
+/** The listed coin with this address (case-insensitive), or undefined when it is not accepted here. */
+export function findBuyerCurrency(net: Pick<Network, "primarySaleVersion" | "saleCurrency" | "saleCurrencies">, address: string): SaleCurrency | undefined {
+  const a = address.toLowerCase();
+  return buyerCurrencies(net).find((c) => c.address.toLowerCase() === a);
+}
+
+/** Exact conversion of a USD amount (USD_PRICE_DECIMALS) into a stablecoin's own units. Refuses coins with fewer decimals. */
+export function usdToTokenUnits(usd: bigint, c: Pick<SaleCurrency, "decimals">): bigint {
+  if (!Number.isInteger(c.decimals) || c.decimals < USD_PRICE_DECIMALS) throw new Error(`a coin with ${c.decimals} decimals cannot hold a USD price exactly`);
+  return usd * 10n ** BigInt(c.decimals - USD_PRICE_DECIMALS);
+}
+
+/** Unit a listing's stored pricePerEdition is in: USD for revision 4 listings, else the network's sale currency. */
+export function listingPriceUnit(net: Network, contractGeneration: number): { decimals: number; symbol: string } {
+  return contractGeneration === 4 ? { decimals: USD_PRICE_DECIMALS, symbol: "USD" } : { decimals: net.saleCurrency.decimals, symbol: net.saleCurrency.symbol };
+}
+
 export interface Network {
   key: NetworkKey;
   chain: Chain;
@@ -47,6 +72,9 @@ export interface Network {
   marketplace?: Hex;
   trwi: Hex;
   saleCurrency: SaleCurrency;
+  // Revision 4 (primarySaleVersion 3) only: every stablecoin the buyer may choose at purchase (owner decision
+  // 28.11.2026). Listings then carry a USD price, converted per coin. Unused while the network is on 2.
+  saleCurrencies?: SaleCurrency[];
   // Token ids already used on-chain outside the app (scripts); the app's next tokenId starts above this.
   tokenIdFloor?: number;
 }
@@ -72,6 +100,8 @@ function celoSepolia(): Network {
     primarySaleVersion: 2,
     trwi: "0xA1A10570534681606eF67Bc8DDeda6061Dd8a8f0",
     saleCurrency: { address: NATIVE, symbol: "CELO", decimals: 18 },
+    // Revision 4 (owner decision 28.11.2026). Circle USDC, developers.circle.com/stablecoins/usdc-contract-addresses.
+    saleCurrencies: [{ address: "0x01C5C0122039549AD1493B8220cABEdD739BC44E", symbol: "USDC", decimals: 6 }],
   };
 }
 
@@ -102,6 +132,8 @@ function arbitrumSepolia(): Network {
           { address: "0x738B0C655E050320764EA1A7191BEA226B053410", symbol: "tUSDG", decimals: 6, testMint: true }
         : // Paxos Global Dollar (USDG) testnet token — docs.paxos.com/guides/stablecoin/usdg/testnet
           { address: "0xFFC95faa3d63Cde504a05B567C600B78C0b41892", symbol: "USDG", decimals: 6 },
+    // Revision 4 (owner decision 28.11.2026): Circle USDC only, developers.circle.com/stablecoins/usdc-contract-addresses.
+    saleCurrencies: [{ address: "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d", symbol: "USDC", decimals: 6 }],
   };
 }
 

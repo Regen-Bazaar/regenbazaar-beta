@@ -22,7 +22,7 @@ import { getDb } from "../../../lib/db";
 import { pinFile, pinJson } from "../../../lib/ipfs";
 import { onchainEnabled, attestImpact, hasCode, ivToWei, type ImpactClaimV2Extra } from "../../../lib/onchain";
 import { partnerShareError } from "../../../lib/partner-share";
-import { DEFAULT_NETWORK_KEY, NATIVE, getNetwork, isNetworkKey, networkByChainId, usdPerUnit, type Network } from "../../../lib/networks";
+import { DEFAULT_NETWORK_KEY, NATIVE, USD_PRICE_DECIMALS, getNetwork, isNetworkKey, networkByChainId, usdPerUnit, type Network } from "../../../lib/networks";
 import type { DB } from "@rb/db";
 import { requireActor, type Actor } from "../../../lib/validator-auth";
 import { attestationValidator, contractGenerationOf } from "../../../lib/revision4";
@@ -119,7 +119,10 @@ async function registerListing(db: DB, net: Network, submissionId: string, partn
   const floor = BigInt(net.tokenIdFloor ?? 0);
   const tokenId = ((last > floor ? last : floor) + 1n).toString();
 
-  const { address: currency, decimals } = net.saleCurrency;
+  // Revision 4: the buyer picks the stablecoin at purchase, so the listing keeps a USD price (USD_PRICE_DECIMALS)
+  // and the zero address as "coin chosen at purchase"; the voucher route converts it per coin.
+  const revision4 = contractGenerationOf(net) === 4;
+  const { address: currency, decimals } = revision4 ? { address: NATIVE, decimals: USD_PRICE_DECIMALS } : net.saleCurrency;
   // v0.2 (D4): price in USD = IV × rate × P × C, settled in the sale currency at its USD value.
   // v0.1 reports keep the v0.1 rule (IV × rate in the sale currency).
   // Price from IV × rate × P × E; declared costs only raise it (E ≤ 1.5).
@@ -259,7 +262,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: `partner share is not available on ${net.chain.name} yet` }, { status: 422 });
     }
     // A contract partner may reject native payouts and block every sale of the listing (docs/AUDIT.md).
-    if (net.saleCurrency.address === NATIVE && (await hasCode(net, p.payoutAddress as Hex))) {
+    if (contractGenerationOf(net) !== 4 && net.saleCurrency.address === NATIVE && (await hasCode(net, p.payoutAddress as Hex))) {
       return NextResponse.json({ error: "a contract partner address needs a stablecoin listing" }, { status: 422 });
     }
     partnerId = p.id;

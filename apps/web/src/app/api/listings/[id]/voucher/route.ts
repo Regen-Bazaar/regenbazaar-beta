@@ -6,7 +6,7 @@ import { getDb } from "../../../../../lib/db";
 import { mintedOnChain, onchainEnabled, signVoucher, type ImpactVoucher } from "../../../../../lib/onchain";
 import { contractGenerationOf } from "../../../../../lib/revision4";
 import { editionLimit, editionLimitError, limitFactsFor } from "../../../../../lib/edition-limit";
-import { networkByChainId } from "../../../../../lib/networks";
+import { findBuyerCurrency, networkByChainId, usdToTokenUnits, type SaleCurrency } from "../../../../../lib/networks";
 import {
   PLATFORM_FEE_BPS,
   RESALE_FEE_BPS,
@@ -21,7 +21,8 @@ const DEADLINE_SECS = 3600;
 
 // GET /api/listings/<id>/voucher — return a freshly platform-signed EIP-712 voucher for a primary listing.
 // The buyer submits {voucher, signature} to RegenPrimarySale.redeem() to pay + lazily mint editions.
-export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+// Revision 4: ?currency=<address> picks one of the network's stablecoins; the USD price is converted to it.
+export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
   if (!onchainEnabled()) return NextResponse.json({ error: "onchain not configured" }, { status: 503 });
   const { id } = await ctx.params;
   const db = await getDb();
@@ -35,6 +36,14 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     return NextResponse.json({ error: "this listing belongs to the previous contracts and is closed" }, { status: 409 });
   }
   if (l.withdrawnAt) return NextResponse.json({ error: "this impact was withdrawn" }, { status: 409 });
+
+  // Revision 4: the buyer's coin must be on this network's list (the contract allowlist holds the same coins).
+  let coin: SaleCurrency | undefined;
+  if (net.primarySaleVersion === 3) {
+    const asked = new URL(req.url).searchParams.get("currency") ?? "";
+    coin = /^0x[0-9a-fA-F]{40}$/.test(asked) ? findBuyerCurrency(net, asked) : undefined;
+    if (!coin) return NextResponse.json({ error: "choose one of this network's stablecoins" }, { status: 422 });
+  }
 
   // Edition limit (revision 4 only): the signed mintCap binds it on-chain; refuse to sign once nothing is left.
   let mintCap: bigint | undefined;
@@ -78,8 +87,9 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     creator: l.beneficiary as `0x${string}`, // NGO (== attestation.ngo)
     totalIV: BigInt(l.totalIvWei),
     maxEditions: BigInt(l.maxEditions),
-    pricePerEdition: BigInt(l.pricePerEdition),
-    currency: l.currency as `0x${string}`,
+    // Revision 4 listings hold a USD price; converted exactly into the chosen coin's own units.
+    pricePerEdition: coin ? usdToTokenUnits(BigInt(l.pricePerEdition), coin) : BigInt(l.pricePerEdition),
+    currency: (coin ? coin.address : l.currency) as `0x${string}`,
     beneficiary: l.beneficiary as `0x${string}`,
     easUID: l.easUid as `0x${string}`,
     metadataURI: l.metadataUri,

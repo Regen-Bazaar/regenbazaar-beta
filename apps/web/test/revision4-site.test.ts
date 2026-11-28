@@ -365,3 +365,38 @@ test("voucher v3: the mint cap must be present and between 1 and maxEditions", a
   assert.equal(voucherV3Message({ ...v, mintCap: BigInt(EDITION_LIMIT.limitedEditions) }).mintCap, 25n);
   assert.equal(voucherV3Message({ ...v, mintCap: 100n }).mintCap, 100n);
 });
+
+// ---- several stablecoins per revision 4 network (owner decision 28.11.2026) ------------------------------------
+
+test("currencies: revision 4 networks list their coins; today's networks keep their single sale currency", async () => {
+  const { buyerCurrencies, findBuyerCurrency } = await import("../src/lib/networks");
+  const arbUsdc = "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d";
+  assert.deepEqual(buyerCurrencies(arbV2).map((c) => c.address), [arbV2.saleCurrency.address], "v2: unchanged");
+  assert.deepEqual(buyerCurrencies(arbV4).map((c) => c.symbol), ["USDC"]);
+  assert.equal(findBuyerCurrency(arbV4, arbUsdc.toLowerCase())?.decimals, 6);
+  assert.equal(findBuyerCurrency(arbV4, arbV2.saleCurrency.address), undefined, "USDG is not on the revision 4 list");
+  assert.equal(findBuyerCurrency(arbV4, "0x0000000000000000000000000000000000000000"), undefined, "no native coin");
+  const celo = getNetwork("celo-sepolia");
+  assert.equal(findBuyerCurrency({ ...celo, primarySaleVersion: 3 }, "0x01C5C0122039549AD1493B8220cABEdD739BC44E")?.symbol, "USDC");
+});
+
+test("currencies: a USD price converts exactly into 6- and 18-decimal coins; fewer decimals are refused", async () => {
+  const { usdToTokenUnits, USD_PRICE_DECIMALS, listingPriceUnit } = await import("../src/lib/networks");
+  assert.equal(USD_PRICE_DECIMALS, 6);
+  const price = 12_345_678n; // 12.345678 USD
+  assert.equal(usdToTokenUnits(price, { decimals: 6 }), 12_345_678n);
+  assert.equal(usdToTokenUnits(price, { decimals: 18 }), 12_345_678_000_000_000_000n);
+  assert.throws(() => usdToTokenUnits(price, { decimals: 2 }), /decimals/);
+  assert.deepEqual(listingPriceUnit(arbV2, 4), { decimals: 6, symbol: "USD" });
+  assert.deepEqual(listingPriceUnit(arbV2, 3), { decimals: arbV2.saleCurrency.decimals, symbol: arbV2.saleCurrency.symbol });
+});
+
+test("voucher: a today's-network listing ignores ?currency and signs exactly as before", async () => {
+  const l = await insertListing({ generation: 3 });
+  const res = await voucherRoute.GET(req(`/api/listings/${l.id}/voucher?currency=0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d`), params(l.id));
+  assert.equal(res.status, 200);
+  const j = (await res.json()) as { version: number; voucher: Record<string, string> };
+  assert.equal(j.version, 2);
+  assert.equal(j.voucher.currency, l.currency);
+  assert.equal(j.voucher.pricePerEdition, l.pricePerEdition);
+});
