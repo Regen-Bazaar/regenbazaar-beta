@@ -482,8 +482,9 @@ contract DeployRevision4ForkTest is DeployRevision4Checks {
     }
 
     function test_Fork_CeloSepolia() public {
-        address[] memory coins = new address[](1);
+        address[] memory coins = new address[](2);
         coins[0] = 0x01C5C0122039549AD1493B8220cABEdD739BC44E; // USDC
+        coins[1] = 0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b; // USDm (Celo dollar)
         _fork(
             "FORK_CELO_SEPOLIA_RPC",
             0x82448c9c9b95Da5dCe9905F9C59CcCA0DF346df8,

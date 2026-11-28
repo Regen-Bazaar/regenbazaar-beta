@@ -31,7 +31,8 @@ import { TestUSDG } from "../src/testnet/TestUSDG.sol";
 ///         ALLOWED_CURRENCIES per network (owner decision 28.11.2026; Circle USDC from
 ///         developers.circle.com/stablecoins/usdc-contract-addresses), DEPLOY_TEST_STABLECOIN=false on both:
 ///           Arbitrum Sepolia: 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d (USDC)
-///           Celo Sepolia:     0x01C5C0122039549AD1493B8220cABEdD739BC44E (USDC) + Celo's dollar stablecoin
+///           Celo Sepolia:     0x01C5C0122039549AD1493B8220cABEdD739BC44E (USDC),
+///                             0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b (USDm, Celo dollar, 18 decimals)
 contract DeployRevision4 is Script {
     string public constant IMPACT_CLAIM_V2_SCHEMA =
         "address creator,uint256 impactValue,string metadataURI,uint8 proofLevel,string methodologyVersion,address validator,address partner,bool transferable";

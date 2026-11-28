@@ -100,8 +100,12 @@ function celoSepolia(): Network {
     primarySaleVersion: 2,
     trwi: "0xA1A10570534681606eF67Bc8DDeda6061Dd8a8f0",
     saleCurrency: { address: NATIVE, symbol: "CELO", decimals: 18 },
-    // Revision 4 (owner decision 28.11.2026). Circle USDC, developers.circle.com/stablecoins/usdc-contract-addresses.
-    saleCurrencies: [{ address: "0x01C5C0122039549AD1493B8220cABEdD739BC44E", symbol: "USDC", decimals: 6 }],
+    // Revision 4 (owner decision 28.11.2026): Circle USDC (developers.circle.com/stablecoins/usdc-contract-addresses)
+    // and Celo's dollar USDm (docs.mento.org/mento-v3/build/deployments/addresses, docs.celo.org token contracts).
+    saleCurrencies: [
+      { address: "0x01C5C0122039549AD1493B8220cABEdD739BC44E", symbol: "USDC", decimals: 6 },
+      { address: "0xdE9e4C3ce781b4bA68120d6261cbad65ce0aB00b", symbol: "USDm (Celo dollar)", decimals: 18 },
+    ],
   };
 }
 

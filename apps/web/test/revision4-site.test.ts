@@ -377,7 +377,9 @@ test("currencies: revision 4 networks list their coins; today's networks keep th
   assert.equal(findBuyerCurrency(arbV4, arbV2.saleCurrency.address), undefined, "USDG is not on the revision 4 list");
   assert.equal(findBuyerCurrency(arbV4, "0x0000000000000000000000000000000000000000"), undefined, "no native coin");
   const celo = getNetwork("celo-sepolia");
-  assert.equal(findBuyerCurrency({ ...celo, primarySaleVersion: 3 }, "0x01C5C0122039549AD1493B8220cABEdD739BC44E")?.symbol, "USDC");
+  const celoV4 = { ...celo, primarySaleVersion: 3 as const };
+  assert.deepEqual(buyerCurrencies(celoV4).map((c) => [c.symbol, c.decimals]), [["USDC", 6], ["USDm (Celo dollar)", 18]]);
+  assert.equal(findBuyerCurrency(celoV4, "0xEF4d55D6dE8e8d73232827Cd1e9b2F2dBb45bC80"), undefined, "cUSD is not on the list");
 });
 
 test("currencies: a USD price converts exactly into 6- and 18-decimal coins; fewer decimals are refused", async () => {
