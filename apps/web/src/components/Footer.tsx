@@ -36,7 +36,7 @@ export function Footer() {
           </p>
           <p className="mt-4 text-sm text-subtle">
             Testnet beta: test networks and test tokens only, no real money moves.{" "}
-            Impact Value is Regen Bazaar&apos;s own relative index (methodology v0.2), not a certification.
+            Impact Value is Regen Bazaar&apos;s own relative index (methodology v0.2).
           </p>
         </div>
         <FooterCol title="Product" links={PRODUCT} />

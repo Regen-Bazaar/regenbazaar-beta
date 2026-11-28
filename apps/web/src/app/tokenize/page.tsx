@@ -591,7 +591,7 @@ export default function Tokenize() {
               {result && (
                 <div className="rounded-xl border border-ok/40 bg-ok-tint px-4 py-3">
                   Submitted ✓ Status <b>{result.status.replace(/_/g, " ")}</b>. Next: a validator checks the proof and sets
-                  its level. Once approved, it is attested on-chain and appears in the{" "}
+                  its level. Once approved, it is verified and recorded on-chain, and appears in the{" "}
                   <a href="/marketplace" className="link">Marketplace</a> on {NETWORK.chain.name} only.{" "}
                   <a href={`/submission/${result.id}`} className="link">Open the report</a>
                 </div>
@@ -654,7 +654,7 @@ export default function Tokenize() {
             </div>
             <div className="mt-5 text-sm text-subtle">
               Impact Value (all areas): <b className="text-fg">{fmt(iv.impactValue)}</b> · Regen Bazaar&apos;s own relative
-              index, not a certification ·{" "}
+              index ·{" "}
               <a href="/methodology" className="underline underline-offset-4 hover:text-accent">
                 how it is scored
               </a>

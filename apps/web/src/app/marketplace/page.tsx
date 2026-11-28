@@ -14,7 +14,7 @@ import { headline, impactView } from "../../lib/impact-view";
 
 export const metadata = {
   title: "Marketplace",
-  description: "Buy verified real-world impact. Each tRWI edition is a fractional share of an attested impact claim.",
+  description: "Buy verified real-world impact. Each tRWI edition is a fractional share of impact verified by a validator.",
 };
 
 export const dynamic = "force-dynamic";
