@@ -16,7 +16,7 @@ const ELSEWHERE: { href: string; label: string; icon: IconName }[] = [
 
 const LINK = "inline-flex min-h-11 items-center gap-1.5 text-meta text-muted hover:text-fg";
 
-/** Compact footer: one or two lines. The four main destinations are in the app bar and the tab bar, not here. */
+/** Compact footer: one line on desktop, three on a phone (link icons are dropped there to keep each group on one line). The four main destinations are in the app bar and the tab bar, not here. */
 export function Footer() {
   return (
     <footer className="mt-16 border-t border-line">
@@ -29,7 +29,7 @@ export function Footer() {
           <nav aria-label="Learn" className="flex flex-wrap gap-x-4">
             {LEARN.map((l) => (
               <Link key={l.href} href={l.href} className={LINK}>
-                <Icon name={l.icon} />
+                <Icon name={l.icon} className="max-sm:hidden" />
                 {l.label}
               </Link>
             ))}
@@ -37,7 +37,7 @@ export function Footer() {
           <nav aria-label="Elsewhere" className="flex flex-wrap gap-x-4">
             {ELSEWHERE.map((l) => (
               <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className={LINK}>
-                <Icon name={l.icon} />
+                <Icon name={l.icon} className="max-sm:hidden" />
                 {l.label}
               </a>
             ))}

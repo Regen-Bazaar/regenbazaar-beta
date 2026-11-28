@@ -651,6 +651,8 @@
     background: var(--rb-surface);
     color: var(--rb-fg);
     padding: 0;
+    /* The app bar it is opened from does not wrap its text; the sheet does. */
+    white-space: normal;
   }
   dialog.sheet::backdrop {
     background: var(--rb-scrim);
