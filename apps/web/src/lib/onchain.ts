@@ -19,6 +19,7 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
+import { NotSentError } from "./chain-errors";
 import type { Network } from "./networks";
 
 // Optional provider RPC per chain (RPC_URL_<chainId>); otherwise the network's public RPC.
@@ -410,25 +411,42 @@ export async function mintedOnChain(net: Network, tokenId: bigint): Promise<bigi
 export async function sendWithdraw(net: Network, easUid: Hex, reasonURI: string): Promise<Hex | null> {
   requireRevision4(net);
   const { account, wallet, pub } = clients(net, "withdrawer");
-  const done = await pub.readContract({ address: net.trwi, abi: trwiV4Abi, functionName: "withdrawnUID", args: [easUid] });
-  if (done) return null;
-  return wallet.writeContract({ address: net.trwi, abi: trwiV4Abi, functionName: "withdraw", args: [easUid, reasonURI], account, chain: net.chain });
+  const request = await notSent(async () => {
+    const done = await pub.readContract({ address: net.trwi, abi: trwiV4Abi, functionName: "withdrawnUID", args: [easUid] });
+    if (done) return null;
+    const sim = await pub.simulateContract({ address: net.trwi, abi: trwiV4Abi, functionName: "withdraw", args: [easUid, reasonURI], account, chain: net.chain });
+    return sim.request;
+  });
+  return request && wallet.writeContract(request);
 }
 
 /** Send the EAS revoke (ATTESTER key, the original attester) without waiting. Null when already revoked. */
 export async function sendRevoke(net: Network, easUid: Hex): Promise<Hex | null> {
   requireRevision4(net);
   const { account, wallet, pub } = clients(net, "attester");
-  const att = await pub.readContract({ address: net.eas, abi: easGetAttestationAbi, functionName: "getAttestation", args: [easUid] });
-  if (att.revocationTime !== 0n) return null;
-  return wallet.writeContract({
-    address: net.eas,
-    abi: easRevokeAbi,
-    functionName: "revoke",
-    args: [{ schema: net.schemaUID, data: { uid: easUid, value: 0n } }],
-    account,
-    chain: net.chain,
+  const request = await notSent(async () => {
+    const att = await pub.readContract({ address: net.eas, abi: easGetAttestationAbi, functionName: "getAttestation", args: [easUid] });
+    if (att.revocationTime !== 0n) return null;
+    const sim = await pub.simulateContract({
+      address: net.eas,
+      abi: easRevokeAbi,
+      functionName: "revoke",
+      args: [{ schema: net.schemaUID, data: { uid: easUid, value: 0n } }],
+      account,
+      chain: net.chain,
+    });
+    return sim.request;
   });
+  return request && wallet.writeContract(request);
+}
+
+/** Run the steps before a send; any failure there is a NotSentError (nothing reached the network). */
+async function notSent<T>(f: () => Promise<T>): Promise<T> {
+  try {
+    return await f();
+  } catch (e) {
+    throw new NotSentError(e);
+  }
 }
 
 /** Read-only: is the withdrawal step already in place on-chain (TRWIV4 mark or EAS revocation)? */

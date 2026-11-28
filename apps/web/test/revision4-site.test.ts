@@ -22,6 +22,7 @@ const { getNetwork } = await import("../src/lib/networks");
 const { editionLimit, editionLimitError, limitFactsFor, EDITION_LIMIT } = await import("../src/lib/edition-limit");
 const { attestationValidator, contractGenerationOf } = await import("../src/lib/revision4");
 const { fileRequest, decideRequest } = await import("../src/lib/withdrawals");
+const { NotSentError } = await import("../src/lib/chain-errors");
 const nonceRoute = await import("../src/app/api/auth/nonce/route");
 const signInRoute = await import("../src/app/api/auth/sign-in/route");
 const withdrawalsRoute = await import("../src/app/api/withdrawals/route");
@@ -732,4 +733,71 @@ test("withdraw: after a revert the attempt never sends again; with an older tran
   assert.equal(sent.withdraw, 1, "no extra send after the revert");
   const [after] = await db.select().from(schema.withdrawalRequests);
   assert.deepEqual([after.status, after.withdrawTx], ["approved", "0x"]);
+});
+
+test("withdraw: a send refused before broadcast releases the claim, so an immediate retry sends once", async () => {
+  const v = await addUser("validator");
+  const a = await addUser("admin");
+  const l = await insertListing({ generation: 4 });
+  await fileRequest(db, v.actor, { listingId: l.id, reason: "photos are from another project" }, resolveV4);
+  const [r] = await db.select().from(schema.withdrawalRequests);
+  const sent = { withdraw: 0, refused: 0 };
+  const ops = {
+    sendWithdraw: async () => {
+      if (sent.refused++ === 0) throw new NotSentError(new Error("RPC timeout during simulation"));
+      sent.withdraw++;
+      return ("0x" + "3".repeat(64)) as Hex;
+    },
+    sendRevoke: async () => ("0x" + "4".repeat(64)) as Hex,
+    waitForTx: async () => "success" as const,
+    isDone: async () => false,
+  };
+  assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 502);
+  const [mid] = await db.select().from(schema.withdrawalRequests);
+  assert.deepEqual([mid.status, mid.claimedAt, mid.withdrawTx], ["approving", null, null], "claim released, nothing recorded");
+  assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 200);
+  assert.equal(sent.withdraw, 1);
+});
+
+test("withdraw: a send refused because the step already landed counts as done and the attempt carries on", async () => {
+  const v = await addUser("validator");
+  const a = await addUser("admin");
+  const l = await insertListing({ generation: 4 });
+  await fileRequest(db, v.actor, { listingId: l.id, reason: "photos are from another project" }, resolveV4);
+  const [r] = await db.select().from(schema.withdrawalRequests);
+  const ops = {
+    // another attempt's withdraw landed between the pre-check and the simulation: ours is refused as a repeat
+    sendWithdraw: async () => {
+      throw new NotSentError(new Error("AlreadyWithdrawn()"));
+    },
+    sendRevoke: async () => ("0x" + "5".repeat(64)) as Hex,
+    waitForTx: async () => "success" as const,
+    isDone: async (_n: unknown, _u: unknown, step: "withdraw" | "revoke") => step === "withdraw",
+  };
+  assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 200);
+  const [after] = await db.select().from(schema.withdrawalRequests);
+  assert.deepEqual([after.status, after.withdrawTx, after.revokeTx], ["approved", "0x", "0x" + "5".repeat(64)]);
+});
+
+test("withdraw: a send that fails in a way that may have broadcast keeps the claim", async () => {
+  const v = await addUser("validator");
+  const a = await addUser("admin");
+  const l = await insertListing({ generation: 4 });
+  await fileRequest(db, v.actor, { listingId: l.id, reason: "photos are from another project" }, resolveV4);
+  const [r] = await db.select().from(schema.withdrawalRequests);
+  const sent = { withdraw: 0 };
+  const ops = {
+    sendWithdraw: async () => {
+      sent.withdraw++;
+      throw new Error("connection reset after eth_sendRawTransaction"); // the transaction may be out
+    },
+    sendRevoke: async () => ("0x" + "6".repeat(64)) as Hex,
+    waitForTx: async () => "success" as const,
+    isDone: async () => false,
+  };
+  assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 502);
+  const [mid] = await db.select().from(schema.withdrawalRequests);
+  assert.ok(mid.claimedAt, "the claim is still held");
+  assert.equal((await decideRequest(db, a.actor, r.id, { decision: "approve", note: null }, ops, resolveV4)).status, 409);
+  assert.equal(sent.withdraw, 1);
 });
